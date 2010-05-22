@@ -1,3 +1,8 @@
+/*
+ * File:   config.h
+ * Author: WU Jun <quark@lihdd.net>
+ */
+
 #ifndef _CONFIG_H
 #define	_CONFIG_H
 

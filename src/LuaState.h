@@ -1,8 +1,6 @@
 /* 
  * File:   LuaState.h
- * Author: quark
- *
- * Created on May 15, 2010, 3:52 AM
+ * Author: WU Jun <quark@lihdd.net>
  */
 
 #ifndef _LUASTATE_H
@@ -16,49 +14,54 @@ extern "C" {
 
 #include <boost/variant.hpp>
 #include <boost/thread/recursive_mutex.hpp>
-#include <exception>
+
 #include <vector>
 #include <string>
+
+#include "LuaException.h"
+#include "LuaValue.h"
 
 namespace lua {
 
     using boost::recursive_mutex;
     using boost::variant;
     using std::vector;
-    using std::string;
+    // using lua::LuaValue;
 
-    typedef variant<lua_Number, string> LuaIndex;
+    typedef variant<lua_Number, std::string> LuaIndex;
 
-    class LuaException : public std::exception {
-    private:
-        string message;
-    public:
-        LuaException(const char * message = "") throw ();
-        ~LuaException() throw ();
-        virtual const char* what() const throw ();
-    };
+    //typedef vector<LuaValue> LuaFunction(vector<LuaValue> parameters);
+
+    class LuaValue;
 
     class LuaState : boost::noncopyable {
     public:
         LuaState();
         ~LuaState();
 
-        const lua_Number get_field(const lua_Number default_value = 0);
-        const string get_field(const string default_value = "");
+        const LuaValue get_field(const LuaValue& default_value);
 
-        bool set_field(LuaIndex index, LuaIndex value);
+        bool set_field(LuaIndex index, LuaValue value);
 
+        operator const LuaValue();
+
+        // for converience:
         operator const lua_Number();
-        operator const string();
-        void operator ()(const string script);
+        operator const std::string();
+
+        void operator ()(const std::string script);
 
         LuaState & operator [](LuaIndex index);
 
-        void do_string(const string script);
+        void do_string(const std::string script);
 
         int get_stack_size();
+
     private:
-        //class stack_push_visitor;
+        friend class LuaValue;
+        LuaState & operator <<(const LuaValue& value);
+        LuaState & operator >>(LuaValue& value);
+
         bool try_reach(const bool clean_indexes = true);
         void unreach();
 
