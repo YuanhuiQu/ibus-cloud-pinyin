@@ -3,7 +3,7 @@ CMAKE_MINIMUM_REQUIRED(VERSION 2.6)
 PROJECT(IBUS_CLOUD_PINYIN_TEST)
 SET(TEST_SRC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../src)
 
-ADD_EXECUTABLE(test-main ${TEST_SRC_DIR}/LuaState.cpp;test_main.cpp)
+ADD_EXECUTABLE(test-main ${TEST_SRC_DIR}/LuaState.cpp;${TEST_SRC_DIR}/LuaValue.cpp;${TEST_SRC_DIR}/LuaException.cpp;test_main.cpp)
 
 # Boost
 SET(Boost_USE_STATIC_LIBS OFF)

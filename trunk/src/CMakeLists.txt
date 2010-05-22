@@ -6,7 +6,7 @@ ELSE()
   SET(PKGDATADIR "${SHARE_INSTALL_PREFIX}/ibus-cloud-pinyin")
 ENDIF()
 
-ADD_EXECUTABLE(ibus-cloud-pinyin LuaState.cpp;main.cpp)
+ADD_EXECUTABLE(ibus-cloud-pinyin LuaException.cpp;LuaValue.cpp;LuaState.cpp;main.cpp)
 
 # Boost
 SET(Boost_USE_STATIC_LIBS ON)
