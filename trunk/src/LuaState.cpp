@@ -3,13 +3,10 @@
  * Author: WU Jun <quark@lihdd.net>
  */
 
-#include <boost/foreach.hpp>
 #include <boost/format.hpp>
+
 #include "LuaState.h"
 #include "LuaException.h"
-#include <cstdio>
-
-#define foreach BOOST_FOREACH
 
 // stack_push_visitor (used by LuaState, private)
 
