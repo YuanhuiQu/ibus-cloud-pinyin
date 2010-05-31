@@ -13,9 +13,12 @@
 #include <string>
 #include <exception>
 
-#define FATAL_ERROR(message) \
-    fprintf(stderr, "FATAL: %s\n", message), \
+#define LUA_FATAL_ERROR(message) \
+    fprintf(stderr, "LUA FATAL: %s\n", message), \
     exit(EXIT_FAILURE);
+
+#define LUA_WARNING(message) \
+    fprintf(stderr, "LUA WARNING: %s\n", message);
 
 namespace lua {
 

@@ -7,108 +7,84 @@
 #include "LuaValue.h"
 
 lua::LuaValue::LuaValue(const lua::LuaValue & that) {
-    // TODO: copy construct
-    type = that.type;
-    string_value = that.string_value;
-    boolean_value = that.boolean_value;
-    number_value = that.number_value;
-}
-
-lua::LuaValue::LuaValue(LuaState& state) {
-    *this = state.operator const LuaValue();
+    operator =(that);
 }
 
 lua::LuaValue::LuaValue() {
-    clear();
+    set_nil();
 }
 
 lua::LuaValue::LuaValue(const std::string value) {
-    operator =(value);
+    set_string(value);
 }
 
 lua::LuaValue::LuaValue(const lua_Number value) {
-    operator =(value);
+    set_number(value);
 }
 
 lua::LuaValue::LuaValue(const bool value) {
-    operator =(value);
+    set_boolean(value);
 }
 
 lua::LuaValue::LuaValue(const int value) {
-    operator =((lua_Number) value);
+    set_number((lua_Number) value);
 }
 
 lua::LuaValue::LuaValue(const size_t value) {
-    operator =((lua_Number) value);
+    set_number((lua_Number) value);
 }
 
 lua::LuaValue::LuaValue(const char * value) {
-    operator =(std::string(value));
+    set_string(std::string(value));
 }
 
-lua::LuaValue::LuaValue(lua_State * L, int index) {
-    read_value(L, index);
-}
-
-void lua::LuaValue::clear() {
+void lua::LuaValue::set_nil() {
     type = NIL;
     string_value = "";
     number_value = 0;
     boolean_value = false;
 }
 
-lua::LuaValue & lua::LuaValue::operator =(const std::string value) {
-    type = STRING;
-    string_value = value;
-    number_value = (lua_Number) value.c_str()[0];
-    boolean_value = !value.empty();
-    return *this;
-}
-
-lua::LuaValue & lua::LuaValue::operator =(const lua_Number value) {
-    type = NUMBER;
-    string_value = (boost::format("%1%") % value).str();
-    number_value = value;
-    boolean_value = (value != 0);
-    return *this;
-}
-
-lua::LuaValue & lua::LuaValue::operator =(const bool value) {
+void lua::LuaValue::set_boolean(const bool value) {
     type = BOOLEAN;
     string_value = value ? "true" : "false";
     number_value = value ? 1 : 0;
     boolean_value = value;
-    return *this;
 }
 
-lua::LuaValue & lua::LuaValue::operator =(const int value) {
-    return operator =((lua_Number) value);
+void lua::LuaValue::set_number(const lua_Number value) {
+    type = NUMBER;
+    string_value = (boost::format("%1%") % value).str();
+    number_value = value;
+    boolean_value = (value != 0);
 }
 
-lua::LuaValue & lua::LuaValue::operator =(const size_t value) {
-    return operator =((lua_Number) value);
+void lua::LuaValue::set_string(const std::string value) {
+    type = STRING;
+    string_value = value;
+    number_value = (lua_Number) value.c_str()[0];
+    boolean_value = !value.empty();
 }
 
-lua::LuaValue & lua::LuaValue::operator =(const char* value) {
-    return operator =(std::string(value));
-}
-
-void lua::LuaValue::read_value(lua_State * L, int index) {
+/**
+ * read a value from lua stack, private use
+ */
+void lua::LuaValue::read_from_stack(lua_State * L, int index) {
     switch (lua_type(L, index)) {
         case LUA_TNIL:
-            clear();
+            set_nil();
             break;
         case LUA_TNONE:
             // do nothing
             break;
         case LUA_TBOOLEAN:
-            operator =((bool)lua_toboolean(L, index));
+            set_boolean((bool)lua_toboolean(L, index));
             break;
         case LUA_TNUMBER:
-            operator =(lua_tonumber(L, index));
+            set_number(lua_tonumber(L, index));
             break;
         case LUA_TSTRING:
-            operator =((std::string)lua_tostring(L, index));
+            set_string((std::string)lua_tostring(L, index));
             break;
         case LUA_TTABLE:
             // TODO: iterative get table content
@@ -119,36 +95,13 @@ void lua::LuaValue::read_value(lua_State * L, int index) {
         case LUA_TUSERDATA:
         default:
             // not supported
-            FATAL_ERROR("not supported lua_type");
+            LUA_FATAL_ERROR("LuaValue::read_from_stack: not supported lua_type");
     }
 }
 
-/*
-lua::LuaValue::operator const bool() const {
-    return boolean_value;
+lua::LuaValue::LuaValue(lua_State * L, int index) {
+    read_from_stack(L, index);
 }
-
-lua::LuaValue::operator const lua_Number() const {
-    return number_value;
-}
-
-lua::LuaValue::operator const std::string() const {
-    return string_value;
-}
-
-lua::LuaValue::operator const int() const {
-    return (int) operator const lua_Number();
-}
-
-lua::LuaValue::operator const size_t() const {
-    return (size_t) operator const lua_Number();
-}
-
-
-lua::LuaValue::operator const char * () const {
-    return string_value.c_str();
-}
-*/
 
 const bool lua::LuaValue::get_boolean() const {
     return boolean_value;
@@ -160,9 +113,6 @@ const lua_Number lua::LuaValue::get_number() const {
 
 const std::string lua::LuaValue::get_string() const {
     return string_value;
-}
-
-lua::LuaValue::~LuaValue() {
 }
 
 const lua::LuaType lua::LuaValue::get_type() const {
@@ -184,4 +134,12 @@ const bool lua::LuaValue::operator ==(const lua::LuaValue& that) const {
         default:
             return false;
     }
+}
+
+lua::LuaValue & lua::LuaValue::operator =(const lua::LuaValue & that) {
+    type = that.type;
+    string_value = that.string_value;
+    boolean_value = that.boolean_value;
+    number_value = that.number_value;
+    return *this;
 }
