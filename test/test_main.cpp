@@ -1,19 +1,50 @@
 #define BOOST_TEST_MAIN
 
 #include <boost/test/unit_test.hpp>
+#include <boost/foreach.hpp>
 #include <iostream>
+#include <vector>
+
 #include "LuaState.h"
 
 using namespace std;
-//using lua::LuaState;
-//using lua::LuaException;
+using namespace boost;
 using namespace lua;
 
-BOOST_AUTO_TEST_CASE(lua_state_test) {
+std::vector<LuaValue> lua_function_test(std::vector<LuaValue> p) {
+    BOOST_FOREACH(LuaValue value, p) {
+        switch (value.get_type()) {
+            case STRING:
+                cout << "string: " << value.get_string() << endl;
+                break;
+            case NUMBER:
+                cout << "number: " << value.get_number() << endl;
+                break;
+        }
+    }
+    std::vector<LuaValue> r;
+    r.push_back("hello world");
+    r.push_back(12345);
+    r.push_back(-34.12);
+    r.push_back("you can not pass!");
+    return r;
+}
+
+BOOST_AUTO_TEST_CASE(lua_state_weak_test) {
+    ios::sync_with_stdio(true);
+
     LuaState l;
 
     BOOST_CHECK_THROW(l.do_string("a(t)"), LuaException);
 
+    BOOST_CHECK_NO_THROW(l("print('hello, world')"));
+    BOOST_CHECK_NO_THROW(l.self_check());
+
+    // register function _G.abc
+    BOOST_CHECK(l.register_function("abc", &lua_function_test));
+    BOOST_CHECK_NO_THROW(l("print(abc(1, 'abcdef', 3.22))"));
+
+    /*
     BOOST_CHECK_EQUAL((LuaValue)l["a"].get_field(3) == 3, true);
     BOOST_CHECK_EQUAL(l["a"]["b"]["c"].get_field("blabla").get_string() == "blabla", true);
     //BOOST_CHECK_EQUAL(l["a"]["b"]["c"].get_field("blabla"), (LuaValue)"blabla");
@@ -55,4 +86,5 @@ BOOST_AUTO_TEST_CASE(lua_state_test) {
     BOOST_CHECK(l["b"]["cde"].set_field(6, "hello"));
 
     BOOST_CHECK((std::string)l["b"]["cde"][6] == std::string("hello"));
+     */
 }

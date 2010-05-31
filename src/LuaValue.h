@@ -14,8 +14,8 @@ extern "C" {
 
 #include <string>
 #include <ostream>
+#include <map>
 
-#include "LuaException.h"
 #include "LuaState.h"
 
 namespace lua {
@@ -32,8 +32,6 @@ namespace lua {
         THREAD
     };
 
-    class LuaState;
-
     class LuaValue {
     public:
         LuaValue();
@@ -46,45 +44,31 @@ namespace lua {
         LuaValue(const char * value);
 
         LuaValue(const LuaValue & that);
-        LuaValue(LuaState & state);
 
-        virtual ~LuaValue();
         const LuaType get_type() const;
-
-        // operator const std::string() const;
-        // operator const lua_Number() const;
-        // operator const bool() const;
-
-        // operator const int() const;
-        // operator const size_t() const;
-        // operator const char * () const;
         const bool get_boolean() const;
         const std::string get_string() const;
         const lua_Number get_number() const;
 
-        void clear();
-        
-        LuaValue & operator =(const bool value);
-        LuaValue & operator =(const lua_Number value);
-        LuaValue & operator =(const std::string value);
+        const std::map<LuaIndex, lua::LuaValue> get_table() const;
 
-        LuaValue & operator =(const int value);
-        LuaValue & operator =(const size_t value);
-        LuaValue & operator =(const char * value);
+        void set_nil();
+        void set_boolean(const bool value);
+        void set_string(const std::string value);
+        void set_number(const lua_Number value);
 
         const bool operator ==(const LuaValue & that) const;
+        LuaValue & operator =(const LuaValue & that);
 
     private:
-        friend class LuaState;
-
         LuaType type;
-
         std::string string_value;
         bool boolean_value;
         lua_Number number_value;
 
+        friend class LuaState;
         LuaValue(lua_State * L, int index = -1);
-        void read_value(lua_State * L, int index = -1);
+        void read_from_stack(lua_State * L, int index = -1);
     };
 
 }

@@ -12,16 +12,17 @@
 void process_program_options(int argc, char ** argv) {
     using namespace std;
     using namespace boost;
-    namespace po = boost::program_options;
+    namespace po = program_options;
 
     po::options_description desc("Options");
     desc.add_options()
             ("help", "print this help message")
             ("version", "show version information")
             ("ibus", "use this if you are ibus")
-            ("dump-xml", "dump ibus engine xml to stdout")
-            ("script", po::value<string > (),
-            "specify a startup script file"
+            ("xml", "dump ibus engine xml to stdout")
+            ("shell", "open lua shell (debugging use)")
+            ("config", po::value<string > (),
+            "specify a startup config file"
             "default: " APP_STARTUP_SCRIPT_PATH);
 
     try {
