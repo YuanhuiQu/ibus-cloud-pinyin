@@ -20,17 +20,23 @@ extern "C" {
 
 namespace lua {
 
+    /**
+     * lua type, defined same as LUA_T*
+     */
     enum LuaType {
-        NIL = 0,
-        BOOLEAN,
-        LIGHT_USER_DATA,
-        NUMBER,
-        STRING,
-        TABLE,
-        FUNCTION,
-        USER_DATA,
-        THREAD
+        NIL = LUA_TNIL,
+        BOOLEAN = LUA_TBOOLEAN,
+        LIGHT_USER_DATA = LUA_TLIGHTUSERDATA,
+        NUMBER = LUA_TNUMBER,
+        STRING = LUA_TSTRING,
+        TABLE = LUA_TTABLE,
+        FUNCTION = LUA_TFUNCTION,
+        USER_DATA = LUA_TUSERDATA,
+        THREAD = LUA_TTHREAD,
+        NONE = LUA_TNONE,
     };
+    
+    typedef std::map<LuaIndex, LuaValue> LuaTable;
 
     class LuaValue {
     public:
@@ -50,7 +56,7 @@ namespace lua {
         const std::string get_string() const;
         const lua_Number get_number() const;
 
-        const std::map<LuaIndex, lua::LuaValue> get_table() const;
+        const LuaTable get_table() const;
 
         void set_nil();
         void set_boolean(const bool value);
@@ -65,10 +71,20 @@ namespace lua {
         std::string string_value;
         bool boolean_value;
         lua_Number number_value;
+        LuaTable table_content;
 
         friend class LuaState;
-        LuaValue(lua_State * L, int index = -1);
-        void read_from_stack(lua_State * L, int index = -1);
+        LuaValue(lua_State * L, int index = -1, int expand_level = 2);
+
+        /**
+         * read value directly from lua stack, private
+         * should be called from friend LuaState
+         *
+         * @param expand_level how many level table should be expanded,
+         *                     1 if only to expand this level (if is table)
+         */
+        void read_from_stack(lua_State * L,
+                int index = -1, int expand_level = 2);
     };
 
 }

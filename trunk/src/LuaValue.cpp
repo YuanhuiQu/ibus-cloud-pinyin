@@ -5,6 +5,7 @@
 
 #include <boost/format.hpp>
 #include "LuaValue.h"
+#include "LuaException.h"
 
 lua::LuaValue::LuaValue(const lua::LuaValue & that) {
     operator =(that);
@@ -66,11 +67,8 @@ void lua::LuaValue::set_string(const std::string value) {
     boolean_value = !value.empty();
 }
 
-/**
- * read a value from lua stack, private use
- */
-void lua::LuaValue::read_from_stack(lua_State * L, int index) {
-    switch (lua_type(L, index)) {
+void lua::LuaValue::read_from_stack(lua_State * L, int index, int expand_level) {
+    switch (type = (lua::LuaType)lua_type(L, index)) {
         case LUA_TNIL:
             set_nil();
             break;
@@ -87,7 +85,24 @@ void lua::LuaValue::read_from_stack(lua_State * L, int index) {
             set_string((std::string)lua_tostring(L, index));
             break;
         case LUA_TTABLE:
-            // TODO: iterative get table content
+            if (expand_level > 0) {
+                // table can only be read in
+                // when directly get value from lua stack
+                // table is in the stack at index 'index'
+                // traversal this table
+                int table_index = index > 0 ? index : index - 1;
+                for (lua_pushnil(L);
+                        lua_next(L, table_index) != 0;
+                        lua_pop(L, 1)) {
+                    LuaIndex key
+                            = (lua_type(L, -2) == LUA_TSTRING
+                            ? LuaIndex(lua_tostring(L, -2))
+                            : LuaIndex(lua_tonumber(L, -2)));
+                    LuaValue value(L, -1, expand_level - 1);
+                    table_content.insert(std::pair<LuaIndex, LuaValue >
+                            (key, value));
+                }
+            }
             break;
         case LUA_TFUNCTION:
         case LUA_TLIGHTUSERDATA:
@@ -95,12 +110,15 @@ void lua::LuaValue::read_from_stack(lua_State * L, int index) {
         case LUA_TUSERDATA:
         default:
             // not supported
-            LUA_FATAL_ERROR("LuaValue::read_from_stack: not supported lua_type");
+            LUA_WARNING("LuaValue::read_from_stack: not supported lua_type");
+            string_value = "";
+            number_value = 0;
+            boolean_value = false;
     }
 }
 
-lua::LuaValue::LuaValue(lua_State * L, int index) {
-    read_from_stack(L, index);
+lua::LuaValue::LuaValue(lua_State * L, int index, int expand_level) {
+    read_from_stack(L, index, expand_level);
 }
 
 const bool lua::LuaValue::get_boolean() const {
@@ -113,6 +131,10 @@ const lua_Number lua::LuaValue::get_number() const {
 
 const std::string lua::LuaValue::get_string() const {
     return string_value;
+}
+
+const lua::LuaTable lua::LuaValue::get_table() const {
+    return table_content;
 }
 
 const lua::LuaType lua::LuaValue::get_type() const {
@@ -141,5 +163,6 @@ lua::LuaValue & lua::LuaValue::operator =(const lua::LuaValue & that) {
     string_value = that.string_value;
     boolean_value = that.boolean_value;
     number_value = that.number_value;
+    table_content = that.table_content;
     return *this;
 }
