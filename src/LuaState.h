@@ -35,7 +35,7 @@ namespace lua {
 
     class LuaState : boost::noncopyable {
     public:
-        LuaState();
+        LuaState(int table_expand_level = 2);
         ~LuaState();
 
         /**
@@ -85,6 +85,18 @@ namespace lua {
          */
         bool register_function(const std::string name, LuaFunction * function);
 
+        /**
+         * set table expand level
+         * not thread safe
+         */
+        void set_table_expand_level(int table_expand_level);
+
+        /**
+         * get table expand level
+         * not thread safe
+         */
+        int get_table_expand_level() const;
+        
         void self_check();
 
     private:
@@ -98,6 +110,11 @@ namespace lua {
          * @return true if successful
          */
         bool try_reach(const bool clean_indexes = true);
+
+        /**
+         * table expand level
+         */
+        int table_expand_level;
 
         /**
          * pop elements left in stack, call this if try_reach successed

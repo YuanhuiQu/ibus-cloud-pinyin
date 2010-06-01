@@ -31,7 +31,7 @@ static const char WRAPPED_LUA_CFUNCTION_NAME[] = "_wrapped_cfunc";
 std::map<lua_State *, lua::LuaState *> lua::LuaState::wrapped_states;
 boost::mutex lua::LuaState::wrapped_states_mutex;
 
-lua::LuaState::LuaState() {
+lua::LuaState::LuaState(int table_expand_level) {
     L = luaL_newstate();
     luaL_openlibs(L);
     lua_register(L, WRAPPED_LUA_CFUNCTION_NAME, lua::LuaState::wrapped_cfunction);
@@ -39,6 +39,7 @@ lua::LuaState::LuaState() {
         boost::mutex::scoped_lock scoped_lock(wrapped_states_mutex);
         wrapped_states[L] = this;
     }
+    this->table_expand_level = table_expand_level;
     reach_pushed_count = 0;
 }
 
@@ -64,7 +65,7 @@ lua::LuaState::operator const LuaValue() {
     lua::LuaValue r;
     boost::recursive_mutex::scoped_lock scoped_mutex(stack_mutex);
     if (try_reach()) {
-        r.read_from_stack(L, -1);
+        r.read_from_stack(L, -1, table_expand_level);
         unreach();
     }
     return r;
@@ -172,13 +173,14 @@ lua::LuaState & lua::LuaState::operator <<(const LuaValue& value) {
             break;
         case TABLE:
             // TODO: impl. push a table
+            LUA_FATAL_ERROR("LuaState: push a table not implemented");
             break;
     }
     return *this;
 }
 
 lua::LuaState & lua::LuaState::operator >>(lua::LuaValue& value) {
-    value.read_from_stack(L, -1);
+    value.read_from_stack(L, -1, table_expand_level);
     lua_pop(L, 1);
     return *this;
 }
@@ -255,3 +257,12 @@ int lua::LuaState::wrapped_cfunction(lua_State * L) {
 
     return (int) (results.size());
 }
+
+int lua::LuaState::get_table_expand_level() const {
+    return table_expand_level;
+}
+
+void lua::LuaState::set_table_expand_level(int table_expand_level) {
+    this->table_expand_level = table_expand_level;
+}
+
