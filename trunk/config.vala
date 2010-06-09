@@ -19,7 +19,7 @@ namespace icp {
 			Error error;
 			OptionContext context = new OptionContext("- cloud pinyin client for ibus");
 			context.add_main_entries({entrie_script, entrie_version, entrie_ibus, entrie_xml, entrie_null}, null);
-			// context.add_group(gtk_get_option_group(TRUE));
+
 			try {
 				context.parse(ref args);
 			} catch (OptionError e) {
