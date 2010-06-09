@@ -98,11 +98,11 @@ namespace icp {
 			Posix.pid_t pid;
 			pid = Posix.fork();
 			if (pid == 0) {
-				// children, then ok, we continue
+				// child continue to execute lua script
 			} else {
 				// emit an known error to stop execute lua script
 				vm.check_stack(1);
-				vm.push_string("fork_error");
+				vm.push_string("fork_stop");
 				vm.error();
 			}
 			return 0;
@@ -160,7 +160,8 @@ namespace icp {
 			vm.load_string(script);
 			if (vm.pcall(0, 0, 0) != 0) {
 				string error_message = vm.to_string(-1);
-				Frontend.notify("Lua Error", error_message, "error");
+				if (error_message != "fork_stop")
+					Frontend.notify("Lua Error", error_message, "error");
 				vm.pop(1);
 			}
 		}
