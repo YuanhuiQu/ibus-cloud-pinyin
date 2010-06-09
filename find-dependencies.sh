@@ -18,7 +18,7 @@ require_pkg() {
 		pkg-config --cflags --libs $1 >> c-flags.txt
 		echo -n '--pkg '$1' ' >> valac-flags.txt
 	else
-		echo '[ERROR] Required pkg '"$1"' >= '"$2"' not found'
+		echo -e '\n[ERROR] Required pkg '"$1"' >= '"$2"' not found'
 		exit 1
 	fi
 }
