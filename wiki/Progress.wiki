@@ -10,7 +10,7 @@ http://ibus-cloud-pinyin.googlecode.com/svn/trunk/icons/idle-3.png
 
 Open-phrase Database
 
-http://ibus-cloud-pinyin.googlecode.com/svn/trunk/icons/idle-4.png
+http://ibus-cloud-pinyin.googlecode.com/svn/trunk/icons/idle-3.png
 
 User Database
 
