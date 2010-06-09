@@ -30,14 +30,14 @@ all: ibus-cloud-pinyin
 
 ibus-cloud-pinyin: $(CFLAGFILE) $(CSRCS)
 	@$(ECHO) "$(MSG_PREFIX)Building $@ ...$(MSG_SUFFIX)"
-	@$(CC) $(CFLAGS) $(CSRCS) -o $@
+	$(CC) $(CFLAGS) $(CSRCS) -o $@
 
 $(CSRCS): $(VALACFLAGFILE) $(VALASRCS)
 	@$(ECHO) "$(MSG_PREFIX)Generating C files ...$(MSG_SUFFIX)"
 	@-rm -rf $(CSRCS)
-	@$(VALAC) $(VALAFLAGS) --disable-warnings -q -C $(VALASRCS)
+	$(VALAC) $(VALAFLAGS) --disable-warnings -q -C $(VALASRCS)
 	@$(ECHO) "$(MSG_PREFIX)Patching main.c (workaround for valac) ...$(MSG_SUFFIX)"
-	@sed -i 's/gdk_threads_init/dbus_threads_init_default();gdk_threads_init/' main.c
+	sed -i 's/gdk_threads_init/dbus_threads_init_default();gdk_threads_init/' main.c
 
 $(CFLAGFILE) $(VALACFLAGFILE): find-dependencies.sh
 	@$(ECHO) "$(MSG_PREFIX)Finding dependencies ...$(MSG_SUFFIX)"
@@ -54,9 +54,9 @@ install: ibus-cloud-pinyin $(ICONFILES);
 	@$(MKDIR) $(PREFIX)/share/ibus-cloud-pinyin/engine
 	@$(MKDIR) $(PREFIX)/share/ibus-cloud-pinyin/db
 	@$(MKDIR) $(PREFIX)/share/ibus-cloud-pinyin/conf
-	@$(INSTALL_DATA) $(ICONFILES) $(PREFIX)/share/ibus-cloud-pinyin/icons
-	@$(INSTALL_EXEC) $< $(PREFIX)/share/ibus-cloud-pinyin/engine
+	$(INSTALL_DATA) $(ICONFILES) $(PREFIX)/share/ibus-cloud-pinyin/icons
+	$(INSTALL_EXEC) $< $(PREFIX)/share/ibus-cloud-pinyin/engine
 
 clean:
 	@$(ECHO) "$(MSG_PREFIX)Cleaning ...$(MSG_SUFFIX)"
-	@-rm -rf ibus-cloud-pinyin *.o $(CSRCS) $(CFLAGFILE) $(VALACFLAGFILE)
+	-rm -rf ibus-cloud-pinyin *.o $(CSRCS) $(CFLAGFILE) $(VALACFLAGFILE)

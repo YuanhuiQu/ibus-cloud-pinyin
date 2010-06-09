@@ -28,26 +28,40 @@ namespace icp {
 		}
 
 		public static void init() {
-			bus = new Bus();
-			factory = new Factory(bus.get_connection());
-			factory.add_engine("vala-debug", typeof(CloudPinyinEngine));
 			component = new Component (
-					"org.freedesktop.IBus.Vala",
-					"ValaTest", "0.0.1", "GPL",
-					"Peng Huang <shawn.p.huang@gmail.com>",
-					"http://code.google.com/p/ibus/",
-					"",
-					"ibus-vala");
-			engine = new EngineDesc ("vala-debug",
-					"Vala (debug)",
-					"Vala demo input method",
+					"org.freedesktop.IBus.cloudpinyin",
+					"Cloud Pinyin", Config.version, "GPL",
+					"WU Jun <quark@lihdd.net>",
+					"http://code.google.com/p/ibus-cloud-pinyin/",
+					Config.global_data_path + "/engine/ibus-cloud-pinyin --ibus",
+					"ibus-cloud-pinyin");
+			engine = new EngineDesc ("cloud-pinyin",
+					"Cloud Pinyin",
+					"A client of cloud pinyin IME on ibus",
 					"zh_CN",
 					"GPL",
-					"Peng Huang <shawn.p.huang@gmail.com>",
-					"",
+					"WU Jun <quark@lihdd.net>",
+					Config.global_data_path + "/icons/ibus-cloud-pinyin.png",
 					"us");
 			component.add_engine (engine);
-			bus.register_component (component);
+		}
+
+		public static string get_component_xml() {
+			StringBuilder builder = new StringBuilder();
+			builder.append("<?xml version=\"1.0\" encoding=\"utf-8\"?>\n");
+			component.output(builder, 4);
+			return builder.str;
+		}
+
+		public static void register() {
+			bus = new Bus();
+			if (Config.launched_by_ibus) 
+				bus.request_name("org.freedesktop.IBus.cloudpinyin", 0);
+			else
+				bus.register_component (component);
+
+			factory = new Factory(bus.get_connection());
+			factory.add_engine("cloud-pinyin", typeof(CloudPinyinEngine));
 		}
 	}
 }

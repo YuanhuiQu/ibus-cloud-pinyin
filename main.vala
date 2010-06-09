@@ -18,6 +18,8 @@ public class Main {
 
 		if (Config.show_xml) {
 			// TODO: dump xml
+			IBusBinding.init();
+			stdout.printf("%s", IBusBinding.get_component_xml());			
 			return 0;
 		}
 
@@ -28,6 +30,7 @@ public class Main {
 		Frontend.init();
 		DBusBinding.init();
 		IBusBinding.init();
+		IBusBinding.register();
 
 		//Thread.usleep(10000);
 
