@@ -24,7 +24,7 @@ Pinyin Utilities
 
 http://ibus-cloud-pinyin.googlecode.com/svn/trunk/icons/idle-3.png
 
-Notification and Text Selection Support
+Notification and Text Selection
 
 http://ibus-cloud-pinyin.googlecode.com/svn/trunk/icons/idle-4.png
 
