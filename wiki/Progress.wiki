@@ -1,0 +1,37 @@
+=== 0.8.0-alpha ===
+
+Lua Binding
+
+http://ibus-cloud-pinyin.googlecode.com/svn/trunk/icons/idle-2.png
+
+DBus Binding
+
+http://ibus-cloud-pinyin.googlecode.com/svn/trunk/icons/idle-3.png
+
+Open-phrase Database
+
+http://ibus-cloud-pinyin.googlecode.com/svn/trunk/icons/idle-4.png
+
+User Database
+
+http://ibus-cloud-pinyin.googlecode.com/svn/trunk/icons/idle-1.png
+
+Lua Scripts
+
+http://ibus-cloud-pinyin.googlecode.com/svn/trunk/icons/idle-1.png
+
+Pinyin Utilities
+
+http://ibus-cloud-pinyin.googlecode.com/svn/trunk/icons/idle-3.png
+
+Notification and Text Selection Support
+
+http://ibus-cloud-pinyin.googlecode.com/svn/trunk/icons/idle-4.png
+
+IBus Engine
+
+http://ibus-cloud-pinyin.googlecode.com/svn/trunk/icons/idle-0.png
+
+Icons
+
+http://ibus-cloud-pinyin.googlecode.com/svn/trunk/icons/idle-4.png
