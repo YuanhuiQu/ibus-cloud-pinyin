@@ -7,58 +7,81 @@ namespace icp {
 
 		HashMap<string, int> consonant_ids;
 		HashMap<string, int> vowel_ids;
-		
+
+		HashMap<int, string> consonant_reverse_ids;
+		HashMap<int, string> vowel_reverse_ids;
+
 		class Id {
 			public int consonant { get; private set; }
 			public int vowel { get; private set; }
-			public Id(string pinyin) {
-				string vowel_str;
-				if (pinyin.length > 1 && consonant_ids.contains(pinyin[0:2])) {
-					consonant = consonant_ids[pinyin[0:2]];
-					vowel_str = pinyin[2:pinyin.length];
-				} else if (pinyin.length > 0 && consonant_ids.contains(pinyin[0:1])) {
-					consonant = consonant_ids[pinyin[0:1]];
-					vowel_str = pinyin[1:pinyin.length];
+			public Id(string? pinyin = null, int? cid = null, int? vid = null) {
+				if (pinyin != null) {
+					string vowel_str;
+					if (pinyin.length > 1 && consonant_ids.contains(pinyin[0:2])) {
+						consonant = consonant_ids[pinyin[0:2]];
+						vowel_str = pinyin[2:pinyin.length];
+					} else if (pinyin.length > 0 && consonant_ids.contains(pinyin[0:1])) {
+						consonant = consonant_ids[pinyin[0:1]];
+						vowel_str = pinyin[1:pinyin.length];
+					} else {
+						consonant = 0;
+						vowel_str = pinyin;
+					}
+					if (vowel_ids.contains(vowel_str))
+						vowel = vowel_ids[vowel_str];
+					else vowel = -1;
+				} else if (cid != null && vid != null) {
+					consonant = cid;
+					vowel = vid;
 				} else {
+					// null pinyin
 					consonant = 0;
-					vowel_str = pinyin;
+					vowel = -1;
 				}
-				if (vowel_ids.contains(vowel_str))
-					vowel = vowel_ids[vowel_str];
-				else vowel = -1;
-			}			
+			}
 		}
 
 		class Sequence {
 			private ArrayList<string> sequence;
 			private ArrayList<Id> id_sequence;
 
-			public Sequence(string pinyins) {
+			public Sequence(string? pinyins = null, ArrayList<Id>? ids = null) {
 				// all characters not belonging to 'a'..'z' are seperators
 				sequence = new ArrayList<string>();
 				id_sequence = new ArrayList<Id>();
 
-				string pinyins_pre;
-				try {
-					pinyins_pre = /__+/.replace(/[^a-z]/.replace(pinyins, -1, 0, "_"), -1, 0, "_");
-				} catch (RegexError e) {
-					pinyins_pre = "";
-				}
-
-				for (int pos = 0; pos < pinyins_pre.length;) {
-					int len;
-					for (len = 6; len > 0; len--) {
-						if (pos + len <= pinyins_pre.length)
-							if (pinyins_pre[pos:pos + len] in valid_partial_pinyins)
-								break;
+				if (pinyins != null) {
+					// construct by pinyins string
+					string pinyins_pre;
+					try {
+						pinyins_pre = /__+/.replace(/[^a-z]/.replace(pinyins, -1, 0, "_"), -1, 0, "_");
+					} catch (RegexError e) {
+						pinyins_pre = "";
 					}
-					if (len == 0) {
-						// invalid, skip it
-						pos++;
-					} else {
-						sequence.add(pinyins_pre[pos:pos + len]);
-						id_sequence.add(new Id(pinyins_pre[pos:pos + len]));
-						pos += len;
+
+					for (int pos = 0; pos < pinyins_pre.length;) {
+						int len;
+						for (len = 6; len > 0; len--) {
+							if (pos + len <= pinyins_pre.length)
+								if (pinyins_pre[pos:pos + len] in valid_partial_pinyins)
+									break;
+						}
+						if (len == 0) {
+							// invalid, skip it
+							pos++;
+						} else {
+							sequence.add(pinyins_pre[pos:pos + len]);
+							id_sequence.add(new Id(pinyins_pre[pos:pos + len]));
+							pos += len;
+						}
+					}
+				} else if (ids != null) {
+					// construct by ids arraylist
+					foreach (Id id in ids) {
+						if (consonant_reverse_ids.contains(id.consonant) && vowel_reverse_ids.contains(id.vowel)) {
+							id_sequence.add(id);
+							sequence.add(consonant_reverse_ids[id.consonant] + vowel_reverse_ids[id.vowel]);
+						}
 					}
 				}
 			}
@@ -604,6 +627,21 @@ namespace icp {
 			vowel_ids["un"] = 54;
 			vowel_ids["uo"] = 55;
 			vowel_ids["v"] = 56;
+
+			consonant_reverse_ids = new HashMap<int, string>();
+			vowel_reverse_ids = new HashMap<int, string>();
+
+			foreach (var entry in consonant_ids)
+				consonant_reverse_ids[entry.value] = entry.key;
+
+			foreach (var entry in vowel_ids)
+				vowel_reverse_ids[entry.value] = entry.key;
+
+			// for zero consonant
+			consonant_reverse_ids[0] = "";
+
+			// for partial pinyin
+			vowel_reverse_ids[-1] = "";
 		}
 	}
 }

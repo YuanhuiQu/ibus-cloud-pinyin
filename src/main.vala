@@ -25,6 +25,7 @@ public class Main {
 		Pinyin.init();
 		Pinyin.Database.init();
 		Pinyin.UserDatabase.init();
+
 		LuaBinding.init();
 		Frontend.init();
 		DBusBinding.init();

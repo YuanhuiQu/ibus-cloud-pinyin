@@ -24,6 +24,12 @@ namespace icp {
 				public string quick_convert (string pinyins) {
 					return icp.Pinyin.Database.greedy_convert(new Pinyin.Sequence(pinyins));
 				}
+
+				public string quick_reverse_convert (string content) {
+					Pinyin.Sequence ps;
+					icp.Pinyin.Database.reverse_convert(content, out ps);
+					return ps.to_string();
+				}
 			}
 
 		public static void init() {

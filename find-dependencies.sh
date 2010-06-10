@@ -2,6 +2,8 @@
 
 CFLAGFILE=c-flags.txt
 VALACFLAGFILE=valac-flags.txt
+PACKAGES_PKGCONFIG=''
+PACKAGES_VALAC=''
 
 error() {
 	rm -f $CFLAGFILE $VALACFLAGFILE 2>/dev/null
@@ -20,8 +22,8 @@ require_pkg() {
 	echo -n "    $1: "
 	if pkg-config --atleast-version=$2 $1; then
 		pkg-config --modversion $1
-		pkg-config --cflags --libs $1 >> c-flags.txt
-		echo -n '--pkg '$1' ' >> valac-flags.txt
+		PACKAGES_PKGCONFIG="$PACKAGES_PKGCONFIG $1"
+		PACKAGES_VALAC="$PACKAGES_VALAC --pkg $1"
 	else
 		echo 'not found'
 		error 'Required pkg '"$1"' >= '"$2"' not found'
@@ -63,3 +65,7 @@ require_pkg sqlite3 3
 if ! lua -e 'require "socket.http"' 1>/dev/null 2>/dev/null; then
 	error 'Runtime-required luasocket not found'
 fi
+
+# output results
+pkg-config --cflags --libs $PACKAGES_PKGCONFIG > $CFLAGFILE
+echo -n $PACKAGES_VALAC > $VALACFLAGFILE

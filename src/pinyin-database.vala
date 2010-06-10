@@ -15,7 +15,7 @@ namespace icp {
 			}
 
 			private UserDatabase() { }
-			
+
 			public static bool response (string pinyin, string content, int priority) {
 				if (!responses.contains(pinyin) 
 						|| responses.get(pinyin).priority < priority) {
@@ -52,10 +52,82 @@ namespace icp {
 
 			public static void* init() {
 				assert(Sqlite.Database.open("/usr/share/ibus-cloud-pinyin/db/main.db", out db) 
-					== Sqlite.OK);
+						== Sqlite.OK);
 				db.exec("PRAGMA cache_size = 16384;\n PRAGMA temp_store = MEMORY;");
 
 				return null;
+			}
+
+			public static bool reverse_convert(string content, out Sequence pinyins) {
+				bool successful = true;
+				ArrayList<Pinyin.Id> ids = new ArrayList<Pinyin.Id>();
+
+				for (int pos = 0; pos < content.length; ) {
+					// IMPROVE: allow query longer phrases (also need sql index)
+					int phrase_length_max = 5;
+					if (pos + phrase_length_max >= content.length) phrase_length_max = (int)content.length - pos - 1;
+
+					int matched_length = 0;
+					// note that phrase_length is real phrase length - 1 for easily building sql query string
+					for (int phrase_length = phrase_length_max; phrase_length >= 0; phrase_length--) {
+						string query = "SELECT ";
+						for (int i = 0; i <= phrase_length; i++) {
+							query += "s%d,y%d%c".printf(i, i, (i == phrase_length) ? ' ':',');
+						}
+						query += " FROM main.py_phrase_%d WHERE phrase=\"%s\" LIMIT 1"
+							.printf(phrase_length, content[pos:pos + phrase_length + 1]);
+
+						// query
+						Sqlite.Statement stmt;
+
+						if (db.prepare_v2(query, -1, out stmt, null) != Sqlite.OK) continue;
+						for (bool running = true; running;) {
+							switch (stmt.step()) {
+								case Sqlite.ROW: 
+									// got it, matched
+									if (matched_length == 0) {
+										matched_length = phrase_length + 1;
+										for (int i = 0; i <= phrase_length; i++)
+											ids.add(new Pinyin.Id(null, stmt.column_int(i * 2), stmt.column_int(i * 2 + 1)));
+									}
+									break;
+								case Sqlite.BUSY: 
+									Thread.usleep(1024);
+									break;
+								default: 
+									running = false;
+									break;
+							}
+						}
+
+						if (matched_length > 0) break;
+					}
+
+					if (matched_length == 0) {
+						// try regonise it as a normal pinyin
+						int pinyin_length = 6;
+						if (pos + pinyin_length >= content.length) pinyin_length = (int)content.length - pos;
+						for (; pinyin_length > 0; pinyin_length--) {
+							if (content[pos:pos + pinyin_length] in valid_partial_pinyins) {
+								// got it
+								matched_length = pinyin_length;
+								ids.add(new Id(content[pos:pos + pinyin_length]));
+								break;
+							}
+						}
+					}
+
+					if (matched_length == 0) {
+						// not matched anyway, ignore that character
+						successful = false;
+						pos++;
+					} else {
+						pos += matched_length;
+					}
+				}
+
+				pinyins = new Sequence(null, ids);
+				return successful;
 			}
 
 			public static void query(Sequence pinyins, 
