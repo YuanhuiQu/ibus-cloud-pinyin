@@ -5,6 +5,7 @@ namespace icp {
 		private static LuaVM vm;
 		private static ThreadPool thread_pool;
 		private static Posix.pid_t main_pid;
+		private static Gee.LinkedList<string> script_pool;
 
 		private LuaBinding() {
 			// this class is used as namespace
@@ -109,6 +110,8 @@ namespace icp {
 
 
 		public static void init() {
+			script_pool = new Gee.LinkedList<string>();
+
 			vm = new LuaVM();
 			vm.open_libs();
 
@@ -167,8 +170,7 @@ correction =
 			// prevent executing them two times
 			if (Posix.getpid() != main_pid) return;
 
-			string script = "%s".printf((string)pscript);
-			vm.load_string(script);
+			vm.load_string((string)pscript);
 			if (vm.pcall(0, 0, 0) != 0) {
 				string error_message = vm.to_string(-1);
 				if (error_message != "fork_stop")
@@ -180,7 +182,14 @@ correction =
 		public static void do_string(string script) {
 			// do all things in thread pool
 			try {
-				thread_pool.push((void*)script);
+				// attention: script may be unavailabe after pushed into thread_pool
+				// thread_pool.push((void*)script);
+
+				// do some cleanning when possible
+				if (thread_pool.unprocessed() == 0) script_pool.clear();
+				// push script into script_pool to keep it safe
+				script_pool.add(script);
+				thread_pool.push((void*)script_pool.last());
 			} catch (ThreadError e) {
 				stderr.printf("LuaBinding fails to launch thread from thread pool: %s\n", e.message);
 			}
