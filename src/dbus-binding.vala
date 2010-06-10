@@ -6,6 +6,8 @@ namespace icp {
 		private static dynamic DBus.Object bus;
 		private static CloudPinyin server;
 
+		// keep this server only running by main process
+		// must not fork() in thread excuting glib main loop in main process 
 		[DBus (name = "org.ibus.CloudPinyin")]
 			public class CloudPinyin : Object {
 

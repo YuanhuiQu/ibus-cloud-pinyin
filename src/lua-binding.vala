@@ -43,7 +43,7 @@ namespace icp {
 			if (vm.is_string(1) && vm.is_string(2)) {
 				string pinyins = vm.to_string(1);
 				string content = vm.to_string(2);
-				int priority = 1;
+				int priority = 127;
 				if (vm.is_number(3)) priority = vm.to_integer(3);
 				icp.Pinyin.UserDatabase.response(pinyins, content, priority);
 			}
@@ -184,7 +184,6 @@ correction =
 			} catch (ThreadError e) {
 				stderr.printf("LuaBinding fails to launch thread from thread pool: %s\n", e.message);
 			}
-			stderr.printf("max: %d unproc: %u num: %u\n", thread_pool.get_max_threads(), thread_pool.unprocessed (), thread_pool.get_num_threads ());
 		}
 
 		public static void load_configuration() {
