@@ -11,6 +11,10 @@ namespace icp {
 		HashMap<int, string> consonant_reverse_ids;
 		HashMap<int, string> vowel_reverse_ids;
 
+		// adjustments for pinyin default cutting
+		// length: 4 to 8
+		HashMap<string, string> cutting_adjusts;
+
 		class Id {
 			public int consonant { get; private set; }
 			public int vowel { get; private set; }
@@ -45,6 +49,17 @@ namespace icp {
 			private ArrayList<string> sequence;
 			private ArrayList<Id> id_sequence;
 
+			private static bool is_valid_pinyin_begin(string pinyins, int start, int len_max) {
+				// used by Sequence string parser
+				if (pinyins.length <= start) return true;
+				if (pinyins[start] == ' ') return true;
+				for (int i = 1; i <= len_max && i + start <= pinyins.length; i++) {
+					if (!valid_partial_pinyins.contains(pinyins[start:start+i]))
+						return false;
+				}
+				return true;
+			}
+
 			public Sequence(string? pinyins = null, ArrayList<Id>? ids = null) {
 				// all characters not belonging to 'a'..'z' are seperators
 				sequence = new ArrayList<string>();
@@ -54,33 +69,62 @@ namespace icp {
 					// construct by pinyins string
 					string pinyins_pre;
 					try {
-						pinyins_pre = /__+/.replace(/[^a-z]/.replace(pinyins, -1, 0, "_"), -1, 0, "_");
+						pinyins_pre = /__+/.replace(
+								/[^a-z]/.replace(pinyins, -1, 0, "_"), -1, 0, "_"
+								);
 					} catch (RegexError e) {
 						pinyins_pre = "";
 					}
 
 					for (int pos = 0; pos < pinyins_pre.length;) {
-						int len;
-						for (len = 6; len > 0; len--) {
-							if (pos + len <= pinyins_pre.length)
-								if (pinyins_pre[pos:pos + len] in valid_partial_pinyins)
-									break;
+						int len = 0;
+						// consider adjusted cuttings
+						for (int l = 8; l >= 4; l--) {
+							if (l + pos <= pinyins_pre.length 
+									&& cutting_adjusts.contains(pinyins_pre[pos:pos+l])) {
+								// recheck, do not break following pinyins
+								if (!is_valid_pinyin_begin(pinyins_pre, pos + l, 2)) continue;
+								// use selected adjusted cutting
+								var pinyin_splited
+									= cutting_adjusts[pinyins_pre[pos:pos+l]].split(" ");
+								foreach (string pinyin_item in pinyin_splited) {
+									sequence.add(pinyin_item);
+									id_sequence.add(new Id(pinyin_item));
+								}
+								len = l;
+								break;
+							}
 						}
+
+						// standard one pinyin cutting
+						if (len == 0)
+							for (len = 6; len > 0; len--) {
+								if (pos + len <= pinyins_pre.length) {
+									if (pinyins_pre[pos:pos + len] in valid_partial_pinyins) {
+										// consider one step futher
+										if (!is_valid_pinyin_begin(pinyins_pre, pos + len, 1))
+											continue;
+										sequence.add(pinyins_pre[pos:pos + len]);
+										id_sequence.add(new Id(pinyins_pre[pos:pos + len]));
+										break;
+									}
+								}
+							}
 						if (len == 0) {
 							// invalid, skip it
 							pos++;
 						} else {
-							sequence.add(pinyins_pre[pos:pos + len]);
-							id_sequence.add(new Id(pinyins_pre[pos:pos + len]));
 							pos += len;
 						}
 					}
 				} else if (ids != null) {
 					// construct by ids arraylist
 					foreach (Id id in ids) {
-						if (consonant_reverse_ids.contains(id.consonant) && vowel_reverse_ids.contains(id.vowel)) {
+						if (consonant_reverse_ids.contains(id.consonant)
+							&& vowel_reverse_ids.contains(id.vowel)) {
 							id_sequence.add(id);
-							sequence.add(consonant_reverse_ids[id.consonant] + vowel_reverse_ids[id.vowel]);
+							sequence.add(consonant_reverse_ids[id.consonant] 
+								+ vowel_reverse_ids[id.vowel]);
 						}
 					}
 				}
@@ -642,6 +686,153 @@ namespace icp {
 
 			// for partial pinyin
 			vowel_reverse_ids[-1] = "";
+
+			// adjust cutting list
+			cutting_adjusts = new HashMap<string, string>();
+			cutting_adjusts["angang"] = "an gang";
+			cutting_adjusts["ange"] = "an ge";
+			cutting_adjusts["bana"] = "ba na";
+
+			cutting_adjusts["bange"] = "ban ge";
+			cutting_adjusts["bengai"] = "ben gai";
+			cutting_adjusts["binan"] = "bi nan";
+			cutting_adjusts["chana"] = "cha na";
+
+			cutting_adjusts["chenei"] = "che nei";
+			cutting_adjusts["chengang"] = "chen gang";
+			cutting_adjusts["chuangan"] = "chuan gan";
+			cutting_adjusts["chuangei"] = "chuan gei";
+			cutting_adjusts["chuna"] = "chu na";
+			cutting_adjusts["chunan"] = "chu nan";
+			cutting_adjusts["danai"] = "da nai";
+
+			cutting_adjusts["danao"] = "da nao";
+			cutting_adjusts["daneng"] = "da neng";
+			cutting_adjusts["dangai"] = "dan gai";
+			cutting_adjusts["dangang"] = "dan gang";
+			cutting_adjusts["dangao"] = "dan gao";
+			cutting_adjusts["dange"] = "dan ge";
+			cutting_adjusts["dunang"] = "du nang";
+			cutting_adjusts["eran"] = "e ran";
+
+			cutting_adjusts["eren"] = "e ren";
+			cutting_adjusts["fangao"] = "fan gao";
+
+			cutting_adjusts["fenge"] = "fen ge";
+			cutting_adjusts["fengei"] = "fen gei";
+			cutting_adjusts["ganga"] = "gan ga";
+
+			cutting_adjusts["gangan"] = "gan gan";
+			cutting_adjusts["guao"] = "gu ao";
+			cutting_adjusts["guangai"] = "guan gai";
+			cutting_adjusts["hangai"] = "han gai";
+
+			cutting_adjusts["henan"] = "he nan";
+			cutting_adjusts["henei"] = "he nei";
+			cutting_adjusts["heneng"] = "he neng";
+			cutting_adjusts["hengao"] = "hen gao";
+			cutting_adjusts["huana"] = "hua na";
+			cutting_adjusts["huanan"] = "hua nan";
+			cutting_adjusts["huaneng"] = "hua neng";
+			cutting_adjusts["huange"] = "huan ge";
+			cutting_adjusts["huangei"] = "huan gei";
+			cutting_adjusts["hunao"] = "hu nao";
+			cutting_adjusts["jiana"] = "jia na";
+
+			cutting_adjusts["jianeng"] = "jia neng";
+			cutting_adjusts["jiange"] = "jian ge";
+			cutting_adjusts["jiangou"] = "jian gou";
+			cutting_adjusts["jinan"] = "ji nan";
+			cutting_adjusts["jineng"] = "ji neng";
+			cutting_adjusts["jingang"] = "jin gang";
+			cutting_adjusts["jingen"] = "jin gen";
+			cutting_adjusts["kange"] = "kan ge";
+
+			cutting_adjusts["kena"] = "ke na";
+			cutting_adjusts["kenan"] = "ke nan";
+			cutting_adjusts["keneng"] = "ke neng";
+			cutting_adjusts["kunan"] = "ku nan";
+			cutting_adjusts["kunao"] = "ku nao";
+			cutting_adjusts["langan"] = "lan gan";
+
+			cutting_adjusts["liangang"] = "lian gang";
+			cutting_adjusts["liange"] = "lian ge";
+			cutting_adjusts["lina"] = "li na";
+			cutting_adjusts["lingang"] = "lin gang";
+			cutting_adjusts["lunei"] = "lu nei";
+			cutting_adjusts["luneng"] = "lu neng";
+			cutting_adjusts["manao"] = "ma nao";
+
+			cutting_adjusts["nana"] = "na na";
+
+			cutting_adjusts["nane"] = "na ne";
+			cutting_adjusts["naneng"] = "na neng";
+			cutting_adjusts["nangao"] = "nan gao";
+			cutting_adjusts["niangao"] = "nian gao";
+			cutting_adjusts["ninan"] = "ni nan";
+			cutting_adjusts["nineng"] = "ni neng";
+			cutting_adjusts["pangang"] = "pan gang";
+
+			cutting_adjusts["pinge"] = "pin ge";
+			cutting_adjusts["qinang"] = "qi nang";
+
+			cutting_adjusts["qinei"] = "qi nei";
+			cutting_adjusts["qineng"] = "qi neng";
+			cutting_adjusts["quna"] = "qu na";
+			cutting_adjusts["qunei"] = "qu nei";
+			cutting_adjusts["renao"] = "re nao";
+
+			cutting_adjusts["reneng"] = "re neng";
+			cutting_adjusts["rengan"] = "ren gan";
+			cutting_adjusts["renge"] = "ren ge";
+			cutting_adjusts["rengou"] = "ren gou";
+			cutting_adjusts["runei"] = "ru nei";
+			cutting_adjusts["runeng"] = "ru neng";
+			cutting_adjusts["sange"] = "san ge";
+
+			cutting_adjusts["sangen"] = "san gen";
+			cutting_adjusts["sangeng"] = "san geng";
+			cutting_adjusts["shangao"] = "shan gao";
+			cutting_adjusts["shange"] = "shan ge";
+			cutting_adjusts["shangou"] = "shan gou";
+			cutting_adjusts["shengan"] = "shen gan";
+			cutting_adjusts["shengang"] = "shen gang";
+			cutting_adjusts["shengao"] = "shen gao";
+			cutting_adjusts["shengou"] = "shen gou";
+			cutting_adjusts["sunan"] = "su nan";
+			cutting_adjusts["tange"] = "tan ge";
+
+			cutting_adjusts["wange"] = "wan ge";
+
+			cutting_adjusts["wengao"] = "wen gao";
+			cutting_adjusts["wenge"] = "wen ge";
+			cutting_adjusts["xiangei"] = "xian gei";
+
+			cutting_adjusts["xina"] = "xi na";
+			cutting_adjusts["xinao"] = "xi nao";
+			cutting_adjusts["xinen"] = "xi nen";
+			cutting_adjusts["xingan"] = "xin gan";
+			cutting_adjusts["xingang"] = "xin gang";
+			cutting_adjusts["xingao"] = "xin gao";
+			cutting_adjusts["xinge"] = "xin ge";
+			cutting_adjusts["yangai"] = "yan gai";
+
+			cutting_adjusts["yange"] = "yan ge";
+			cutting_adjusts["yinei"] = "yi nei";
+			cutting_adjusts["yineng"] = "yi neng";
+			cutting_adjusts["yunan"] = "yu nan";
+			cutting_adjusts["zange"] = "zan ge";
+
+			cutting_adjusts["zenan"] = "ze nan";
+			cutting_adjusts["zeneng"] = "ze neng";
+			cutting_adjusts["zhangang"] = "zhan gang";
+			cutting_adjusts["zhange"] = "zhan ge";
+			cutting_adjusts["zhene"] = "zhe ne";
+			cutting_adjusts["zhenge"] = "zhen ge";
+			cutting_adjusts["zhengou"] = "zhen gou";
+			cutting_adjusts["zhuangao"] = "zhuan gao";
+			cutting_adjusts["zhuangei"] = "zhuan gei";
+			cutting_adjusts["zunao"] = "zu nao";
 		}
 	}
 }
