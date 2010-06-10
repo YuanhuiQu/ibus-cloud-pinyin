@@ -38,9 +38,6 @@ namespace icp {
 
 			LuaBinding.load_configuration();
 
-			LuaBinding.load_configuration();
-			LuaBinding.load_configuration();
-
 			main_loop = new MainLoop (null, false);
 			main_loop.run();
 

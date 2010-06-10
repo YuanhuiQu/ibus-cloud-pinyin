@@ -30,6 +30,11 @@ namespace icp {
 					icp.Pinyin.Database.reverse_convert(content, out ps);
 					return ps.to_string();
 				}
+
+				public string format_pinyins (string pinyins) {
+					Pinyin.Sequence ps = new Pinyin.Sequence(pinyins);
+					return ps.to_string();
+				}
 			}
 
 		public static void init() {
