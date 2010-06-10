@@ -6,8 +6,7 @@ CC= gcc
 CFLAGS = `cat $(CFLAGFILE)` -pthread
 VALAFLAGS= `cat $(VALACFLAGFILE)` --pkg ibus-1.0 --pkg posix --thread --enable-checking --vapidir=.
 
-VALASRCS= main.vala dbus-binding.vala pinyin-utils.vala frontend-utils.vala config.vala pinyin-database.vala lua-binding.vala ibus-engine.vala
-CSRCS= main.c dbus-binding.c pinyin-utils.c frontend-utils.c config.c pinyin-database.c lua-binding.c ibus-engine.c
+SRCS= src/main.vala src/dbus-binding.vala src/pinyin-utils.vala src/frontend-utils.vala src/config.vala src/pinyin-database.vala src/lua-binding.vala src/ibus-engine.vala
 ICONFILES= icons/ibus-cloud-pinyin.png icons/idle-0.png icons/idle-1.png icons/idle-2.png icons/idle-3.png icons/idle-4.png icons/waiting-0.png icons/waiting-1.png icons/waiting-2.png icons/waiting-3.png icons/pinyin-disabled.png icons/pinyin-enabled.png 
 EXEFILES= src/ibus-cloud-pinyin
 
@@ -25,25 +24,24 @@ MSG_SUFFIX=\x1b[33;00m
 
 .PHONY: all clean install
 
-.NOTPARALLEL: $(CSRCS)
-
-.DELETE_ON_ERROR: main.db cloud-pinyin.xml $(CSRCS)
+.DELETE_ON_ERROR: main.db cloud-pinyin.xml
 
 all: $(EXEFILES) cloud-pinyin.xml main.db
 
-$(EXEFILES): $(CFLAGFILE) $(VALACFLAGFILE)
+$(EXEFILES): $(CFLAGFILE) $(VALACFLAGFILE) $(SRCS)
 	@$(MAKE) -C src ibus-cloud-pinyin
 
 $(CFLAGFILE) $(VALACFLAGFILE): find-dependencies.sh
 	@$(ECHO) "$(MSG_PREFIX)Finding dependencies ...$(MSG_SUFFIX)"
 	@find-dependencies.sh
 
-install: $(EXEFILES) $(ICONFILES) main.db cloud-pinyin.xml
+install: $(EXEFILES) $(ICONFILES) main.db cloud-pinyin.xml config.lua
 	@$(ECHO) "$(MSG_PREFIX)Installing (prefix=$(PREFIX)) ...$(MSG_SUFFIX)"
 	@$(MKDIR) $(PREFIX)/share/ibus-cloud-pinyin/db/
 	@$(MKDIR) $(PREFIX)/share/ibus-cloud-pinyin/icons/
 	@$(MKDIR) $(PREFIX)/share/ibus-cloud-pinyin/engine/
 	@$(MKDIR) $(PREFIX)/share/ibus/component/
+	$(INSTALL_DATA) config.lua $(PREFIX)/share/ibus-cloud-pinyin/
 	$(INSTALL_DATA) main.db $(PREFIX)/share/ibus-cloud-pinyin/db/
 	$(INSTALL_DATA) $(ICONFILES) $(PREFIX)/share/ibus-cloud-pinyin/icons/
 	$(INSTALL_DATA) cloud-pinyin.xml $(PREFIX)/share/ibus/component/
@@ -69,5 +67,5 @@ pinyin-database-1.2.99.tar.bz2:
 
 clean:
 	@$(ECHO) "$(MSG_PREFIX)Cleaning ...$(MSG_SUFFIX)"
-	-rm -rf ibus-cloud-pinyin *.o $(CSRCS) $(CFLAGFILE) $(VALACFLAGFILE) pinyin-database-1.2.99.tar.bz2 db/ cloud-pinyin.xml main.db
+	-rm -rf ibus-cloud-pinyin *.o $(CFLAGFILE) $(VALACFLAGFILE) pinyin-database-1.2.99.tar.bz2 db/ cloud-pinyin.xml main.db
 	-$(MAKE) -C src clean

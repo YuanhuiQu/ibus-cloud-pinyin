@@ -21,6 +21,8 @@ namespace icp {
 			try {
 				notification.show();
 			} catch (Error e) {
+				stdout.printf("Notification: %s %s %s\n", title, content, icon);
+				// then, just ignore
 				;
 			}
 		}
@@ -41,9 +43,7 @@ namespace icp {
 			clipboard.owner_change.connect(
 				() => {
 					lock(_selection) {
-						stdout.printf("owner change\n");
 						_selection = clipboard.wait_for_text();
-						stdout.printf("owner changed\n");
 						clipboard_update_time = get_current_time();
 					}
 				}
