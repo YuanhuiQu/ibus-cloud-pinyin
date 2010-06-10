@@ -29,9 +29,12 @@ public class Main {
 		Frontend.init();
 		DBusBinding.init();
 		IBusBinding.init();
-		IBusBinding.register();
 
-		LuaBinding.load_configuration();  // run in seperated thread
+		if (!Config.do_not_connect_ibus) {
+			IBusBinding.register();
+		}
+
+		LuaBinding.load_configuration();
 
 		new MainLoop (null, false).run();
 		

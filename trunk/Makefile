@@ -9,6 +9,7 @@ VALAFLAGS= `cat $(VALACFLAGFILE)` --pkg ibus-1.0 --pkg posix --thread --enable-c
 VALASRCS= main.vala dbus-binding.vala pinyin-utils.vala frontend-utils.vala config.vala pinyin-database.vala lua-binding.vala ibus-engine.vala
 CSRCS= main.c dbus-binding.c pinyin-utils.c frontend-utils.c config.c pinyin-database.c lua-binding.c ibus-engine.c
 ICONFILES= icons/ibus-cloud-pinyin.png icons/idle-0.png icons/idle-1.png icons/idle-2.png icons/idle-3.png icons/idle-4.png icons/waiting-0.png icons/waiting-1.png icons/waiting-2.png icons/waiting-3.png icons/pinyin-disabled.png icons/pinyin-enabled.png 
+EXEFILES= src/ibus-cloud-pinyin
 
 CFLAGFILE=c-flags.txt
 VALACFLAGFILE=valac-flags.txt
@@ -26,38 +27,47 @@ MSG_SUFFIX=\x1b[33;00m
 
 .NOTPARALLEL: $(CSRCS)
 
-all: ibus-cloud-pinyin 
+.DELETE_ON_ERROR: main.db cloud-pinyin.xml $(CSRCS)
 
-ibus-cloud-pinyin: $(CFLAGFILE) $(CSRCS)
-	@$(ECHO) "$(MSG_PREFIX)Building $@ ...$(MSG_SUFFIX)"
-	$(CC) $(CFLAGS) $(CSRCS) -o $@
+all: $(EXEFILES) cloud-pinyin.xml main.db
 
-$(CSRCS): $(VALACFLAGFILE) $(VALASRCS)
-	@$(ECHO) "$(MSG_PREFIX)Generating C files ...$(MSG_SUFFIX)"
-	@-rm -rf $(CSRCS)
-	#$(VALAC) $(VALAFLAGS) --disable-warnings -q -C $(VALASRCS)
-	$(VALAC) $(VALAFLAGS) -C $(VALASRCS)
-	@$(ECHO) "$(MSG_PREFIX)Patching main.c (workaround for valac) ...$(MSG_SUFFIX)"
-	sed -i 's/gdk_threads_init/dbus_threads_init_default();gdk_threads_init/' main.c
+$(EXEFILES): $(CFLAGFILE) $(VALACFLAGFILE)
+	@$(MAKE) -C src ibus-cloud-pinyin
 
 $(CFLAGFILE) $(VALACFLAGFILE): find-dependencies.sh
 	@$(ECHO) "$(MSG_PREFIX)Finding dependencies ...$(MSG_SUFFIX)"
 	@find-dependencies.sh
 
-ibus-engine-vala: test.vala
-	@valac --pkg ibus-1.0 --pkg enchant $^ -C
-	@valac -g --pkg ibus-1.0 --pkg enchant $^ -o $@
-
-install: ibus-cloud-pinyin $(ICONFILES);
+install: $(EXEFILES) $(ICONFILES) main.db cloud-pinyin.xml
 	@$(ECHO) "$(MSG_PREFIX)Installing (prefix=$(PREFIX)) ...$(MSG_SUFFIX)"
-	@$(MKDIR) $(PREFIX)/share/ibus-cloud-pinyin
-	@$(MKDIR) $(PREFIX)/share/ibus-cloud-pinyin/icons
-	@$(MKDIR) $(PREFIX)/share/ibus-cloud-pinyin/engine
-	@$(MKDIR) $(PREFIX)/share/ibus-cloud-pinyin/db
-	@$(MKDIR) $(PREFIX)/share/ibus-cloud-pinyin/conf
-	$(INSTALL_DATA) $(ICONFILES) $(PREFIX)/share/ibus-cloud-pinyin/icons
-	$(INSTALL_EXEC) $< $(PREFIX)/share/ibus-cloud-pinyin/engine
+	@$(MKDIR) $(PREFIX)/share/ibus-cloud-pinyin/db/
+	@$(MKDIR) $(PREFIX)/share/ibus-cloud-pinyin/icons/
+	@$(MKDIR) $(PREFIX)/share/ibus-cloud-pinyin/engine/
+	@$(MKDIR) $(PREFIX)/share/ibus/component/
+	$(INSTALL_DATA) main.db $(PREFIX)/share/ibus-cloud-pinyin/db/
+	$(INSTALL_DATA) $(ICONFILES) $(PREFIX)/share/ibus-cloud-pinyin/icons/
+	$(INSTALL_DATA) cloud-pinyin.xml $(PREFIX)/share/ibus/component/
+	$(INSTALL_EXEC) $< $(PREFIX)/share/ibus-cloud-pinyin/engine/
+
+cloud-pinyin.xml: $(EXEFILES)
+	@$(ECHO) "$(MSG_PREFIX)Creating ibus compoment xml file ...$(MSG_SUFFIX)"
+	@$(EXEFILES) -x > cloud-pinyin.xml
+
+main.db: db/main.db create-index.sql
+	@$(ECHO) "$(MSG_PREFIX)Clone open-phrase database ...$(MSG_SUFFIX)"
+	@cp db/main.db main.db
+	@$(ECHO) "$(MSG_PREFIX)Creating index. This may takes one minute. Please be patient ...$(MSG_SUFFIX)"
+	@sqlite3 main.db < create-index.sql
+
+db/main.db: pinyin-database-1.2.99.tar.bz2
+	@$(ECHO) "$(MSG_PREFIX)Extracting open-phrase database ...$(MSG_SUFFIX)"
+	@tar --no-same-owner -xjmf pinyin-database-1.2.99.tar.bz2
+
+pinyin-database-1.2.99.tar.bz2:
+	@$(ECHO) "$(MSG_PREFIX)Downloading open-phrase database ...$(MSG_SUFFIX)"
+	@wget -c http://ibus.googlecode.com/files/pinyin-database-1.2.99.tar.bz2
 
 clean:
 	@$(ECHO) "$(MSG_PREFIX)Cleaning ...$(MSG_SUFFIX)"
-	-rm -rf ibus-cloud-pinyin *.o $(CSRCS) $(CFLAGFILE) $(VALACFLAGFILE)
+	-rm -rf ibus-cloud-pinyin *.o $(CSRCS) $(CFLAGFILE) $(VALACFLAGFILE) pinyin-database-1.2.99.tar.bz2 db/ cloud-pinyin.xml main.db
+	-$(MAKE) -C src clean

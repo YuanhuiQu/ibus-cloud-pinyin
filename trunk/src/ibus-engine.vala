@@ -2,12 +2,18 @@ using IBus;
 
 namespace icp {
 	class IBusBinding {
+		// for connection
 		private static EngineDesc engine;
 		private static Component component;
 		private static Bus bus;
 		private static Factory factory;
 
 		class CloudPinyinEngine : Engine {
+			private string preedit;
+			private string full_preedit;
+			
+			
+
 			// override process_key_event to handle key events
 			public override bool process_key_event (uint keyval, uint keycode, uint state) {
 				// ignore release event
