@@ -30,7 +30,7 @@ http://ibus-cloud-pinyin.googlecode.com/svn/trunk/icons/idle-4.png
 
 IBus Engine
 
-http://ibus-cloud-pinyin.googlecode.com/svn/trunk/icons/idle-0.png
+http://ibus-cloud-pinyin.googlecode.com/svn/trunk/icons/idle-1.png
 
 Icons
 

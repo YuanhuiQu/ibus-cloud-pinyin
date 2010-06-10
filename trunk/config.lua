@@ -1,3 +1,5 @@
+print 'hello world'
+
 require 'socket'
 
 keys = {
@@ -15,4 +17,6 @@ masks = {
 	release  = 1073741824,
 }
 
+socket.sleep(2)
 print('done')
+
