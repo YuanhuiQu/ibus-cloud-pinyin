@@ -11,12 +11,12 @@ namespace icp {
 		[DBus (name = "org.ibus.CloudPinyin")]
 			public class CloudPinyin : Object {
 
-				// key interface for async engine call back
+				// key interface for child processes to call
 				public bool response (string pinyins, string content, int priority) {
 					return icp.Pinyin.UserDatabase.response(pinyins, content, priority);
 				}
 
-				// for later web ime use ...
+				// other programs use ...
 				public string try_request (string pinyins) {
 					return icp.Pinyin.UserDatabase.request(pinyins);
 				}

@@ -24,8 +24,10 @@ namespace icp {
 			}
 
 			Pinyin.init();
+			Pinyin.DoublePinyin.init();
 			Pinyin.Database.init();
 			Pinyin.UserDatabase.init();
+
 
 			LuaBinding.init();
 			Frontend.init();

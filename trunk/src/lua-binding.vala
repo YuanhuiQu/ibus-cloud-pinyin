@@ -5,7 +5,21 @@ namespace icp {
 		private static LuaVM vm;
 		private static ThreadPool thread_pool;
 		private static Posix.pid_t main_pid;
-		private static Gee.LinkedList<string> script_pool;
+		private static Gee.LinkedList<LuaTrunk> script_pool;
+
+		// since lua binding run one thread per process, keep current_engine
+		// static of this class in do_string() to track matched engine ....
+		private static IBusBinding.CloudPinyinEngine* current_engine;
+		
+		class LuaTrunk {
+			public string script;
+			public IBusBinding.CloudPinyinEngine* engine;
+
+			public LuaTrunk(string script, IBusBinding.CloudPinyinEngine* engine) {
+				this.script = script;
+				this.engine = engine;
+			}
+		}
 
 		private LuaBinding() {
 			// this class is used as namespace
@@ -53,11 +67,39 @@ namespace icp {
 
 		private static int l_action(LuaVM vm) {
 			if (Posix.getpid() != main_pid) return 0;
+			// check engine available
 			return 0;
 		}
 
 		private static int l_set_enable(LuaVM vm) {
 			if (Posix.getpid() != main_pid) return 0;
+
+			if (!vm.is_table(1)) return 0;
+
+			int vm_top = vm.get_top();
+			vm.check_stack(2);
+			// traverse that table (at pos 1)
+			for (vm.push_nil(); vm.next(1) != 0; vm.pop(1)) {
+				if (!vm.is_boolean(-1) || !vm.is_string(-2)) continue;
+
+				string k = vm.to_string(-2);
+				bool v = vm.to_boolean(-1);
+				bool* bind_value = null;
+				
+				switch(k) {
+					case "double_pinyin":
+						bind_value = &Config.double_pinyin_enabled;
+						break;
+					case "background_request":
+						bind_value = &Config.background_request_enabled;
+						break;
+					case "always_show_candidates":
+						bind_value = &Config.always_show_candidates_enabled;
+						break;
+				}
+				*bind_value = v;
+			}
+
 			return 0;
 		}
 
@@ -73,10 +115,45 @@ namespace icp {
 
 		private static int l_set_double_pinyin(LuaVM vm) {
 			if (Posix.getpid() != main_pid) return 0;
+			Pinyin.DoublePinyin.clear();
+
+			if (!vm.is_table(1)) return 0;
+
+			int vm_top = vm.get_top();
+			vm.check_stack(2);
+			// traverse that table (at pos 1)
+			for (vm.push_nil(); vm.next(1) != 0; vm.pop(1)) {
+				// key is at index -2 and value is at index -1
+				if (!vm.is_string(-1) || !vm.is_string(-2)) continue;
+
+				string double_pinyin = vm.to_string(-2);
+				string full_pinyin = vm.to_string(-1);
+				if (double_pinyin.length != 2) continue;
+				Pinyin.DoublePinyin.insert((int)double_pinyin[0], (int)double_pinyin[1], full_pinyin);
+			}
+			assert(vm.get_top() == vm_top);
+
 			return 0;
 		}
 
-		private static int l_register_key(LuaVM vm) {
+		private static int l_set_key(LuaVM vm) {
+			if (Posix.getpid() != main_pid) return 0;
+
+			if (vm.get_top() < 3 || (!vm.is_string(1) && !vm.is_number(1))
+				|| !vm.is_string(3) || !vm.is_number(2)) return 0;
+
+			uint key_value = 0;
+			if (vm.is_string(1)) {
+				string s = vm.to_string(1);
+				if (s.length > 0) key_value = (uint)s[0];
+			} else key_value = (uint)vm.to_number(1);
+
+			Config.Key key = new Config.Key(key_value, (uint)vm.to_number(2));
+			Config.set_key_action(key, vm.to_string(3));
+			return 0;
+		}
+
+		private static int l_set_candidate_labels(LuaVM vm) {
 			if (Posix.getpid() != main_pid) return 0;
 			return 0;
 		}
@@ -110,7 +187,7 @@ namespace icp {
 
 
 		public static void init() {
-			script_pool = new Gee.LinkedList<string>();
+			script_pool = new Gee.LinkedList<LuaTrunk>();
 
 			vm = new LuaVM();
 			vm.open_libs();
@@ -136,6 +213,7 @@ request =
 correction = 
 			 */
 			vm.register("set_double_pinyin", l_set_double_pinyin);
+			vm.register("set_candidate_labels", l_set_candidate_labels);
 			// vm.register("enable_double_pinyin", l_enable_double_pinyin);
 
 			vm.register("set_limit", l_set_limit);
@@ -143,7 +221,7 @@ correction =
 			   concurrency_request
 			   database_candidates
 			 */
-			vm.register("register_key", l_register_key);
+			vm.register("set_key", l_set_key);
 
 			// only make these engines async
 			vm.register("register_engine", l_register_engine);
@@ -165,12 +243,14 @@ correction =
 			main_pid = Posix.getpid();
 		}
 
-		private static void do_string_internal(void * pscript) {
+		private static void do_string_internal(void* ptrunk) {
 			// do not execute other script if being forked
 			// prevent executing them two times
+			LuaTrunk* trunk = (LuaTrunk*)ptrunk;
+			current_engine = trunk->engine;
 			if (Posix.getpid() != main_pid) return;
 
-			vm.load_string((string)pscript);
+			vm.load_string(trunk->script);
 			if (vm.pcall(0, 0, 0) != 0) {
 				string error_message = vm.to_string(-1);
 				if (error_message != "fork_stop")
@@ -179,7 +259,7 @@ correction =
 			}
 		}
 
-		public static void do_string(string script) {
+		public static void do_string(string script, IBusBinding.CloudPinyinEngine* pengine = null) {
 			// do all things in thread pool
 			try {
 				// attention: script may be unavailabe after pushed into thread_pool
@@ -188,7 +268,7 @@ correction =
 				// do some cleanning when possible
 				if (thread_pool.unprocessed() == 0) script_pool.clear();
 				// push script into script_pool to keep it safe
-				script_pool.add(script);
+				script_pool.add(new LuaTrunk(script, pengine));
 				thread_pool.push((void*)script_pool.last());
 			} catch (ThreadError e) {
 				stderr.printf("LuaBinding fails to launch thread from thread pool: %s\n", e.message);
