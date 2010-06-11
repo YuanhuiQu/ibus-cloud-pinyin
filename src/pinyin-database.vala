@@ -88,7 +88,7 @@ namespace icp {
 									if (matched_length == 0) {
 										matched_length = phrase_length + 1;
 										for (int i = 0; i <= phrase_length; i++)
-											ids.add(new Pinyin.Id(null, stmt.column_int(i * 2), stmt.column_int(i * 2 + 1)));
+											ids.add(new Pinyin.Id.id(stmt.column_int(i * 2), stmt.column_int(i * 2 + 1)));
 									}
 									break;
 								case Sqlite.BUSY: 
@@ -126,7 +126,7 @@ namespace icp {
 					}
 				}
 
-				pinyins = new Sequence(null, ids);
+				pinyins = new Sequence.ids(ids);
 				return successful;
 			}
 

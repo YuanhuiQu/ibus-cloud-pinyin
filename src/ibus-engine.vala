@@ -1,6 +1,8 @@
 using IBus;
+using Gee;
 
 namespace icp {
+
 	class IBusBinding {
 		// for connection
 		private static EngineDesc engine;
@@ -8,7 +10,28 @@ namespace icp {
 		private static Bus bus;
 		private static Factory factory;
 
-		class CloudPinyinEngine : Engine {
+		// constants
+		public static const uint key_state_filter
+			= ModifierType.SHIFT_MASK | ModifierType.LOCK_MASK | ModifierType.CONTROL_MASK 
+			| ModifierType.MOD1_MASK | ModifierType.MOD4_MASK | ModifierType.MOD5_MASK
+			| ModifierType.SUPER_MASK | ModifierType.RELEASE_MASK | ModifierType.META_MASK;
+
+		// active engines
+		/*
+		public static HashSet<CloudPinyinEngine*> active_engines;
+
+		protected static void set_active(CloudPinyinEngine* pengine, bool actived = true) {
+			lock (active_engines) {
+				if (actived)
+					active_engines.add(pengine);
+				else
+					// it is ok to remove an non-existed item
+					active_engines.remove(pengine);
+			}
+		}
+		*/
+
+		public class CloudPinyinEngine : Engine {
 			private string preedit = "";
 			private string full_preedit = "";
 
@@ -66,17 +89,20 @@ namespace icp {
 			}
 
 			public override void reset() {
+
 			}
 
 			public override void enable() {
 				enabled = true;
 				if (!inited) init();
 				update_properties();
+				// set_active(this);
 			}
 
 			public override void disable() {
 				enabled = false;
 				stdout.printf("called disable\n");
+				// set_active(this, false);
 			}
 
 			public override void focus_in() {
@@ -93,19 +119,25 @@ namespace icp {
 				switch (prop_name) {
 					case "mode":
 						pinyin_enabled = !pinyin_enabled;
-						break;
+					break;
 					case "status":
 						if (waiting_animation_timer == null)
 							start_waiting_animation();
 						else 
 							stop_waiting_animation();
-						break;
+					break;
 				}
 				update_properties();
 			}
-	
+
 			public override bool process_key_event(uint keyval, uint keycode, uint state) {
-				// ignore release event
+				string? action = Config.get_key_action(
+					new Config.Key(keyval, state & key_state_filter)
+					);
+				if (action != null) {
+					// consider action
+					stdout.printf("action: %s\n", action);
+				}
 				return false;
 			}
 

@@ -33,9 +33,12 @@ require_pkg() {
 require_program valac
 require_program pkg-config
 require_program gcc
+require_program sed
+require_program grep
 require_program touch
 require_program wget
 require_program tar
+require_program lua
 require_program sqlite3
 
 [ -e c-flags.txt ] && rm c-flags.txt

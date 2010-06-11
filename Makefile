@@ -1,23 +1,23 @@
 PREFIX ?= /usr
 
-VALAC= valac
-CC= gcc
+VALAC=valac
+CC=gcc
 
-CFLAGS = `cat $(CFLAGFILE)` -pthread
-VALAFLAGS= `cat $(VALACFLAGFILE)` --pkg ibus-1.0 --pkg posix --thread --enable-checking --vapidir=.
+CFLAGS=`cat $(CFLAGFILE)` -pthread
+VALAFLAGS=`cat $(VALACFLAGFILE)` --pkg ibus-1.0 --pkg posix --thread --enable-checking --vapidir=.
 
-SRCS= src/main.vala src/dbus-binding.vala src/pinyin-utils.vala src/frontend-utils.vala src/config.vala src/pinyin-database.vala src/lua-binding.vala src/ibus-engine.vala
-ICONFILES= icons/ibus-cloud-pinyin.png icons/idle-0.png icons/idle-1.png icons/idle-2.png icons/idle-3.png icons/idle-4.png icons/waiting-0.png icons/waiting-1.png icons/waiting-2.png icons/waiting-3.png icons/pinyin-disabled.png icons/pinyin-enabled.png 
-EXEFILES= src/ibus-cloud-pinyin
+SRCS=src/main.vala src/dbus-binding.vala src/pinyin-utils.vala src/frontend-utils.vala src/config.vala src/pinyin-database.vala src/lua-binding.vala src/ibus-engine.vala
+ICONFILES=icons/ibus-cloud-pinyin.png icons/idle-0.png icons/idle-1.png icons/idle-2.png icons/idle-3.png icons/idle-4.png icons/waiting-0.png icons/waiting-1.png icons/waiting-2.png icons/waiting-3.png icons/pinyin-disabled.png icons/pinyin-enabled.png 
+EXEFILES=src/ibus-cloud-pinyin
 
 CFLAGFILE=c-flags.txt
 VALACFLAGFILE=valac-flags.txt
 
-ECHO= echo -e
-INSTALL= install -p
-MKDIR= mkdir -p
-INSTALL_EXEC= $(INSTALL) -s -m 0755
-INSTALL_DATA= $(INSTALL) -m 0644
+ECHO=echo -e
+INSTALL=install -p
+MKDIR=mkdir -p
+INSTALL_EXEC=$(INSTALL) -s -m 0755
+INSTALL_DATA=$(INSTALL) -m 0644
 
 MSG_PREFIX=\x1b[32;01m=> \x1b[39;01m
 MSG_SUFFIX=\x1b[33;00m
