@@ -7,7 +7,7 @@ CFLAGS=`cat $(CFLAGFILE)` -pthread
 VALAFLAGS=`cat $(VALACFLAGFILE)` --pkg ibus-1.0 --pkg posix --thread --enable-checking --vapidir=.
 
 SRCS=src/main.vala src/dbus-binding.vala src/pinyin-utils.vala src/frontend-utils.vala src/config.vala src/pinyin-database.vala src/lua-binding.vala src/ibus-engine.vala
-ICONFILES=icons/ibus-cloud-pinyin.png icons/idle-0.png icons/idle-1.png icons/idle-2.png icons/idle-3.png icons/idle-4.png icons/waiting-0.png icons/waiting-1.png icons/waiting-2.png icons/waiting-3.png icons/pinyin-disabled.png icons/pinyin-enabled.png 
+ICONFILES=icons/ibus-cloud-pinyin.png icons/idle-0.png icons/idle-1.png icons/idle-2.png icons/idle-3.png icons/idle-4.png icons/waiting-0.png icons/waiting-1.png icons/waiting-2.png icons/waiting-3.png icons/pinyin-disabled.png icons/pinyin-enabled.png icons/traditional-disabled.png icons/traditional-enabled.png icons/offline.png
 EXEFILES=src/ibus-cloud-pinyin
 
 CFLAGFILE=c-flags.txt

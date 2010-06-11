@@ -65,10 +65,12 @@ namespace icp {
 				for (int pos = 0; pos < content.length; ) {
 					// IMPROVE: allow query longer phrases (also need sql index)
 					int phrase_length_max = 5;
-					if (pos + phrase_length_max >= content.length) phrase_length_max = (int)content.length - pos - 1;
+					if (pos + phrase_length_max >= content.length) 
+						phrase_length_max = (int)content.length - pos - 1;
 
 					int matched_length = 0;
-					// note that phrase_length is real phrase length - 1 for easily building sql query string
+					// note that phrase_length is real phrase length - 1 
+					// for easily building sql query string
 					for (int phrase_length = phrase_length_max; phrase_length >= 0; phrase_length--) {
 						string query = "SELECT ";
 						for (int i = 0; i <= phrase_length; i++) {
@@ -88,7 +90,8 @@ namespace icp {
 									if (matched_length == 0) {
 										matched_length = phrase_length + 1;
 										for (int i = 0; i <= phrase_length; i++)
-											ids.add(new Pinyin.Id.id(stmt.column_int(i * 2), stmt.column_int(i * 2 + 1)));
+											ids.add(new Pinyin.Id.id(stmt.column_int(i * 2), 
+														stmt.column_int(i * 2 + 1)));
 									}
 									break;
 								case Sqlite.BUSY: 
@@ -106,7 +109,9 @@ namespace icp {
 					if (matched_length == 0) {
 						// try regonise it as a normal pinyin
 						int pinyin_length = 6;
-						if (pos + pinyin_length >= content.length) pinyin_length = (int)content.length - pos;
+						if (pos + pinyin_length >= content.length) 
+							pinyin_length = (int)content.length - pos;
+
 						for (; pinyin_length > 0; pinyin_length--) {
 							if (content[pos:pos + pinyin_length] in valid_partial_pinyins) {
 								// got it
@@ -137,13 +142,6 @@ namespace icp {
 				// candidates is already a ref type, directly modify it
 				string where = "", query = "SELECT phrase, freqadj FROM (";
 
-				/**
-				 * sql sample:
-				 * SELECT  phrase, freqadj FROM (
-				 *   SELECT phrase, freq* 1 AS freqadj FROM main.py_phrase_0 WHERE s0=4 AND y0=29 UNION ALL
-				 *   SELECT phrase, freq * 2.33 AS freqadj FROM main.py_phrase_1 WHERE s0=4 AND y0=29 AND s1=4 AND y1=28
-				 * ) GROUP BY phrase ORDER BY freqadj DESC LIMIT 30
-				 */
 				for (int id = 0; id < pinyins.size; ++id) {
 					if (id > PHASE_LENGTH_MAX) break;
 

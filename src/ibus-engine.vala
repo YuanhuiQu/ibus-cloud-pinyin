@@ -18,40 +18,54 @@ namespace icp {
 
 		// active engines
 		/*
-		public static HashSet<CloudPinyinEngine*> active_engines;
+		   public static HashSet<CloudPinyinEngine*> active_engines;
 
-		protected static void set_active(CloudPinyinEngine* pengine, bool actived = true) {
-			lock (active_engines) {
-				if (actived)
-					active_engines.add(pengine);
-				else
-					// it is ok to remove an non-existed item
-					active_engines.remove(pengine);
-			}
+		   protected static void set_active(CloudPinyinEngine* pengine, bool actived = true) {
+		   lock (active_engines) {
+		   if (actived)
+		   active_engines.add(pengine);
+		   else
+		// it is ok to remove an non-existed item
+		active_engines.remove(pengine);
 		}
-		*/
+		}
+		 */
 
 		public class CloudPinyinEngine : Engine {
-			private string preedit = "";
-			private string full_preedit = "";
+			private string raw_buffer = "";
+			private Pinyin.Sequence pinyin_buffer;
 
 			// engine states
-			private bool pinyin_enabled = true;
+			private bool chinese_mode = true;
+			private bool correction_mode = false;
+			private bool offline_mode = false;
+			private bool traditional_mode = false;
 
 			// panel icons
 			private Property chinese_mode_icon
 				= new Property("mode", PropType.NORMAL, null,
-						Config.global_data_path + "/icons/pinyin-enabled.png", null,
+						Config.global_data_path + "/icons/pinyin-enabled.png", 
+						new Text.from_string("切换中文/英文模式"),
 						true, true, PropState.INCONSISTENT, null);
+			private Property traditional_conversion_icon
+				= new Property("trad", PropType.NORMAL, null,
+						Config.global_data_path + "/icons/traditional-disabled.png", 
+						new Text.from_string("切换简体/繁体模式"),
+						false, true, PropState.INCONSISTENT, null);
 			private Property status_icon 
 				= new Property("status", PropType.NORMAL, null, 
-						Config.global_data_path + "/icons/idle-0.png", null,
+						Config.global_data_path + "/icons/idle-0.png",
+						new Text.from_string("切换在线/离线模式"),
 						true, true, PropState.INCONSISTENT, null);
 			private PropList panel_prop_list = new PropList();
 			private TimeoutSource waiting_animation_timer = null;
 
 			// used by update_properties() and waiting_animation_timer callback func
-			private bool last_pinyin_enabled = true;
+			// they should be static vars in func, however Vala does not seems to support
+			// static vars at the time I write these code ...
+			private bool last_chinese_mode = true;
+			private bool last_traditional_mode = false;
+			private bool last_offline_mode = false;
 			private int waiting_index = 0;
 			private int waiting_index_acc = 1;
 
@@ -82,9 +96,11 @@ namespace icp {
 
 			private void init() {
 				panel_prop_list.append(chinese_mode_icon);
+				panel_prop_list.append(traditional_conversion_icon);
 				panel_prop_list.append(status_icon);
 				update_properties();
 
+				// TODO: dlopen opencv ...
 				inited = true;
 			}
 
@@ -118,36 +134,133 @@ namespace icp {
 			public override void property_activate(string prop_name, uint prop_state) {
 				switch (prop_name) {
 					case "mode":
-						pinyin_enabled = !pinyin_enabled;
+						chinese_mode = !chinese_mode;
+					break;
+					case "trad":
+						traditional_mode = !traditional_mode;
 					break;
 					case "status":
-						if (waiting_animation_timer == null)
-							start_waiting_animation();
-						else 
-							stop_waiting_animation();
+						offline_mode = !offline_mode;
 					break;
 				}
 				update_properties();
 			}
 
 			public override bool process_key_event(uint keyval, uint keycode, uint state) {
-				string? action = Config.get_key_action(
-					new Config.Key(keyval, state & key_state_filter)
-					);
-				if (action != null) {
-					// consider action
-					stdout.printf("action: %s\n", action);
+				/*
+				   keys handle precedence
+				   chinese mode:
+				   backspace / escape(stop all pending, call reset?)
+				   pinyin input (include ';' in some double pinyin scheme)
+				   (' ' in full pinyin (seperator))
+				   candidates (page up, page down, select)
+				   submit (punc, enter, mode switch)
+
+				   english mode:
+				   backspace / escape
+				   submit directly
+				 */
+				bool handled = false;
+				state = state & key_state_filter;
+
+				string action = Config.get_key_action(
+						new Config.Key(keyval, state)
+						);
+
+				do {
+					// this loop is dummy onlyto enable 'break' for flow control
+					if (action.has_prefix("lua:")) {
+						// it is a lua script, execute in background
+						LuaBinding.do_string(action[4:action.length]);
+						handled = true;
+						break;
+					}
+
+					// otherwise user may specify multi actions seperated by space
+					// collect them into a set
+					HashSet<string> actions = new HashSet<string>();
+					foreach (string v in action.split(" ")) {
+						actions.add(v);
+					}
+
+					if (chinese_mode) {
+						// edit raw pinyin buffer (disabled in correction mode)
+						if (state == 0 && !handled && !correction_mode) {
+							if ("clear" in actions) {
+								raw_buffer = "";
+								pinyin_buffer.clear();
+								handled = true;
+								break;
+							}
+
+							bool is_backspace = (("backspace" in actions) && raw_buffer.length > 0);
+							if (Config.double_pinyin_enabled) {
+								if (Pinyin.DoublePinyin.is_valid_key(keyval) || is_backspace) {
+									if (is_backspace) raw_buffer = raw_buffer[0:-1];
+									else raw_buffer += "%c".printf((int)keyval);
+									Pinyin.DoublePinyin.convert(raw_buffer, out pinyin_buffer);
+									handled = true;
+									break;
+								}
+							} else {
+								if ('z' >= keyval >= 'a' || is_backspace) {
+									if (is_backspace) raw_buffer = raw_buffer[0:-1];
+									else raw_buffer += "%c".printf((int)keyval);
+									pinyin_buffer = new Pinyin.Sequence(raw_buffer);
+									handled = true;
+									break;
+								}
+							}
+						}
+					}
+				} while (false);
+
+				if (handled) update_preedit();
+
+				return handled;
+			}
+
+			public void update_preedit() {
+				// auxiliary text
+				if (pinyin_buffer.size == 0 || !Config.show_pinyin_auxiliary_enabled) {
+					hide_auxiliary_text();
+				} else {
+					var text = new Text.from_string(pinyin_buffer.to_string());
+					update_auxiliary_text(text, true);					
 				}
-				return false;
+				// preedit
+				{
+					var text = new Text.from_string(
+							Pinyin.Database.greedy_convert(pinyin_buffer)
+							);
+					text.append_attribute(AttrType.UNDERLINE, 
+							AttrUnderline.SINGLE, 0, (int)text.get_length()
+							);
+					update_preedit_text(text, (int)text.get_length(), true);
+				}
+
 			}
 
 			public void update_properties() {
 				if (!enabled) return;
-				if (last_pinyin_enabled != pinyin_enabled) {
+				if (last_chinese_mode != chinese_mode) {
 					chinese_mode_icon.set_icon("%s/icons/pinyin-%s.png"
 							.printf(Config.global_data_path,
-								pinyin_enabled ? "enabled" : "disabled"));
-					last_pinyin_enabled = pinyin_enabled;
+								chinese_mode ? "enabled" : "disabled"));
+					last_chinese_mode = chinese_mode;
+				}
+				if (last_traditional_mode != traditional_mode) {
+					traditional_conversion_icon.set_icon("%s/icons/traditional-%s.png"
+							.printf(Config.global_data_path,
+								traditional_mode ? "enabled" : "disabled"));
+					last_traditional_mode = traditional_mode;
+				}
+				if (last_offline_mode != offline_mode) {
+					status_icon.set_icon("%s/icons/%s.png"
+							.printf(Config.global_data_path,
+								offline_mode ? "offline" : "idle-4"));
+					last_offline_mode = offline_mode;
+					// TODO: update status info using data
 				}
 
 				register_properties(panel_prop_list);

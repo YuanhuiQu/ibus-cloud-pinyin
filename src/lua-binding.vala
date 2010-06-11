@@ -73,10 +73,8 @@ namespace icp {
 
 		private static int l_set_enable(LuaVM vm) {
 			if (Posix.getpid() != main_pid) return 0;
-
 			if (!vm.is_table(1)) return 0;
 
-			int vm_top = vm.get_top();
 			vm.check_stack(2);
 			// traverse that table (at pos 1)
 			for (vm.push_nil(); vm.next(1) != 0; vm.pop(1)) {
@@ -267,6 +265,7 @@ correction =
 
 				// do some cleanning when possible
 				if (thread_pool.unprocessed() == 0) script_pool.clear();
+
 				// push script into script_pool to keep it safe
 				script_pool.add(new LuaTrunk(script, pengine));
 				thread_pool.push((void*)script_pool.last());
