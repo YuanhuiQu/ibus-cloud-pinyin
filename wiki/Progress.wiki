@@ -1,12 +1,8 @@
 === 0.8.0-alpha ===
 
-Lua Binding
+Lua and DBus Binding
 
 http://ibus-cloud-pinyin.googlecode.com/svn/trunk/icons/idle-2.png
-
-DBus Binding
-
-http://ibus-cloud-pinyin.googlecode.com/svn/trunk/icons/idle-3.png
 
 Open-phrase Database
 
@@ -20,11 +16,7 @@ Lua Scripts
 
 http://ibus-cloud-pinyin.googlecode.com/svn/trunk/icons/idle-1.png
 
-Pinyin Utilities
-
-http://ibus-cloud-pinyin.googlecode.com/svn/trunk/icons/idle-4.png
-
-Notification and Text Selection
+Pinyin Utilities, Notification, Text Selection Monitor
 
 http://ibus-cloud-pinyin.googlecode.com/svn/trunk/icons/idle-4.png
 
@@ -35,3 +27,7 @@ http://ibus-cloud-pinyin.googlecode.com/svn/trunk/icons/idle-2.png
 Icons
 
 http://ibus-cloud-pinyin.googlecode.com/svn/trunk/icons/idle-4.png
+
+User Guide
+
+http://ibus-cloud-pinyin.googlecode.com/svn/trunk/icons/idle-0.png
