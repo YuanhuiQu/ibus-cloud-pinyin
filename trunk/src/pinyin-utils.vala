@@ -37,9 +37,9 @@ namespace icp {
 					consonant = 0;
 					vowel_str = pinyin;
 				}
-				if (vowel_ids.contains(vowel_str))
+				if (vowel_ids.contains(vowel_str) && (pinyin in valid_pinyins)) {
 					vowel = vowel_ids[vowel_str];
-				else vowel = -1;
+				} else vowel = -1;
 			}
 
 			public Id.id(int cid = 0, int vid = -1) {
@@ -68,7 +68,7 @@ namespace icp {
 			private static bool is_valid_pinyin_begin(string pinyins, int start, int len_max) {
 				// used by Sequence string parser
 				if (pinyins.length <= start) return true;
-				if (pinyins[start] == ' ') return true;
+				if (pinyins[start] > 'z' || pinyins[start] < 'a') return true;
 				for (int i = 1; i <= len_max && i + start <= pinyins.length; i++) {
 					if (!valid_partial_pinyins.contains(pinyins[start:start+i]))
 						return false;
@@ -126,8 +126,8 @@ namespace icp {
 						for (len = 6; len > 0; len--) {
 							if (pos + len <= pinyins_pre.length) {
 								if (pinyins_pre[pos:pos + len] in valid_partial_pinyins) {
-									// consider one step futher
-									if (!is_valid_pinyin_begin(pinyins_pre, pos + len, 1))
+									// consider one step futher if len > 1
+									if (len > 1 && !is_valid_pinyin_begin(pinyins_pre, pos + len, 1))
 										continue;
 									sequence.add(pinyins_pre[pos:pos + len]);
 									id_sequence.add(new Id(pinyins_pre[pos:pos + len]));
@@ -216,7 +216,7 @@ namespace icp {
 			}
 
 			public static void insert(int key1, int key2, string pinyin) {				
-				if (pinyin.size() == 0) return;
+				if (pinyin.length == 0 || !(pinyin in valid_pinyins)) return;
 				if (!scheme.contains(key1)) scheme[key1] = new HashMap<int, Id>();
 				scheme[key1][key2] = new Id(pinyin);
 
@@ -248,7 +248,6 @@ namespace icp {
 							ids.add(new Id(double_pinyins[pos:pos+1]));
 						}
 					}
-					pos++;
 				}
 				sequence = new Sequence.ids(ids);
 			}
@@ -668,7 +667,7 @@ namespace icp {
 			valid_pinyins.add("an");
 			valid_pinyins.add("en");
 			valid_pinyins.add("ang");
-			valid_pinyins.add("eng");
+			// valid_pinyins.add("eng");
 			valid_pinyins.add("er");
 
 			// calculate valid_partial_pinyins

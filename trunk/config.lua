@@ -61,5 +61,10 @@ set_double_pinyin{
 	['za'] = 'za', ['zb'] = 'zou', ['ze'] = 'ze', ['zf'] = 'zen', ['zg'] = 'zeng', ['zh'] = 'zang', ['zi'] = 'zi', ['zj'] = 'zan', ['zk'] = 'zao', ['zl'] = 'zai', ['zo'] = 'zuo', ['zp'] = 'zun', ['zr'] = 'zuan', ['zs'] = 'zong', ['zu'] = 'zu', ['zv'] = 'zui', ['zz'] = 'zei',
 }
 
-set_key('a', 0, 'bla')
-set_key('a', 0, 'foo')
+set_enable{
+	default_offline_mode = true,
+	default_traditional_mode = true,
+	-- double_pinyin = true,
+	-- show_raw_in_auxiliary = true,
+}
+
