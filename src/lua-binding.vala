@@ -94,6 +94,24 @@ namespace icp {
 					case "always_show_candidates":
 						bind_value = &Config.always_show_candidates_enabled;
 						break;
+					case "show_pinyin_auxiliary":
+						bind_value = &Config.show_pinyin_auxiliary_enabled;
+						break;
+					case "show_raw_in_auxiliary":
+						bind_value = &Config.show_raw_in_auxiliary_enabled;
+						break;						
+					case "offline_mode_auto_commit":
+						bind_value = &Config.offline_mode_auto_commit_enabled;
+						break;
+					case "default_offline_mode":
+						bind_value = &Config.default_offline_mode;
+						break;
+					case "default_chinese_mode":
+						bind_value = &Config.default_chinese_mode;
+						break;
+					case "default_traditional_mode":
+						bind_value = &Config.default_traditional_mode;
+						break;
 				}
 				*bind_value = v;
 			}

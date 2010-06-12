@@ -34,11 +34,13 @@ namespace icp {
 			DBusBinding.init();
 			IBusBinding.init();
 
+			LuaBinding.load_configuration();
+
 			if (!Config.do_not_connect_ibus) {
+				// give lua script some time to set up
+				Thread.usleep(100000);
 				IBusBinding.register();
 			}
-
-			LuaBinding.load_configuration();
 
 			main_loop = new MainLoop (null, false);
 			main_loop.run();
