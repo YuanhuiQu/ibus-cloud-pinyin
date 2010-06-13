@@ -307,7 +307,7 @@ namespace icp {
 
                 // TODO: check no pending requests
                 if (Frontend.get_current_time()
-                    <= Config.Timeouts.selection * 1000
+                    <= (uint64)(1000000 * Config.Timeouts.selection)
                     + Frontend.clipboard_update_time) {
                   string selection = Frontend.get_selection();
                   if (!selection.contains("\n")

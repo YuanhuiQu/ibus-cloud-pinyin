@@ -40,14 +40,14 @@ namespace icp {
         public static bool show_xml;
       }
 
-    // timeouts, unit: 0.001 seconds
+    // timeouts, unit: 1 second
     [Compact]
       public class Timeouts {
         public Timeouts() { assert_not_reached(); }
 
-        public static int request = 10000;
-        public static int prerequest = 1000;
-        public static int selection = 2000;
+        public static double request = 10.0;
+        public static double prerequest = 1.0;
+        public static double selection = 2.0;
       }
 
     // colors
