@@ -21,7 +21,7 @@
 
 namespace icp {
   class Frontend {
-    private static string? _selection;
+    private static string _selection;
     private static unowned Gtk.Clipboard clipboard;
     
     private Frontend() {
@@ -29,7 +29,7 @@ namespace icp {
     }
 
     public static string get_selection() {
-      return _selection ?? "";
+      return _selection;
     }
     
     public static uint64 clipboard_update_time {
@@ -58,6 +58,7 @@ namespace icp {
     public static void init() {
       // assume gtk and gdk are inited
       if (Notify.is_initted()) return;
+      _selection = "";
       Notify.init("ibus-cloud-pinyin");
       clipboard = Gtk.Clipboard.get_for_display(
         Gdk.Display.get_default(),
