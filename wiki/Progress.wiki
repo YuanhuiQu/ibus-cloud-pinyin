@@ -28,7 +28,7 @@ Icons
 
 http://ibus-cloud-pinyin.googlecode.com/svn/trunk/icons/idle-4.png
 
-libcc support
+libopencc Support
 
 http://ibus-cloud-pinyin.googlecode.com/svn/trunk/icons/idle-0.png
 
