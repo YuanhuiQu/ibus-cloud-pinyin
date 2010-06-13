@@ -47,9 +47,9 @@ namespace icp {
 
       if (should_in_configuration && !in_configuration) {
         Frontend.notify("No permission", 
-          "Configurations must be done in startup script.", 
-          "stop"
-          );
+            "Configurations must be done in startup script.", 
+            "stop"
+            );
         return false;
       }
       return true;
@@ -132,35 +132,35 @@ namespace icp {
         switch(k) {
           case "buffer_raw":
             Config.Colors.buffer_raw
-              = new Config.Colors.Color(foreground, background, underlined);
+            = new Config.Colors.Color(foreground, background, underlined);
           break;
           case "buffer_pinyin":
             Config.Colors.buffer_pinyin
-              = new Config.Colors.Color(foreground, background, underlined);
+            = new Config.Colors.Color(foreground, background, underlined);
           break;
           case "candidate_local":
             Config.Colors.candidate_local
-              = new Config.Colors.Color(foreground, background, underlined);
+            = new Config.Colors.Color(foreground, background, underlined);
           break;
           case "candidate_remote":
             Config.Colors.candidate_remote
-              = new Config.Colors.Color(foreground, background, underlined);
+            = new Config.Colors.Color(foreground, background, underlined);
           break;
           case "preedit_correcting":
             Config.Colors.preedit_correcting
-              = new Config.Colors.Color(foreground, background, underlined);
+            = new Config.Colors.Color(foreground, background, underlined);
           break;            
           case "preedit_local":
             Config.Colors.preedit_local
-              = new Config.Colors.Color(foreground, background, underlined);
+            = new Config.Colors.Color(foreground, background, underlined);
           break;
           case "preedit_remote":
             Config.Colors.preedit_remote
-              = new Config.Colors.Color(foreground, background, underlined);
+            = new Config.Colors.Color(foreground, background, underlined);
           break;
           case "preedit_fixed":
             Config.Colors.preedit_fixed
-              = new Config.Colors.Color(foreground, background, underlined);
+            = new Config.Colors.Color(foreground, background, underlined);
           break;
         }
       }
@@ -215,11 +215,55 @@ namespace icp {
 
     private static int l_set_timeout(LuaVM vm) {
       if (!check_permissions(false)) return 0;
+      if (!vm.is_table(1)) return 0;
+
+      vm.check_stack(2);
+      // traverse that table (at pos 1)
+      for (vm.push_nil(); vm.next(1) != 0; vm.pop(1)) {
+        if (!vm.is_number(-1) || !vm.is_string(-2)) continue;
+
+        string k = vm.to_string(-2);
+        double v = vm.to_number(-1);
+        double* bind_value = null;
+
+        switch(k) {
+          case "request":
+            bind_value = &Config.Timeouts.request;
+          break;
+          case "prerequest":
+            bind_value = &Config.Timeouts.prerequest;
+          break;
+          case "selection":
+            bind_value = &Config.Timeouts.selection;
+          break;
+        }
+        *bind_value = v;
+      }
+
       return 0;
     }
 
     private static int l_set_limit(LuaVM vm) {
       if (!check_permissions(false)) return 0;
+      if (!vm.is_table(1)) return 0;
+
+      vm.check_stack(2);
+      // traverse that table (at pos 1)
+      for (vm.push_nil(); vm.next(1) != 0; vm.pop(1)) {
+        if (!vm.is_number(-1) || !vm.is_string(-2)) continue;
+
+        string k = vm.to_string(-2);
+        int v = vm.to_integer(-1);
+        int* bind_value = null;
+
+        switch(k) {
+          case "database_query_limit":
+            bind_value = &Config.Limits.database_query_limit;
+          break;
+        }
+        *bind_value = v;
+      }
+
       return 0;
     }
 
@@ -283,6 +327,7 @@ namespace icp {
 
     private static int l_register_engine(LuaVM vm) {
       if (!check_permissions()) return 0;
+      // TODO: register request engine at Config...
       return 0;
     }
 
@@ -312,24 +357,21 @@ namespace icp {
       vm.open_libs();
 
       vm.register("go_background", l_go_background);
-
       vm.register("notify", l_notify);
-      vm.register("set_response", l_set_response);
-
       vm.register("get_selection", l_get_selection);
+      
+      vm.register("set_response", l_set_response);
+      vm.register("set_double_pinyin", l_set_double_pinyin);
+      vm.register("set_key", l_set_key);
+      vm.register("set_candidate_labels", l_set_candidate_labels);
 
-      // TODO: allow color settings
+      vm.register("set_switch", l_set_switch);
+      vm.register("set_timeout", l_set_timeout);
+      vm.register("set_limit", l_set_limit);
       vm.register("set_color", l_set_color);
 
-      vm.register("set_timeout", l_set_timeout);
-      vm.register("set_double_pinyin", l_set_double_pinyin);
-      vm.register("set_candidate_labels", l_set_candidate_labels);
-      vm.register("set_limit", l_set_limit);
-      vm.register("set_key", l_set_key);
-
-      // only make these engines async
+      // these engines' requests will be async (in sep process)
       vm.register("register_engine", l_register_engine);
-      vm.register("set_switch", l_set_switch);
 
       try {
         thread_pool = new ThreadPool(do_string_internal, 1, true);
@@ -349,9 +391,11 @@ namespace icp {
       // prevent executing them two times
       string script = (string)data;
 
-      if (script == ".stop_conf") {
-        in_configuration = false;
-      } else {
+      switch(script) {
+        case ".stop_conf":
+          in_configuration = false;
+        break;
+        default:
         vm.load_string(script);
         if (vm.pcall(0, 0, 0) != 0) {
           string error_message = vm.to_string(-1);
@@ -359,6 +403,7 @@ namespace icp {
             Frontend.notify("Lua Error", error_message, "error");
           vm.pop(1);
         }
+        break;
       }
     }
 

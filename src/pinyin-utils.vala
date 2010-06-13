@@ -282,7 +282,6 @@ namespace icp {
                 scheme[double_pinyin] = id;
                 reverse_scheme[id] = double_pinyin;
                 valid_keys.add((uint)double_pinyin[0]);
-                valid_keys.add((uint)double_pinyin[0]);
                 valid_keys.add((uint)double_pinyin[1]);
               }
             }
