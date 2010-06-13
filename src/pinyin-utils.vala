@@ -94,17 +94,17 @@ namespace icp {
       private ArrayList<string> sequence;
       private ArrayList<Id> id_sequence;
 
-      private static bool
-        is_valid_pinyin_begin(string pinyins, int start, int len_max) {
-          // used by Sequence string parser
-          if (pinyins.length <= start) return true;
-          if (pinyins[start] > 'z' || pinyins[start] < 'a') return true;
-          for (int i = 1; i <= len_max && i + start <= pinyins.length; i++) {
-            if (!valid_partial_pinyins.contains(pinyins[start:start+i]))
-              return false;
-          }
-          return true;
+      private static bool is_valid_pinyin_begin(string pinyins, 
+          int start, int len_max) {
+        // used by Sequence string parser
+        if (pinyins.length <= start) return true;
+        if (pinyins[start] > 'z' || pinyins[start] < 'a') return true;
+        for (int i = 1; i <= len_max && i + start <= pinyins.length; i++) {
+          if (!valid_partial_pinyins.contains(pinyins[start:start+i]))
+            return false;
         }
+        return true;
+      }
 
       public void clear() {
         sequence.clear();
@@ -173,8 +173,7 @@ namespace icp {
           } else {
             pos += len;
           }
-        }
-
+        } // for pos
       }
 
       public Sequence.ids(ArrayList<Id>? ids = null) {
@@ -265,18 +264,33 @@ namespace icp {
       }
 
       public static void insert(string double_pinyin, string pinyin) {
-        if (pinyin.length == 0 || !(pinyin in valid_pinyins)) return;
-
-        if (0 < double_pinyin.length <= 2) {
-          scheme[double_pinyin] = new Id(pinyin);
-          reverse_scheme[new Id(pinyin)] = double_pinyin;
-          valid_keys.add((uint)double_pinyin[0]);
-          if (double_pinyin.length > 1)
-            valid_keys.add((uint)double_pinyin[1]);
+        switch (double_pinyin.length) {
+          case 1:
+            Id id = new Id(pinyin);
+            if (id.consonant > 0 && id.vowel == -1) {
+              // valid
+              scheme[double_pinyin] = id;
+              reverse_scheme[id] = double_pinyin;
+              valid_keys.add((uint)double_pinyin[0]);
+            }
+            break;
+          case 2:
+            if (pinyin in valid_pinyins) {
+              Id id = new Id(pinyin);
+              if (!id.empty()) {
+                // valid
+                scheme[double_pinyin] = id;
+                reverse_scheme[id] = double_pinyin;
+                valid_keys.add((uint)double_pinyin[0]);
+                valid_keys.add((uint)double_pinyin[0]);
+                valid_keys.add((uint)double_pinyin[1]);
+              }
+            }
+            break;
         }
       }
 
-      // convert to full pinyin
+      // convert to pinyin sequence
       public static void convert(string double_pinyins, 
           out Sequence sequence) {
         ArrayList<Id> ids = new ArrayList<Id>();
@@ -290,11 +304,7 @@ namespace icp {
             // last char
             string s = double_pinyins[pos:pos+1];
             Id id = (s in scheme) ? scheme[s] : new Id(s);
-            if (!id.empty()) {
-              ids.add(new Id.id(id.consonant, -1));
-            } else {
-              ids.add(new Id(double_pinyins[pos:pos+1]));
-            }
+            if (!id.empty()) ids.add(new Id.id(id.consonant, -1));
           }
         }
         sequence = new Sequence.ids(ids);

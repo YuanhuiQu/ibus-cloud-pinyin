@@ -341,9 +341,12 @@ namespace icp {
             bool is_backspace = (("back" in actions) 
                 && raw_buffer.length > 0
                 );
+            // check normal pinyin chars
             if (Config.Switches.double_pinyin) {
+              // note that ';' can not occur at the beginning
               if ((Pinyin.DoublePinyin.is_valid_key(keyval)
-                    && state == 0) || is_backspace) {
+                    && state == 0 && ('z' >= keyval >= 'a'
+                    || raw_buffer.length > 0)) || is_backspace) {
                 if (is_backspace) raw_buffer = raw_buffer[0:-1];
                 else raw_buffer += "%c".printf((int)keyval);
                 Pinyin.DoublePinyin.convert(raw_buffer, out pinyin_buffer);
@@ -493,12 +496,22 @@ namespace icp {
               )) {
           hide_auxiliary_text();
         } else {
+          string pinyin_buffer_aux 
+            = Config.Switches.show_pinyin_auxiliary 
+            ? pinyin_buffer.to_string() : "";
+          string raw_buffer_aux
+            = Config.Switches.show_raw_in_auxiliary 
+            ? " [%s]".printf(raw_buffer) : "";
+
           var text = new Text.from_string(
-              "%s%s".printf(
-                Config.Switches.show_pinyin_auxiliary ?
-                pinyin_buffer.to_string() : "",
-                Config.Switches.show_raw_in_auxiliary ?
-                " [%s]".printf(raw_buffer) : "" )
+              "%s%s".printf(pinyin_buffer_aux, raw_buffer_aux)
+              );
+          Config.Colors.buffer_pinyin.apply(
+              text, 0, (int)pinyin_buffer_aux.length
+              );
+          Config.Colors.buffer_raw.apply(
+              text, (uint)pinyin_buffer_aux.length, 
+              (int)(pinyin_buffer_aux.length + raw_buffer_aux.length)
               );
           update_auxiliary_text(text, true);          
         }
@@ -511,10 +524,17 @@ namespace icp {
               Pinyin.Database.greedy_convert(
                 pinyin_buffer
                 ));
+          if (correction_mode)
+            Config.Colors.preedit_correcting.apply(text);
+          else 
+            Config.Colors.preedit_local.apply(text);
+          // apply underline
           text.append_attribute(AttrType.UNDERLINE, 
               AttrUnderline.SINGLE, 0,
               (int)text.get_length()
               );
+          // TODO: only try query ...
+
           update_preedit_text(text,
               correction_mode ? 0 : (int)text.get_length(), true
               );
@@ -534,7 +554,9 @@ namespace icp {
             candidates.clear();
             table.clear();
             page_index = 0;
-            Pinyin.Database.query(pinyin_buffer, candidates);
+            Pinyin.Database.query(pinyin_buffer, candidates, 
+              Config.Limits.database_query_limit
+              );
 
             // update lookup table labels
             for (int i = 0; i < Config.CandidateLabels.size; i++) {
@@ -547,7 +569,9 @@ namespace icp {
 
             // update candidates
             foreach (string s in candidates) {
-              table.append_candidate(new Text.from_string(s));
+              var text = new Text.from_string(s);
+              Config.Colors.candidate_local.apply(text);
+              table.append_candidate(text);
             }
 
             table_visible = (candidates.size > 0);

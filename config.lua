@@ -1,6 +1,6 @@
 require 'socket'
 
-notify('test', 'hello world')
+notify('test', 'hello world 1')
 
 -- constants
 keys = {
@@ -60,6 +60,7 @@ set_double_pinyin{
 	['ya'] = 'ya', ['yb'] = 'you', ['ye'] = 'ye', ['yh'] = 'yang', ['yi'] = 'yi', ['yj'] = 'yan', ['yk'] = 'yao', ['yl'] = 'yai', ['yn'] = 'yin', ['yo'] = 'yo', ['yp'] = 'yun', ['yr'] = 'yuan', ['ys'] = 'yong', ['yt'] = 'yue', ['yu'] = 'yu', ['yy'] = 'ying', 
 	['za'] = 'za', ['zb'] = 'zou', ['ze'] = 'ze', ['zf'] = 'zen', ['zg'] = 'zeng', ['zh'] = 'zang', ['zi'] = 'zi', ['zj'] = 'zan', ['zk'] = 'zao', ['zl'] = 'zai', ['zo'] = 'zuo', ['zp'] = 'zun', ['zr'] = 'zuan', ['zs'] = 'zong', ['zu'] = 'zu', ['zv'] = 'zui', ['zz'] = 'zei',
 	['i'] = 'ch', ['u'] = 'sh', ['v'] = 'zh',
+	['m;'] = 'ming',
 }
 
 set_switch{
@@ -76,4 +77,8 @@ set_candidate_labels(
 	"_2345678"
 )
 
-set_key('1', 0, 'lua:notify("hello")')
+-- set_key('1', 0, 'lua:notify("hello")')
+
+set_color{
+	buffer_pinyin = 'ff0000,ffffff,1'
+}
