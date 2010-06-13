@@ -294,6 +294,44 @@ namespace icp {
           // edit raw pinyin buffer (disabled in correction mode)
           // "sep", "back", "clear" here should has state = 0
           if (!correction_mode && chinese_mode) {
+            // enter correction mode ?
+            if ("correct" in actions) {
+              if (raw_buffer.length > 0) {
+                if (pinyin_buffer.size > 0) {
+                  correction_mode = true;
+                  handled = true; break;
+                }
+              } else {
+                // user select some thing, currently buffer is empty,
+                // test if it can be reverse converted to pinyin
+
+                // TODO: check no pending requests
+                if (Frontend.get_current_time()
+                    <= Config.Timeouts.selection * 1000
+                    + Frontend.clipboard_update_time) {
+                  string selection = Frontend.get_selection();
+                  if (!selection.contains("\n")
+                      && Pinyin.Database.reverse_convert(
+                        selection, out pinyin_buffer)) {
+                    // reverse convert successful
+                    // erase client text
+                    commit_text(new Text.from_string(""));
+                    correction_mode = true;
+                    // rebuild raw_buffer
+                    if (Config.Switches.double_pinyin) {
+                      raw_buffer = pinyin_buffer.to_double_pinyin_string();
+                    } else {
+                      raw_buffer = pinyin_buffer.to_string();
+                    }
+                    handled = true; break;
+                  } else {
+                    // convert fail, clean buffers
+                    pinyin_buffer = new Pinyin.Sequence();
+                  }
+                }
+              }
+            }
+
             if ("clear" in actions) {
               raw_buffer = "";
               pinyin_buffer.clear();
@@ -385,7 +423,6 @@ namespace icp {
             }
             if (handled) break;
           }
-
 
           // non-chinese puncs
           if (((state ^ IBus.ModifierType.SHIFT_MASK)
@@ -479,17 +516,19 @@ namespace icp {
               (int)text.get_length()
               );
           update_preedit_text(text,
-              (int)text.get_length(), true
+              correction_mode ? 0 : (int)text.get_length(), true
               );
         }
       }
 
       private string last_pinyin_buffer_string;
+      private bool last_correction_mode = false;
       private void update_candidates() {
         // update candidates according to pinyin_buffer
         if (pinyin_buffer.size > 0 && 
             (Config.Switches.always_show_candidates || correction_mode)) {
-          if (last_pinyin_buffer_string != pinyin_buffer.to_string()) {
+          if (last_pinyin_buffer_string != pinyin_buffer.to_string()
+          || last_correction_mode != correction_mode) {
             // should update lookup table
             // TODO: append results from userdb
             candidates.clear();
@@ -514,10 +553,13 @@ namespace icp {
             table_visible = (candidates.size > 0);
             update_lookup_table(table, table_visible);
             last_pinyin_buffer_string = pinyin_buffer.to_string();
+            last_correction_mode = correction_mode;
           }
         } else {
           table_visible = false;
           hide_lookup_table();
+          // if nothing to correct, exit correct mode.
+          if (pinyin_buffer.size == 0) correction_mode = false;
           last_pinyin_buffer_string = "";
         }
       }
