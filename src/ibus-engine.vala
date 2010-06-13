@@ -321,7 +321,6 @@ namespace icp {
               }
               if (("sep" in actions) && raw_buffer.length > 0 
                   && (uint)raw_buffer[raw_buffer.length - 1] != keyval) {
-                stdout.printf("sep action");
                 raw_buffer += "%c".printf((int)keyval);
                 handled = true; break;
               }
@@ -348,39 +347,28 @@ namespace icp {
           // lookup table pgup, pgdn, candidate select
           if (table_visible && (correction_mode
                 || !Config.Punctuations.exists((int)keyval))) {
-            if (("pgup" in actions && (table.page_up() || true))
-                || ("pgdn" in actions && (table.page_down() || true))) {
+            if ("pgup" in actions) { page_up(); handled = true;}
+            if ("pgdn" in actions) { page_down(); handled = true;}
+            if (handled) {
               update_lookup_table(table, true);
-              print("cur: %u\n", table.get_cursor_in_page());
-              handled = true; break;
+              break;
             }
-            foreach (string s in actions) {
-              if (s.has_prefix("cand:")) {
-                uint index = 0;
-                s.scanf("cand:%u", &index);
-                // check if that candidate exists
-                index += table.get_page_size() * page_index;
-                if (table.get_number_of_candidates() > index) {
-                  Text candidate = table.get_candidate(index);
-                  string content = candidate.text;
-                  int len = (int)content.length;
-                  commit(content);
-                  // remove heading pinyins (rebuild buffer)
-                  if (Config.Switches.double_pinyin) {
-                    raw_buffer = pinyin_buffer.to_double_pinyin_string(len);
-                    Pinyin.DoublePinyin.convert(raw_buffer, 
-                      out pinyin_buffer);
-                  } else {
-                    raw_buffer = pinyin_buffer.to_string(len);
-                    pinyin_buffer = new Pinyin.Sequence(raw_buffer);
-                  }
-                  handled = true;
-                }
-                break;
-              }
-            }
-            if (handled) break;
           }
+
+          foreach (string s in actions) {
+            if (s.has_prefix("cand:")) {
+              uint index = 0;
+              s.scanf("cand:%u", &index);
+              // check if that candidate exists
+              if (table.get_number_of_candidates() 
+                  > table.get_page_size() * page_index + index) {
+                candidate_clicked(index, 128, 0);
+                handled = true;
+              }
+              break;
+            }
+          }
+          if (handled) break;
 
           // puncs
           if (((state ^ IBus.ModifierType.SHIFT_MASK)
@@ -426,6 +414,26 @@ namespace icp {
       private override void candidate_clicked (uint index, uint button,
           uint state) {
 
+        index += table.get_page_size() * page_index;
+        Text candidate = table.get_candidate(index);
+        string content = candidate.text;
+        int len = (int)content.length;
+        commit(content);
+
+        // remove heading pinyins (rebuild buffer)
+        if (Config.Switches.double_pinyin) {
+          raw_buffer = pinyin_buffer.to_double_pinyin_string(len);
+          Pinyin.DoublePinyin.convert(raw_buffer, 
+              out pinyin_buffer);
+        } else {
+          raw_buffer = pinyin_buffer.to_string(len);
+          pinyin_buffer = new Pinyin.Sequence(raw_buffer);
+        }
+
+        if (button != 128) {
+          update_preedit();
+          update_candidates();
+        }
       }
 
       private void update_preedit() {
