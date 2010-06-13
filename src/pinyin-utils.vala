@@ -80,6 +80,14 @@ namespace icp {
         if (empty()) return "";
         return consonant_reverse_ids[consonant] + vowel_reverse_ids[vowel];
       }
+
+      public static uint hash_func(Id a) {
+        return (uint)(a.consonant * 128 + a.vowel);
+      }
+
+      public static bool equal_func(Id a, Id b) {
+        return a.consonant == b.consonant && a.vowel == b.vowel;
+      }
     }
 
     class Sequence {
@@ -194,9 +202,24 @@ namespace icp {
         if (end > sequence.size) end = sequence.size;
 
         var builder = new StringBuilder();
-        for (int i = start; i < start + len; i++) {
+        for (int i = start; i < end; i++) {
           if (i > start) builder.append(" ");
           builder.append(sequence.get(i));
+        }
+
+        return builder.str;
+      }
+
+      public string to_double_pinyin_string(int start = 0, int len = -1) {
+        while (start < 0) start = start + sequence.size;
+        while (len < 0) len = sequence.size;
+
+        int end = start + len;
+        if (end > sequence.size) end = sequence.size;
+
+        var builder = new StringBuilder();
+        for (int i = start; i < end; i++) {
+          builder.append(DoublePinyin.lookup(id_sequence.get(i)));
         }
 
         return builder.str;
@@ -220,13 +243,15 @@ namespace icp {
     }
 
     class DoublePinyin {
-      private static HashMap<int, HashMap<int, Id> > scheme;
+      private static HashMap<Id, string> reverse_scheme;
+      private static HashMap<string, Id> scheme;
       private static HashSet<uint> valid_keys;
 
       private DoublePinyin() { }
 
       public static void init() {
-        scheme = new HashMap<char, HashMap<char, Id> >();
+        reverse_scheme = new HashMap<Id, string>((HashFunc)Id.hash_func, (EqualFunc)Id.equal_func);
+        scheme = new HashMap<string, Id>();
         valid_keys = new HashSet<uint>();
       }
 
@@ -239,19 +264,16 @@ namespace icp {
         return (key in valid_keys);
       }
 
-      public static void insert(int key1, int key2, string pinyin) {        
+      public static void insert(string double_pinyin, string pinyin) {
         if (pinyin.length == 0 || !(pinyin in valid_pinyins)) return;
-        if (!scheme.contains(key1)) scheme[key1] = new HashMap<int, Id>();
-        scheme[key1][key2] = new Id(pinyin);
 
-        valid_keys.add((uint)key1);
-        valid_keys.add((uint)key2);        
-      }
-
-      public static Id query(int key1, int key2 = 0) {
-        if (!scheme.contains(key1) || !scheme[key1].contains(key2)) 
-          return new Id("");
-        return scheme[key1][key2];
+        if (0 < double_pinyin.length <= 2) {
+          scheme[double_pinyin] = new Id(pinyin);
+          reverse_scheme[new Id(pinyin)] = double_pinyin;
+          valid_keys.add((uint)double_pinyin[0]);
+          if (double_pinyin.length > 1)
+            valid_keys.add((uint)double_pinyin[1]);
+        }
       }
 
       // convert to full pinyin
@@ -260,16 +282,14 @@ namespace icp {
         ArrayList<Id> ids = new ArrayList<Id>();
         for (int pos = 0; pos < double_pinyins.length; ++pos) {
           if (pos + 1 < double_pinyins.length) {
-            Id id = query((int)double_pinyins[pos], 
-                (int)double_pinyins[pos+1]
-                );
-            if (!id.empty()) {
+            if (double_pinyins[pos:pos+2] in scheme) {
+              ids.add(scheme[double_pinyins[pos:pos+2]]);
               pos++;
-              ids.add(id);
             }
           } else {
             // last char
-            Id id = query((int)double_pinyins[pos], (int)'i');
+            string s = double_pinyins[pos:pos+1];
+            Id id = (s in scheme) ? scheme[s] : new Id(s);
             if (!id.empty()) {
               ids.add(new Id.id(id.consonant, -1));
             } else {
@@ -278,6 +298,12 @@ namespace icp {
           }
         }
         sequence = new Sequence.ids(ids);
+      }
+
+      // convert Id to double_pinyin
+      public static string lookup(Id id) {
+        if (id in reverse_scheme) return reverse_scheme[id];
+        else return "";
       }
     }
 

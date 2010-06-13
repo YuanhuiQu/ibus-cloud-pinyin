@@ -59,12 +59,20 @@ set_double_pinyin{
 	['xc'] = 'xiao', ['xd'] = 'xiang', ['xi'] = 'xi', ['xm'] = 'xian', ['xn'] = 'xin', ['xp'] = 'xun', ['xq'] = 'xiu', ['xr'] = 'xuan', ['xs'] = 'xiong', ['xt'] = 'xue', ['xu'] = 'xu', ['xw'] = 'xia', ['xx'] = 'xie', ['xy'] = 'xing', 
 	['ya'] = 'ya', ['yb'] = 'you', ['ye'] = 'ye', ['yh'] = 'yang', ['yi'] = 'yi', ['yj'] = 'yan', ['yk'] = 'yao', ['yl'] = 'yai', ['yn'] = 'yin', ['yo'] = 'yo', ['yp'] = 'yun', ['yr'] = 'yuan', ['ys'] = 'yong', ['yt'] = 'yue', ['yu'] = 'yu', ['yy'] = 'ying', 
 	['za'] = 'za', ['zb'] = 'zou', ['ze'] = 'ze', ['zf'] = 'zen', ['zg'] = 'zeng', ['zh'] = 'zang', ['zi'] = 'zi', ['zj'] = 'zan', ['zk'] = 'zao', ['zl'] = 'zai', ['zo'] = 'zuo', ['zp'] = 'zun', ['zr'] = 'zuan', ['zs'] = 'zong', ['zu'] = 'zu', ['zv'] = 'zui', ['zz'] = 'zei',
+	['i'] = 'ch', ['u'] = 'sh', ['v'] = 'zh',
 }
 
 set_switch{
 	default_offline_mode = true,
 	default_traditional_mode = true,
-	-- double_pinyin = true,
+	double_pinyin = true,
 	show_raw_in_auxiliary = true,
+	always_show_candidates = true,
+	
 }
+
+set_candidate_labels(
+	"jkl;asdf",
+	"12345678"
+)
 

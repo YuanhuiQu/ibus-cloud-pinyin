@@ -29,29 +29,44 @@ namespace icp {
       global_data_path = "/usr/share/ibus-cloud-pinyin";
 
     // command line options
-    public static string? startup_script = null;
-    public static bool show_version;
-    public static bool launched_by_ibus;
-    public static bool do_not_connect_ibus;
-    public static bool show_xml;
+    [Compact]
+      public class CommandlineOptions {
+        public CommandlineOptions() { assert_not_reached(); }
+
+        public static string? startup_script = null;
+        public static bool show_version;
+        public static bool launched_by_ibus;
+        public static bool do_not_connect_ibus;
+        public static bool show_xml;
+      }
 
     // timeouts
-    public static int request_timeout = 10000;
-    public static int quick_request_timeout = 1000;
+    [Compact]
+      public class Timeouts {
+        public Timeouts() { assert_not_reached(); }
+
+        public static int request = 10000;
+        public static int prerequest = 1000;
+      }
 
     // limits
-    public static int database_query_limit = 256;
+    [Compact]
+      public class Limits {
+        public Limits() { assert_not_reached(); }
+
+        public static int database_query_limit = 128;
+      }
 
     // enables
     [Compact]
       public class Switches {
         public Switches() { assert_not_reached(); }
+
         public static bool double_pinyin = false;
         public static bool background_request = true;
         public static bool always_show_candidates = false;
         public static bool show_pinyin_auxiliary = true;
         public static bool show_raw_in_auxiliary = false;
-        public static bool offline_mode_auto_commit = false;
 
         public static bool default_offline_mode = false;
         public static bool default_chinese_mode = true;
@@ -114,22 +129,22 @@ namespace icp {
 
       public static void set(int half_char, string full_chars, 
           bool only_after_chinese = false) {
-        lock (punctuations) {
-          if (full_chars.length == 0) punctuations.remove(half_char);
-          else punctuations[half_char] = new FullPunctuation(full_chars, 
-              only_after_chinese
-              );
-        }
+        if (full_chars.length == 0) punctuations.remove(half_char);
+        else punctuations[half_char] = new FullPunctuation(full_chars, 
+            only_after_chinese
+            );
       }
 
       public static string get(int key, bool after_chinese = true) {
-        lock (punctuations) {
-          if (!punctuations.contains(key) 
-              || (punctuations[key].only_after_chinese 
-                && !after_chinese)
-             ) return "%c".printf(key);
-          return punctuations[key].get_full_char();
-        }
+        if (!punctuations.contains(key) 
+            || (punctuations[key].only_after_chinese 
+              && !after_chinese)
+           ) return "%c".printf(key);
+        return punctuations[key].get_full_char();
+      }
+
+      public static bool exists(int key) {
+        return punctuations.contains(key);
       }
     }
 
@@ -164,6 +179,14 @@ namespace icp {
         set(new Key(IBus.BackSpace), "back");
         set(new Key(IBus.space), "sep commit");
         set(new Key(IBus.Escape), "clear");
+        set(new Key(IBus.Page_Down), "pgdn");
+        set(new Key((uint)'h'), "pgdn");
+        set(new Key((uint)']'), "pgdn");
+        set(new Key((uint)'='), "pgdn");
+        set(new Key(IBus.Page_Up), "pgup");
+        set(new Key((uint)'g'), "pgup");
+        set(new Key((uint)'['), "pgup");
+        set(new Key((uint)'-'), "pgup");
         set(new Key((uint)'\''), "sep");
         set(new Key((uint)'P',
               IBus.ModifierType.RELEASE_MASK | IBus.ModifierType.CONTROL_MASK 
@@ -177,62 +200,103 @@ namespace icp {
             "trad simp"
            );
         set(new Key(IBus.Return), "raw");
+
+        string labels = "jkl;asdf";
+        for (int i = 0; i < labels.length; i++) {
+          set(new Key(labels[i]), "cand:%d".printf(i));
+          set(new Key(i + '1'), "cand:%d".printf(i));
+        }
       }
 
       public static void set(Key key, string action) {
-        lock (key_actions) {
-          if (action.length == 0) key_actions.remove(key);
-          else key_actions[key] = action;
-        }
+        if (action.length == 0) key_actions.remove(key);
+        else key_actions[key] = action;
       }
 
       public static string get(Key key) {
-        lock (key_actions) {
-          if (!key_actions.contains(key)) return "";
-          return key_actions[key];
-        }
+        if (!key_actions.contains(key)) return "";
+        return key_actions[key];
       }
     }
 
-    // candidate keys
-    class CandidateKeys {
-      private CandidateKeys() { }
+    // lookup table labels
+    public class CandidateLabels {
+      private CandidateLabels() { }
 
-      private static ArrayList<ArrayList<Key>> candidate_keys;
-      public static void init() {
-        candidate_keys = new ArrayList<ArrayList<Key>>();
-      }
+      private static ArrayList<ArrayList<string> > labels;
 
       public static void clear() {
-        candidate_keys.clear();
+        labels[0].clear();
+        labels[1].clear();
+      }
+
+      public static void add(string label, string? label_alternative = null) {
+        labels[0].add(label);
+        labels[1].add(label_alternative ?? label);
+      }
+
+      public static void set(int index, string? label = null,
+          string? label_alternative = null) {
+        if (index < 0 || index >= size) return;        
+        if (label != null)
+          labels[0].set(index, label);
+        if (label_alternative != null) 
+          labels[1].set(index, label_alternative);
+      }
+
+      public static string get(int index, bool use_alternative = false) {
+        if (index < 0 || index >= size) return "";
+        return labels[use_alternative ? 1 : 0].get(index);
+      }
+
+      public static int size {
+        get {
+          assert(labels[0].size == labels[1].size);
+          return labels[0].size;
+        }
+      }
+
+      public static void init() {
+        labels = new ArrayList<ArrayList<string> >();
+        labels.add(new ArrayList<string>());
+        labels.add(new ArrayList<string>());
+
+        string labels = "jkl;asdf";
+        for (int i = 0; i < labels.length; i++) {
+          add(labels[i:i+1], "%d".printf(i + 1));
+        }
       }
     }
 
     // init
     public static void init(string[] args) {
       KeyActions.init();
-      CandidateKeys.init();
+      CandidateLabels.init();
       Punctuations.init();
 
       // command line options
       // workaround for vala 0.8.0 and 0.9.0 not allowing nested
       // struct assignments
       OptionEntry entrie_script = { "script", 'c', 0, OptionArg.FILENAME, 
-        out startup_script, "specify a startup script", "filename" };
+        out CommandlineOptions.startup_script, "specify a startup script",
+        "filename" };
       OptionEntry entrie_version = { "version", 'i', 0, OptionArg.NONE,
-        out show_version, "show version information", null };
+        out CommandlineOptions.show_version, "show version information", 
+        null };
       OptionEntry entrie_ibus = { "ibus", 'b', 0, OptionArg.NONE,
-        out launched_by_ibus, "run by ibus", null };
+        out CommandlineOptions.launched_by_ibus, "run by ibus", null };
       OptionEntry entrie_no_ibus = { "no-ibus", 'n', 0, OptionArg.NONE,
-        out do_not_connect_ibus,
+        out CommandlineOptions.do_not_connect_ibus,
         "do not register at ibus, use this if ibus-daemon is not running",
         null };
       OptionEntry entrie_xml = { "dump-xml", 'x', 0, OptionArg.NONE,
-        out show_xml, "print ibus engine description xml", null };
+        out CommandlineOptions.show_xml, "print ibus engine description xml", 
+        null };
       OptionEntry entrie_null = { null };
 
       OptionContext context =
         new OptionContext("- cloud pinyin client for ibus");
+
       context.add_main_entries({entrie_script, entrie_version, entrie_ibus,
           entrie_no_ibus, entrie_xml, entrie_null}, null);
 
@@ -242,8 +306,8 @@ namespace icp {
         stderr.printf("option parsing failed: %s\n", e.message);
       }
 
-      if (startup_script == null)
-        startup_script = global_data_path + "/config.lua";
+      if (CommandlineOptions.startup_script == null)
+        CommandlineOptions.startup_script = global_data_path + "/config.lua";
     }
 
     // this class is used as namespace
