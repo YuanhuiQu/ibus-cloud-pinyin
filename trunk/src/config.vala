@@ -40,7 +40,7 @@ namespace icp {
         public static bool show_xml;
       }
 
-    // timeouts, unit 0.001 seconds
+    // timeouts, unit: 0.001 seconds
     [Compact]
       public class Timeouts {
         public Timeouts() { assert_not_reached(); }
@@ -49,6 +49,61 @@ namespace icp {
         public static int prerequest = 1000;
         public static int selection = 2000;
       }
+
+    // colors
+    public class Colors {
+      public class Color {
+        private int? foreground;
+        private int? background;
+        private bool underlined;
+        public Color(int? foreground = null, int? background = null, 
+            bool underlined = false) {
+          this.foreground = foreground;
+          this.background = background;
+          this.underlined = underlined;
+        }
+        public void apply(IBus.Text text, uint start = 0, int end = -1) {
+          if (end == -1) end = (int)text.get_length();
+          if ((int)start >= end) return;
+          if (underlined) text.append_attribute(IBus.AttrType.UNDERLINE,
+              IBus.AttrUnderline.SINGLE, start, end
+              );
+          if (foreground != null) text.append_attribute(
+              IBus.AttrType.FOREGROUND, foreground, start, end
+              );
+          if (background != null) text.append_attribute(
+              IBus.AttrType.BACKGROUND, background, start, end
+              );
+        }
+      }
+
+      private Colors() { assert_not_reached(); }
+
+      public static Color buffer_raw;
+      public static Color buffer_pinyin;
+
+      public static Color candidate_local;
+      public static Color candidate_remote;
+
+      public static Color preedit_correcting;
+
+      public static Color preedit_local;
+      public static Color preedit_remote;
+      public static Color preedit_fixed;
+
+      public static void init() {
+        buffer_raw = new Color(0x00B75D);
+        buffer_pinyin = new Color();
+
+        candidate_local = new Color();
+        candidate_remote = new Color(0x0050FF);
+
+        preedit_correcting = new Color(null, 0xFFB442);
+        preedit_local = new Color(0x8C8C8C);
+        preedit_remote = new Color(0x0024B2);
+        preedit_fixed = new Color(0x242322);
+      }
+    }
 
     // limits
     [Compact]
@@ -272,6 +327,7 @@ namespace icp {
 
     // init
     public static void init(string[] args) {
+      Colors.init();
       KeyActions.init();
       CandidateLabels.init();
       Punctuations.init();

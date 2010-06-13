@@ -166,7 +166,7 @@ namespace icp {
 
       public static void query(Sequence pinyins, 
           ArrayList<string> candidates, 
-          int limit = 0, double phrase_adjust = 2) {
+          int limit = 0, double phrase_adjust = 2.4) {
 
         // candidates is already a ref type, directly modify it
         string where = "", query = "SELECT phrase, freqadj FROM (";
@@ -227,8 +227,10 @@ namespace icp {
       }
 
       public static string greedy_convert(Sequence pinyins, 
-          double phrase_adjust = 3) {
+          double phrase_adjust = 4) {
+
         string r = "";
+        if (pinyins.size == 0) return r;
 
         for (int id = (int) pinyins.size - 1; id >= 0;) {
           int length_max = id + 1;

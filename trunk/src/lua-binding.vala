@@ -95,6 +95,79 @@ namespace icp {
       return 0;
     }
 
+    private static int l_set_color(LuaVM vm) {
+      if (!check_permissions()) return 0;
+      if (!vm.is_table(1)) return 0;
+
+      vm.check_stack(2);
+      for (vm.push_nil(); vm.next(1) != 0; vm.pop(1)) {
+        // format: 'name' = '[fgcolor],[bgcolor],[1/0]'
+        if (!vm.is_string(-1) || !vm.is_string(-2)) continue;
+
+        string k = vm.to_string(-2);
+        string v = vm.to_string(-1);
+
+        int i = 0;
+        bool underlined = false;
+        int? foreground = null;
+        int? background = null;
+
+        foreach (string s in v.split(",")) {
+          int t = -1;
+          s.scanf("%x", &t);
+          switch (i) {
+            case 0:
+              if (t != -1) foreground = t;
+              break;
+            case 1:
+              if (t != -1) background = t;
+              break;
+            case 2:
+              underlined = (t > 0);
+              break;
+          }
+          i++;
+        }
+
+        switch(k) {
+          case "buffer_raw":
+            Config.Colors.buffer_raw
+              = new Config.Colors.Color(foreground, background, underlined);
+          break;
+          case "buffer_pinyin":
+            Config.Colors.buffer_pinyin
+              = new Config.Colors.Color(foreground, background, underlined);
+          break;
+          case "candidate_local":
+            Config.Colors.candidate_local
+              = new Config.Colors.Color(foreground, background, underlined);
+          break;
+          case "candidate_remote":
+            Config.Colors.candidate_remote
+              = new Config.Colors.Color(foreground, background, underlined);
+          break;
+          case "preedit_correcting":
+            Config.Colors.preedit_correcting
+              = new Config.Colors.Color(foreground, background, underlined);
+          break;            
+          case "preedit_local":
+            Config.Colors.preedit_local
+              = new Config.Colors.Color(foreground, background, underlined);
+          break;
+          case "preedit_remote":
+            Config.Colors.preedit_remote
+              = new Config.Colors.Color(foreground, background, underlined);
+          break;
+          case "preedit_fixed":
+            Config.Colors.preedit_fixed
+              = new Config.Colors.Color(foreground, background, underlined);
+          break;
+        }
+      }
+
+      return 0;
+    }
+
     private static int l_set_switch(LuaVM vm) {
       if (!check_permissions(false)) return 0;
       if (!vm.is_table(1)) return 0;
@@ -165,7 +238,7 @@ namespace icp {
 
         string double_pinyin = vm.to_string(-2);
         string full_pinyin = vm.to_string(-1);
-        if (double_pinyin.length != 2) continue;
+        if (double_pinyin.length > 2) continue;
         Pinyin.DoublePinyin.insert(double_pinyin, full_pinyin);
       }
       assert(vm.get_top() == vm_top);
@@ -205,7 +278,6 @@ namespace icp {
             (i < alternative_labels.length) ? alternative_labels[i:i+1] : null
             );
       }
-
       return 0;
     }
 
@@ -246,38 +318,18 @@ namespace icp {
 
       vm.register("get_selection", l_get_selection);
 
-      // vm.register("set_mode", l_set_mode); // in 1, bool
-      // vm.register("set_color", l_set_color);
+      // TODO: allow color settings
+      vm.register("set_color", l_set_color);
 
       vm.register("set_timeout", l_set_timeout);
-      /*
-in : a table
-set_timeout:
-prerequest = 0.3
-request = 
-correction = 
-       */
       vm.register("set_double_pinyin", l_set_double_pinyin);
       vm.register("set_candidate_labels", l_set_candidate_labels);
-      // vm.register("enable_double_pinyin", l_enable_double_pinyin);
-
       vm.register("set_limit", l_set_limit);
-      /*
-         concurrency_request
-         database_candidates
-       */
       vm.register("set_key", l_set_key);
 
       // only make these engines async
       vm.register("register_engine", l_register_engine);
-      // vm.register("set_filter", l_set_filter);
       vm.register("set_switch", l_set_switch);
-      /*
-         double_pinyin = true
-         background_request = true
-         apply_filter = true
-         chinese_mode = true
-       */
 
       try {
         thread_pool = new ThreadPool(do_string_internal, 1, true);
