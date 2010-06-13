@@ -178,6 +178,8 @@ namespace icp {
           int cid = pinyin_id.consonant, vid = pinyin_id.vowel;
 
           if (cid == 0 && vid == -1) break;
+          // refuse to lookup single character with partial pinyin
+          if (vid == -1 && id == 0) break;
           if (where.length != 0) where += " AND ";
           where += "s%d=%d".printf(id, cid);
           if (vid != -1) where += " AND y%d=%d".printf(id, vid);

@@ -65,6 +65,12 @@ namespace icp {
       private bool traditional_mode;
       private bool last_is_chinese = true;
 
+      // lookup table and candidates
+      LookupTable table;
+      ArrayList<string> candidates;
+      bool table_visible;
+      uint page_index;
+
       // panel icons
       private Property chinese_mode_icon
         = new Property("mode", PropType.NORMAL, null,
@@ -123,18 +129,32 @@ namespace icp {
       private bool inited = false;
 
       private void init() {
+        // strings, booleans
+        raw_buffer = "";
+        last_pinyin_buffer_string = "";
+        pinyin_buffer = new Pinyin.Sequence(raw_buffer);
+        table_visible = false;
+
+        // switches
         chinese_mode = Config.Switches.default_chinese_mode;
         traditional_mode = Config.Switches.default_traditional_mode;
         offline_mode = Config.Switches.default_offline_mode;
         correction_mode = false;
 
+        // load properties into property list
         panel_prop_list.append(chinese_mode_icon);
         panel_prop_list.append(traditional_conversion_icon);
         panel_prop_list.append(status_icon);
         waiting_animation_timer = null;
-        raw_buffer = "";
-        pinyin_buffer = new Pinyin.Sequence(raw_buffer);
         update_properties();
+
+        // lookup table, insert enough dummy labels first
+        page_index = 0;
+        table = new LookupTable(Config.CandidateLabels.size, 0, false, false);
+        candidates = new ArrayList<string>();
+        for (int i = 0; i < Config.CandidateLabels.size; i++) {
+          table.append_label(new Text.from_string("."));
+        }
 
         // TODO: dlopen opencv ...
         inited = true;
@@ -161,27 +181,31 @@ namespace icp {
         has_focus = true;
         if (!inited) init();
         update_properties();
+        update_preedit();
+        // force update candidates
+        last_pinyin_buffer_string = ".";
+        update_candidates();
       }
 
       public override void focus_out() {
         has_focus = false;
       }
 
-      public override void
-        property_activate(string prop_name, uint prop_state) {
-          switch (prop_name) {
-            case "mode":
-              chinese_mode = !chinese_mode;
-            break;
-            case "trad":
-              traditional_mode = !traditional_mode;
-            break;
-            case "status":
-              offline_mode = !offline_mode;
-            break;
-          }
-          update_properties();
+      public override void property_activate(string prop_name, 
+          uint prop_state) {
+        switch (prop_name) {
+          case "mode":
+            chinese_mode = !chinese_mode;
+          break;
+          case "trad":
+            traditional_mode = !traditional_mode;
+          break;
+          case "status":
+            offline_mode = !offline_mode;
+          break;
         }
+        update_properties();
+      }
 
       private void commit(string content) {
         // TODO: check previous commit,
@@ -204,152 +228,207 @@ namespace icp {
 
       // process key event, most important func in engine
       private uint last_state = 0;
-      public override bool
-        process_key_event(uint keyval, uint keycode, uint state) {
-          /*
-             keys handle precedence
-             chinese mode:
-             backspace / escape(stop all pending, call reset?)
-             pinyin input (include ';' in some double pinyin scheme)
-             (' ' in full pinyin (seperator))
-             candidates (page up, page down, select)
-             submit (punc, enter, mode switch)
+      public override bool process_key_event(uint keyval, uint keycode, 
+          uint state) {
+        /*
+           keys handle precedence
+           chinese mode:
+           backspace / escape(stop all pending, call reset?)
+           pinyin input (include ';' in some double pinyin scheme)
+           (' ' in full pinyin (seperator))
+           candidates (page up, page down, select)
+           submit (punc, enter, mode switch)
 
-             english mode:
-             backspace / escape
-             submit directly
-           */
-          bool handled = false;
-          state = state & key_state_filter;
+           english mode:
+           backspace / escape
+           submit directly
+         */
+        bool handled = false;
+        state = state & key_state_filter;
 
-          string action;
-          // prevent trigger unwanted hotkeys
-          if (((state & ModifierType.RELEASE_MASK) != 0)
-              && ((last_state & ModifierType.RELEASE_MASK) != 0))
-            action = "";
-          else action = Config.KeyActions.get(
-              new Config.Key(keyval, state)
-              );
-          last_state = state;
+        string action;
+        // prevent trigger unwanted hotkeys
+        if (((state & ModifierType.RELEASE_MASK) != 0)
+            && ((last_state & ModifierType.RELEASE_MASK) != 0))
+          action = "";
+        else action = Config.KeyActions.get(
+            new Config.Key(keyval, state)
+            );
+        last_state = state;
 
-          do {
-            // this loop is dummy onlyto enable 'break' for flow control
-            if (action.has_prefix("lua:")) {
-              // it is a lua script, execute in background
-              LuaBinding.do_string(action[4:action.length]);
-              handled = true;
-              break;
-            }
+        do {
+          // this loop is dummy onlyto enable 'break' for flow control
+          if (action.has_prefix("lua:")) {
+            // it is a lua script, execute in background
+            LuaBinding.do_string(action[4:action.length]);
+            handled = true;
+            break;
+          }
 
-            // otherwise user may specify multi actions seperated by space
-            // collect them into a set
-            HashSet<string> actions = new HashSet<string>();
-            foreach (string v in action.split(" ")) actions.add(v);
+          // otherwise user may specify multi actions seperated by space
+          // collect them into a set
+          HashSet<string> actions = new HashSet<string>();
+          foreach (string v in action.split(" ")) actions.add(v);
 
-            // consider mode switch action first
-            if ((chinese_mode == false && ("chs" in actions))
-                || (chinese_mode == true && ("eng" in actions))) {
-              // TODO: do something here
-              chinese_mode = !chinese_mode;
-              update_properties();
-              handled = true; break;
-            }
+          // consider mode switch action first
+          if ((chinese_mode == false && ("chs" in actions))
+              || (chinese_mode == true && ("eng" in actions))) {
+            // TODO: do something here
+            chinese_mode = !chinese_mode;
+            handled = true; break;
+          }
 
-            if ((traditional_mode && ("simp" in actions))
-                || (!traditional_mode && ("trad" in actions))) {
-              traditional_mode = !traditional_mode;
-              update_properties();
-              handled = true; break;
-            }
+          if ((traditional_mode && ("simp" in actions))
+              || (!traditional_mode && ("trad" in actions))) {
+            traditional_mode = !traditional_mode;
+            handled = true; break;
+          }
 
-            if ((offline_mode && ("online" in actions))
-                || (!offline_mode && ("offline" in actions))) {
-              offline_mode = !offline_mode;
-              update_properties();
-              handled = true; break;
-            }
+          if ((offline_mode && ("online" in actions))
+              || (!offline_mode && ("offline" in actions))) {
+            offline_mode = !offline_mode;
+            handled = true; break;
+          }
 
-            // then in chinese mode, consider edit / commit things
-            // edit raw pinyin buffer (disabled in correction mode)
-            // "sep", "back", "clear" here should has state = 0
-            if (!correction_mode && chinese_mode) {
-              if ("clear" in actions) {
-                raw_buffer = "";
-                pinyin_buffer.clear();
-                handled = true; break;
-              }
-
-              bool is_backspace = (("back" in actions) 
-                  && raw_buffer.length > 0
-                  );
-              if (Config.Switches.double_pinyin) {
-                if ((Pinyin.DoublePinyin.is_valid_key(keyval)
-                      && state == 0) || is_backspace) {
-                  if (is_backspace) raw_buffer = raw_buffer[0:-1];
-                  else raw_buffer += "%c".printf((int)keyval);
-                  Pinyin.DoublePinyin.convert(raw_buffer, out pinyin_buffer);
-                  handled = true; break;
-                }
-              } else {
-                if (('z' >= keyval >= 'a'
-                      && state == 0) || is_backspace) {
-                  if (is_backspace) raw_buffer = raw_buffer[0:-1];
-                  else raw_buffer += "%c".printf((int)keyval);
-                  pinyin_buffer = new Pinyin.Sequence(raw_buffer);
-                  handled = true; break;
-                }
-                if (("sep" in actions) && raw_buffer.length > 0 
-                    && (uint)raw_buffer[raw_buffer.length - 1] != keyval) {
-                  stdout.printf("sep action");
-                  raw_buffer += "%c".printf((int)keyval);
-                  handled = true; break;
-                }
-              }
-            }
-
-            // raw commit
-            if (("raw" in actions)
-                && raw_buffer.length > 0) {
-              commit(raw_buffer);
+          // then in chinese mode, consider edit / commit things
+          // edit raw pinyin buffer (disabled in correction mode)
+          // "sep", "back", "clear" here should has state = 0
+          if (!correction_mode && chinese_mode) {
+            if ("clear" in actions) {
               raw_buffer = "";
               pinyin_buffer.clear();
-              last_is_chinese = true;
               handled = true; break;
             }
 
-            // commit buffer hotkey
-            if (("commit" in actions)
-                && pinyin_buffer.size > 0) {
-              commit_buffer();
-              handled = true; break;
-            }
-
-            // candidate select
-
-            // puncs
-            if (((state ^ IBus.ModifierType.SHIFT_MASK)
-                  == 0 || state == 0)
-                && 128 > keyval >= 32) {
-              commit_buffer();
-
-              string punc = chinese_mode ?
-                Config.Punctuations.get(
-                    (int)keyval, last_is_chinese)
-                : "%c".printf((int)keyval);
-              if (punc.length > 0) {
-                last_is_chinese = (punc.size() > 2);
-                commit(punc);
+            bool is_backspace = (("back" in actions) 
+                && raw_buffer.length > 0
+                );
+            if (Config.Switches.double_pinyin) {
+              if ((Pinyin.DoublePinyin.is_valid_key(keyval)
+                    && state == 0) || is_backspace) {
+                if (is_backspace) raw_buffer = raw_buffer[0:-1];
+                else raw_buffer += "%c".printf((int)keyval);
+                Pinyin.DoublePinyin.convert(raw_buffer, out pinyin_buffer);
+                handled = true; break;
+              }
+            } else {
+              if (('z' >= keyval >= 'a'
+                    && state == 0) || is_backspace) {
+                if (is_backspace) raw_buffer = raw_buffer[0:-1];
+                else raw_buffer += "%c".printf((int)keyval);
+                pinyin_buffer = new Pinyin.Sequence(raw_buffer);
+                handled = true; break;
+              }
+              if (("sep" in actions) && raw_buffer.length > 0 
+                  && (uint)raw_buffer[raw_buffer.length - 1] != keyval) {
+                stdout.printf("sep action");
+                raw_buffer += "%c".printf((int)keyval);
                 handled = true; break;
               }
             }
-          } while (false);
+          }
 
-          if (handled) update_preedit();
+          // raw commit
+          if (("raw" in actions)
+              && raw_buffer.length > 0) {
+            commit(raw_buffer);
+            raw_buffer = "";
+            pinyin_buffer.clear();
+            last_is_chinese = true;
+            handled = true; break;
+          }
 
-          return handled;
+          // commit buffer hotkey
+          if (("commit" in actions)
+              && pinyin_buffer.size > 0) {
+            commit_buffer();
+            handled = true; break;
+          }
+
+          // lookup table pgup, pgdn, candidate select
+          if (table_visible && (correction_mode
+                || !Config.Punctuations.exists((int)keyval))) {
+            if (("pgup" in actions && (table.page_up() || true))
+                || ("pgdn" in actions && (table.page_down() || true))) {
+              update_lookup_table(table, true);
+              print("cur: %u\n", table.get_cursor_in_page());
+              handled = true; break;
+            }
+            foreach (string s in actions) {
+              if (s.has_prefix("cand:")) {
+                uint index = 0;
+                s.scanf("cand:%u", &index);
+                // check if that candidate exists
+                index += table.get_page_size() * page_index;
+                if (table.get_number_of_candidates() > index) {
+                  Text candidate = table.get_candidate(index);
+                  string content = candidate.text;
+                  int len = (int)content.length;
+                  commit(content);
+                  // remove heading pinyins (rebuild buffer)
+                  if (Config.Switches.double_pinyin) {
+                    raw_buffer = pinyin_buffer.to_double_pinyin_string(len);
+                    Pinyin.DoublePinyin.convert(raw_buffer, 
+                      out pinyin_buffer);
+                  } else {
+                    raw_buffer = pinyin_buffer.to_string(len);
+                    pinyin_buffer = new Pinyin.Sequence(raw_buffer);
+                  }
+                  handled = true;
+                }
+                break;
+              }
+            }
+            if (handled) break;
+          }
+
+          // puncs
+          if (((state ^ IBus.ModifierType.SHIFT_MASK)
+                == 0 || state == 0)
+              && 128 > keyval >= 32) {
+            commit_buffer();
+
+            string punc = chinese_mode ?
+              Config.Punctuations.get(
+                  (int)keyval, last_is_chinese)
+              : "%c".printf((int)keyval);
+            if (punc.length > 0) {
+              last_is_chinese = (punc.size() > 2);
+              commit(punc);
+              handled = true; break;
+            }
+          }
+        } while (false);
+
+        if (handled) {
+          update_preedit();
+          update_properties();
+          update_candidates();
         }
 
-      public void update_preedit() {
+        return handled;
+      }
+
+      private override void page_up() {
+        if (table_visible && table.page_up()) {
+          update_lookup_table(table, true);
+          page_index --;
+        }
+      }
+
+      private override void page_down() {
+        if (table_visible && table.page_down()) {
+          update_lookup_table(table, true);
+          page_index ++;
+        }
+      }
+
+      private override void candidate_clicked (uint index, uint button,
+          uint state) {
+
+      }
+
+      private void update_preedit() {
         // auxiliary text
         if (pinyin_buffer.size == 0 
             || (!Config.Switches.show_pinyin_auxiliary 
@@ -383,10 +462,47 @@ namespace icp {
               (int)text.get_length(), true
               );
         }
-
       }
 
-      public void update_properties() {
+      private string last_pinyin_buffer_string;
+      private void update_candidates() {
+        // update candidates according to pinyin_buffer
+        if (pinyin_buffer.size > 0 && 
+            (Config.Switches.always_show_candidates || correction_mode)) {
+          if (last_pinyin_buffer_string != pinyin_buffer.to_string()) {
+            // should update lookup table
+            // TODO: append results from userdb
+            candidates.clear();
+            table.clear();
+            page_index = 0;
+            Pinyin.Database.query(pinyin_buffer, candidates);
+
+            // update lookup table labels
+            for (int i = 0; i < Config.CandidateLabels.size; i++) {
+              table.set_label((uint)i, new Text.from_string(
+                    Config.CandidateLabels.get(i,
+                      (Config.Switches.always_show_candidates 
+                       && !correction_mode)))
+                  );
+            }
+
+            // update candidates
+            foreach (string s in candidates) {
+              table.append_candidate(new Text.from_string(s));
+            }
+
+            table_visible = (candidates.size > 0);
+            update_lookup_table(table, table_visible);
+            last_pinyin_buffer_string = pinyin_buffer.to_string();
+          }
+        } else {
+          table_visible = false;
+          hide_lookup_table();
+          last_pinyin_buffer_string = "";
+        }
+      }
+
+      private void update_properties() {
         if (!enabled) return;
         if (last_chinese_mode != chinese_mode) {
           chinese_mode_icon.set_icon("%s/icons/pinyin-%s.png"
@@ -448,7 +564,7 @@ namespace icp {
 
     public static void register() {
       bus = new Bus();
-      if (Config.launched_by_ibus) 
+      if (Config.CommandlineOptions.launched_by_ibus) 
         bus.request_name("org.freedesktop.IBus.cloudpinyin", 0);
       else
         bus.register_component (component);

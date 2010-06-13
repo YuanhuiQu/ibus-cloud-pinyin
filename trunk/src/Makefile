@@ -28,13 +28,13 @@ all:
 
 ibus-cloud-pinyin: $(CFLAGFILE) $(CSRCS)
 	@$(ECHO) "$(MSG_PREFIX)Building $@ ...$(MSG_SUFFIX)"
-	$(CC) $(CFLAGS) $(CSRCS) -o $@
+	$(CC) $(CFLAGS) $(CSRCS) -g -o $@
 
 $(CSRCS): $(VALACFLAGFILE) $(VALASRCS)
 	@$(ECHO) "$(MSG_PREFIX)Generating C files ...$(MSG_SUFFIX)"
 	@-rm -rf $(CSRCS)
-	#$(VALAC) $(VALAFLAGS) --disable-warnings -q -C $(VALASRCS)
-	$(VALAC) $(VALAFLAGS) -C $(VALASRCS)
+	$(VALAC) $(VALAFLAGS) --disable-warnings  -C $(VALASRCS)
+	@#$(VALAC) $(VALAFLAGS) -C $(VALASRCS)
 	@$(ECHO) "$(MSG_PREFIX)Patching main.c (workaround for valac) ...$(MSG_SUFFIX)"
 	if ! grep -qe 'dbus_[^t]*thread' main.c; then sed -i 's/gdk_threads_init/dbus_g_thread_init();gdk_threads_init/' main.c; fi
 

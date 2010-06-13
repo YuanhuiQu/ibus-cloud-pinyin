@@ -26,34 +26,43 @@ namespace icp {
     private static LuaVM vm;
     private static ThreadPool thread_pool;
     private static Posix.pid_t main_pid;
-    private static Gee.LinkedList<LuaTrunk> script_pool;
+    private static Gee.LinkedList<string> script_pool;
 
-    // since lua binding run one thread per process, keep current_engine
-    // static of this class in do_string() to track matched engine ....
-    private static IBusBinding.CloudPinyinEngine* current_engine;
-
-    class LuaTrunk {
-      public string script;
-      public IBusBinding.CloudPinyinEngine* engine;
-
-      public LuaTrunk(string script, IBusBinding.CloudPinyinEngine* engine) {
-        this.script = script;
-        this.engine = engine;
-      }
-    }
+    // only in_configuration = true, can some settings be done.
+    // this provides extended thread safty.
+    // main glib loop will be delayed ~0.1s. in this time, global
+    // configuration should make all settings done...
+    // i hate locks ...
+    private static bool in_configuration;
 
     private LuaBinding() {
       // this class is used as namespace
+    }
+
+    private static bool check_permissions(bool should_in_configuration = true) {
+      if (Posix.getpid() != main_pid) {
+        stderr.printf("LUA-WARNING: IME native functions are disabled after go_background().\n");
+        return false;
+      }
+
+      if (should_in_configuration && !in_configuration) {
+        Frontend.notify("No permission", 
+          "Configurations must be done in startup script.", 
+          "stop"
+          );
+        return false;
+      }
+      return true;
     }
 
     private static int l_get_selection(LuaVM vm) {
       // refuse to do anything in non-main process
       // for example, a requesting thread
       // it should only return string, no operation to ime
-      if (Posix.getpid() != main_pid) return 0;
+      if (!check_permissions(false)) return 0;
 
       // lock is no more needed because only one thread per process
-      // use this lua vm.
+      // use this lua vm. however this thread is not main glib loop
       // lock(vm_lock) {
       vm.check_stack(1);
       vm.push_string(icp.Frontend.get_selection());
@@ -62,7 +71,7 @@ namespace icp {
     }
 
     private static int l_notify(LuaVM vm) {
-      if (Posix.getpid() != main_pid) return 0;
+      if (!check_permissions(false)) return 0;
       if (vm.is_string(1)) {
         string title = vm.to_string(1);
         string content = "", icon = "";
@@ -75,7 +84,7 @@ namespace icp {
     }
 
     private static int l_set_response(LuaVM vm) {
-      if (Posix.getpid() != main_pid) return 0;
+      if (!check_permissions()) return 0;
       if (vm.is_string(1) && vm.is_string(2)) {
         string pinyins = vm.to_string(1);
         string content = vm.to_string(2);
@@ -86,14 +95,8 @@ namespace icp {
       return 0;
     }
 
-    private static int l_action(LuaVM vm) {
-      if (Posix.getpid() != main_pid) return 0;
-      // check engine available
-      return 0;
-    }
-
     private static int l_set_switch(LuaVM vm) {
-      if (Posix.getpid() != main_pid) return 0;
+      if (!check_permissions(false)) return 0;
       if (!vm.is_table(1)) return 0;
 
       vm.check_stack(2);
@@ -121,9 +124,6 @@ namespace icp {
           case "show_raw_in_auxiliary":
             bind_value = &Config.Switches.show_raw_in_auxiliary;
           break;            
-          case "offline_mode_auto_commit":
-            bind_value = &Config.Switches.offline_mode_auto_commit;
-          break;
           case "default_offline_mode":
             bind_value = &Config.Switches.default_offline_mode;
           break;
@@ -141,17 +141,17 @@ namespace icp {
     }
 
     private static int l_set_timeout(LuaVM vm) {
-      if (Posix.getpid() != main_pid) return 0;
+      if (!check_permissions(false)) return 0;
       return 0;
     }
 
     private static int l_set_limit(LuaVM vm) {
-      if (Posix.getpid() != main_pid) return 0;
+      if (!check_permissions(false)) return 0;
       return 0;
     }
 
     private static int l_set_double_pinyin(LuaVM vm) {
-      if (Posix.getpid() != main_pid) return 0;
+      if (!check_permissions()) return 0;
       Pinyin.DoublePinyin.clear();
 
       if (!vm.is_table(1)) return 0;
@@ -166,9 +166,7 @@ namespace icp {
         string double_pinyin = vm.to_string(-2);
         string full_pinyin = vm.to_string(-1);
         if (double_pinyin.length != 2) continue;
-        Pinyin.DoublePinyin.insert(
-            (int)double_pinyin[0], (int)double_pinyin[1], full_pinyin
-            );
+        Pinyin.DoublePinyin.insert(double_pinyin, full_pinyin);
       }
       assert(vm.get_top() == vm_top);
 
@@ -176,7 +174,7 @@ namespace icp {
     }
 
     private static int l_set_key(LuaVM vm) {
-      if (Posix.getpid() != main_pid) return 0;
+      if (!check_permissions()) return 0;
 
       if (vm.get_top() < 3 || (!vm.is_string(1) && !vm.is_number(1))
           || !vm.is_string(3) || !vm.is_number(2)) return 0;
@@ -193,23 +191,32 @@ namespace icp {
     }
 
     private static int l_set_candidate_labels(LuaVM vm) {
-      if (Posix.getpid() != main_pid) return 0;
+      if (!check_permissions()) return 0;
+      // accept two strings, only one unichar per label
+      if (!vm.is_string(1)) return 0;
+
+      string labels = vm.to_string(1);
+      string alternative_labels = labels;
+      if (vm.is_string(2)) alternative_labels = vm.to_string(2);
+
+      Config.CandidateLabels.clear();
+      for (int i = 0; i < labels.length; i++) {
+        Config.CandidateLabels.add (labels[i:i+1],
+            (i < alternative_labels.length) ? alternative_labels[i:i+1] : null
+            );
+      }
+
       return 0;
     }
 
     private static int l_register_engine(LuaVM vm) {
-      if (Posix.getpid() != main_pid) return 0;
-      return 0;
-    }
-
-    private static int l_get_status(LuaVM vm) {
-      if (Posix.getpid() != main_pid) return 0;
+      if (!check_permissions()) return 0;
       return 0;
     }
 
     private static int l_go_background(LuaVM vm) {
       // fork, do nothing if already in background 
-      if (Posix.getpid() != main_pid) return 0;
+      if (!check_permissions(false)) return 0;
 
       Posix.pid_t pid;
       pid = Posix.fork();
@@ -226,7 +233,8 @@ namespace icp {
 
 
     public static void init() {
-      script_pool = new Gee.LinkedList<LuaTrunk>();
+      in_configuration = false;
+      script_pool = new Gee.LinkedList<string>();
 
       vm = new LuaVM();
       vm.open_libs();
@@ -237,8 +245,6 @@ namespace icp {
       vm.register("set_response", l_set_response);
 
       vm.register("get_selection", l_get_selection);
-      vm.register("action", l_action);
-      vm.register("get_status", l_get_status);
 
       // vm.register("set_mode", l_set_mode); // in 1, bool
       // vm.register("set_color", l_set_color);
@@ -277,53 +283,58 @@ correction =
         thread_pool = new ThreadPool(do_string_internal, 1, true);
       } catch (ThreadError e) {
         stderr.printf("LuaBinding cannot create thread pool: %s\n", 
-          e.message
-          );
+            e.message
+            );
       }
 
       main_pid = Posix.getpid();
     }
 
-    private static void do_string_internal(void* ptrunk) {
-      // do not execute other script if being forked
-      // prevent executing them two times
-      LuaTrunk* trunk = (LuaTrunk*)ptrunk;
-      current_engine = trunk->engine;
+    private static void do_string_internal(void* data) {
       if (Posix.getpid() != main_pid) return;
 
-      vm.load_string(trunk->script);
-      if (vm.pcall(0, 0, 0) != 0) {
-        string error_message = vm.to_string(-1);
-        if (error_message != "fork_stop")
-          Frontend.notify("Lua Error", error_message, "error");
-        vm.pop(1);
+      // do not execute other script if being forked
+      // prevent executing them two times
+      string script = (string)data;
+
+      if (script == ".stop_conf") {
+        in_configuration = false;
+      } else {
+        vm.load_string(script);
+        if (vm.pcall(0, 0, 0) != 0) {
+          string error_message = vm.to_string(-1);
+          if (error_message != "fork_stop")
+            Frontend.notify("Lua Error", error_message, "error");
+          vm.pop(1);
+        }
       }
     }
 
-    public static void
-      do_string(string script,
-          IBusBinding.CloudPinyinEngine* pengine = null
-          ) {
-        // do all things in thread pool
-        try {
-          // attention: script may be unavailabe after pushed into thread_pool
-          // thread_pool.push((void*)script);
+    public static void do_string(string script) {
+      // do all things in thread pool
+      try {
+        // attention: script may be unavailabe after pushed into thread_pool
+        // thread_pool.push((void*)script);
 
-          // do some cleanning when possible
-          if (thread_pool.unprocessed() == 0) script_pool.clear();
+        // do some cleanning when possible
+        if (thread_pool.unprocessed() == 0) script_pool.clear();
 
-          // push script into script_pool to keep it safe
-          script_pool.add(new LuaTrunk(script, pengine));
-          thread_pool.push((void*)script_pool.last());
-        } catch (ThreadError e) {
-          stderr.printf(
-              "LuaBinding fails to launch thread from thread pool: %s\n",
-              e.message);
-        }
+        // push script into script_pool to keep it safe
+        script_pool.add(script);
+        thread_pool.push((void*)script_pool.last());
+      } catch (ThreadError e) {
+        stderr.printf(
+            "LuaBinding fails to launch thread from thread pool: %s\n",
+            e.message);
       }
+    }
 
     public static void load_configuration() {
-      do_string("dofile('%s')".printf(Config.startup_script));
+      in_configuration = true;
+      do_string("dofile('%s')".printf(
+            Config.CommandlineOptions.startup_script)
+          );
+      do_string(".stop_conf");
     }
   }
 }

@@ -31,7 +31,7 @@ namespace icp {
 
       Config.init(args);
 
-      if (Config.show_version) {
+      if (Config.CommandlineOptions.show_version) {
         stdout.printf(
             "ibus-cloud-pinyin %s [built with ibus %d.%d.%d]\n"
             + "Copyright (c) 2010 WU Jun <quark@lihdd.net>\n",
@@ -41,7 +41,7 @@ namespace icp {
         return 0;
       }
 
-      if (Config.show_xml) {
+      if (Config.CommandlineOptions.show_xml) {
         IBusBinding.init();
         stdout.printf("%s", IBusBinding.get_component_xml());
         return 0;
@@ -52,7 +52,6 @@ namespace icp {
       Pinyin.Database.init();
       Pinyin.UserDatabase.init();
 
-
       LuaBinding.init();
       Frontend.init();
       DBusBinding.init();
@@ -60,8 +59,9 @@ namespace icp {
 
       LuaBinding.load_configuration();
 
-      if (!Config.do_not_connect_ibus) {
-        // give lua script some time to set up
+      if (!Config.CommandlineOptions.do_not_connect_ibus) {
+        // give lua thread some time to set up
+        // currently no lock to  protect complex settings
         Thread.usleep(100000);
         IBusBinding.register();
       }
