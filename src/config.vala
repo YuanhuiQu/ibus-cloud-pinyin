@@ -176,6 +176,7 @@ namespace icp {
       public static void init() {
         key_actions = new HashMap<Key, string>
           ((HashFunc) Key.hash_func, (EqualFunc) Key.equal_func);      
+        set(new Key(IBus.Tab), "correct");
         set(new Key(IBus.BackSpace), "back");
         set(new Key(IBus.space), "sep commit");
         set(new Key(IBus.Escape), "clear");
