@@ -325,6 +325,22 @@ namespace icp {
                 handled = true; break;
               }
             }
+
+            // chinese puncs
+            if (((state ^ IBus.ModifierType.SHIFT_MASK)
+                  == 0 || state == 0)
+                && 128 > keyval >= 32 
+                && Config.Punctuations.exists((int)keyval)) {
+
+              if (pinyin_buffer.size > 0) last_is_chinese = true;
+              string punc = Config.Punctuations.get(
+                  (int)keyval, last_is_chinese
+                  );
+              commit_buffer();
+              last_is_chinese = (punc.size() > 2);
+              commit(punc);
+              handled = true; break;
+            }
           }
 
           // raw commit
@@ -345,46 +361,42 @@ namespace icp {
           }
 
           // lookup table pgup, pgdn, candidate select
-          if (table_visible && (correction_mode
-                || !Config.Punctuations.exists((int)keyval))) {
+          if (table_visible /*&& (correction_mode
+                              || !Config.Punctuations.exists((int)keyval) )*/) {
             if ("pgup" in actions) { page_up(); handled = true;}
             if ("pgdn" in actions) { page_down(); handled = true;}
             if (handled) {
               update_lookup_table(table, true);
               break;
             }
-          }
 
-          foreach (string s in actions) {
-            if (s.has_prefix("cand:")) {
-              uint index = 0;
-              s.scanf("cand:%u", &index);
-              // check if that candidate exists
-              if (table.get_number_of_candidates() 
-                  > table.get_page_size() * page_index + index) {
-                candidate_clicked(index, 128, 0);
-                handled = true;
+            foreach (string s in actions) {
+              if (s.has_prefix("cand:")) {
+                uint index = 0;
+                s.scanf("cand:%u", &index);
+                // check if that candidate exists
+                if (table.get_number_of_candidates() 
+                    > table.get_page_size() * page_index + index) {
+                  candidate_clicked(index, 128, 0);
+                  handled = true;
+                }
+                break;
               }
-              break;
             }
+            if (handled) break;
           }
-          if (handled) break;
 
-          // puncs
+
+          // non-chinese puncs
           if (((state ^ IBus.ModifierType.SHIFT_MASK)
                 == 0 || state == 0)
               && 128 > keyval >= 32) {
             commit_buffer();
 
-            string punc = chinese_mode ?
-              Config.Punctuations.get(
-                  (int)keyval, last_is_chinese)
-              : "%c".printf((int)keyval);
-            if (punc.length > 0) {
-              last_is_chinese = (punc.size() > 2);
-              commit(punc);
-              handled = true; break;
-            }
+            string punc = "%c".printf((int)keyval);
+            last_is_chinese = false;
+            commit(punc);
+            handled = true; break;
           }
         } while (false);
 

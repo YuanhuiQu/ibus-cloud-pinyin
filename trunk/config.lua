@@ -73,6 +73,7 @@ set_switch{
 
 set_candidate_labels(
 	"jkl;asdf",
-	"12345678"
+	"_2345678"
 )
 
+set_key('1', 0, 'lua:notify("hello")')
