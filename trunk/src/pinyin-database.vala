@@ -51,7 +51,7 @@ namespace icp {
         }
       }
 
-      public static string request (string pinyin) {
+      public static string query (string pinyin) {
         if (responses.contains(pinyin)) {
           return responses.get(pinyin).content;
         } else {
