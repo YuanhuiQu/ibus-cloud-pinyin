@@ -25,8 +25,11 @@ namespace icp {
   class Config {
     // project constants
     public static const string version = "0.8.0-alpha";
-    public static const string 
-      global_data_path = "/usr/share/ibus-cloud-pinyin";
+    public static const string global_data_path = "@PKGDATADIR@";
+
+    // PKGDATADIR should looked like: "/usr/share/ibus-cloud-pinyin"
+    // since Vala has a very poor preprocessor, i need to 
+    // replace all "@PKGDATADIR@" in C code using scripts
 
     // command line options
     [Compact]
