@@ -189,6 +189,7 @@ namespace icp {
 
       public override void focus_out() {
         has_focus = false;
+        print("focus out\n");
       }
 
       public override void property_activate(string prop_name, 

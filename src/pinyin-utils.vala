@@ -716,6 +716,20 @@ namespace icp {
       valid_pinyins.add("zun");
       valid_pinyins.add("zuo");
 
+      valid_pinyins.add("a");
+      valid_pinyins.add("e");
+      valid_pinyins.add("ei");
+      valid_pinyins.add("ai");
+      valid_pinyins.add("ei");
+      valid_pinyins.add("ao");
+      valid_pinyins.add("o");
+      valid_pinyins.add("ou");
+      valid_pinyins.add("an");
+      valid_pinyins.add("en");
+      valid_pinyins.add("ang");
+      // valid_pinyins.add("eng");
+      valid_pinyins.add("er");
+
       // calculate valid_partial_pinyins
       foreach (string s in valid_pinyins) {
         for (int i = 1; i <= s.length; i++) {
