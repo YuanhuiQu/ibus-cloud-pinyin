@@ -65,8 +65,8 @@ set_double_pinyin{
 
 set_switch{
 	default_offline_mode = true,
-	default_traditional_mode = true,
-	-- double_pinyin = true,
+	-- default_traditional_mode = true,
+	double_pinyin = true,
 	show_raw_in_auxiliary = true,
 	always_show_candidates = true,
 }
