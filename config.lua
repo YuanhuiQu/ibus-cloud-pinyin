@@ -66,19 +66,7 @@ set_double_pinyin{
 set_switch{
 	default_offline_mode = true,
 	default_traditional_mode = true,
-	double_pinyin = true,
+	-- double_pinyin = true,
 	show_raw_in_auxiliary = true,
 	always_show_candidates = true,
-	
-}
-
-set_candidate_labels(
-	"jkl;asdf",
-	"_2345678"
-)
-
--- set_key('1', 0, 'lua:notify("hello")')
-
-set_color{
-	buffer_pinyin = 'ff0000,ffffff,1'
 }

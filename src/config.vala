@@ -96,7 +96,7 @@ namespace icp {
 
       public static void init() {
         buffer_raw = new Color(0x00B75D);
-        buffer_pinyin = new Color();
+        buffer_pinyin = new Color(null, null, true);
 
         candidate_local = new Color();
         candidate_remote = new Color(0x0050FF);

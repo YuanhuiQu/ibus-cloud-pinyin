@@ -40,7 +40,7 @@ namespace icp {
 
         // other programs use ...
         public string try_request (string pinyins) {
-          return Pinyin.UserDatabase.request(pinyins);
+          return Pinyin.UserDatabase.query(pinyins);
         }
 
         public string quick_convert (string pinyins) {
