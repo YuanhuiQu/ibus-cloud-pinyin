@@ -1,7 +1,7 @@
 PREFIX ?= /usr
 
-VALAC= valac
-CC= gcc
+VALAC=valac
+CC=gcc
 
 CFLAGS = `cat $(CFLAGFILE)` -pthread
 VALAFLAGS= `cat $(VALACFLAGFILE)` --pkg ibus-1.0 --pkg posix --thread --enable-checking --vapidir=.
@@ -35,8 +35,9 @@ $(CSRCS): $(VALACFLAGFILE) $(VALASRCS)
 	@-rm -rf $(CSRCS)
 	$(VALAC) $(VALAFLAGS) --disable-warnings  -C $(VALASRCS)
 	@#$(VALAC) $(VALAFLAGS) -C $(VALASRCS)
-	@$(ECHO) "$(MSG_PREFIX)Patching main.c (workaround for valac) ...$(MSG_SUFFIX)"
+	@$(ECHO) "$(MSG_PREFIX)Patching C files (workaround for valac) ...$(MSG_SUFFIX)"
 	if ! grep -qe 'dbus_[^t]*thread' main.c; then sed -i 's/gdk_threads_init/dbus_g_thread_init();gdk_threads_init/' main.c; fi
+	for i in *.c; do sed -i "s#@PKGDATADIR@#$(PREFIX)/share/ibus-cloud-pinyin#g" $$i; done
 
 clean:
 	@$(ECHO) "$(MSG_PREFIX)Cleaning src ...$(MSG_SUFFIX)"
