@@ -32,10 +32,6 @@ libopencc Support
 
 http://ibus-cloud-pinyin.googlecode.com/svn/trunk/icons/idle-0.png
 
-Setup Utility
-
-http://ibus-cloud-pinyin.googlecode.com/svn/trunk/icons/idle-0.png
-
 User Guide
 
 http://ibus-cloud-pinyin.googlecode.com/svn/trunk/icons/idle-0.png
