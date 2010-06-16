@@ -240,11 +240,44 @@ namespace icp {
       lock (db) {
         // try insert if not existed
         assert_exec(sql_builder.str);
-        // update freq
-        assert_exec(
-            "UPDATE userdb.py_phrase_%d SET freq=freq*%lf+1, atime=%lf WHERE %s"
-            .printf(length - 1, freq_increase + 1.0, get_atime(), where)
-            );
+        // update freq OR atime
+        double atime = get_atime();
+        
+        query =
+          "SELECT atime FROM userdb.py_phrase_%d WHERE %s LIMIT 1"
+          .printf(length - 1, where);
+
+        if (db.prepare_v2(query, -1, out stmt, null) == Sqlite.OK) {
+          for (bool running = true; running;) {
+            switch (stmt.step()) {
+              case Sqlite.ROW: 
+                atime = (double)stmt.column_int(0);
+                break;
+              case Sqlite.BUSY:
+                Thread.usleep(1024);
+                break;
+              default:
+                running = false;
+                break;
+            }
+          }
+        }
+
+        atime = get_atime() - atime;
+        if (atime < 1.0) {
+          // in 24 hours, update both
+          assert_exec(
+              "UPDATE userdb.py_phrase_%d SET freq=freq*%lf+1, atime=%lf WHERE %s"
+              .printf(length - 1, freq_increase + 1.0, get_atime(), where)
+              );
+        } else {
+          // update atime only
+          assert_exec(
+              "UPDATE userdb.py_phrase_%d SET atime=%lf WHERE %s"
+              .printf(length - 1, get_atime(), where)
+              );
+        }
+
       }
     }
 
@@ -375,10 +408,8 @@ namespace icp {
         path += "/%s".printf(dir);
         Posix.mkdir(path, Posix.S_IRWXU);
       }
-
-      // load user db
+      // load dbs
       load_databases();
-
     }
 
     private Database() { }
