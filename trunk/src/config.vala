@@ -25,8 +25,9 @@ namespace icp {
   class Config {
     // project constants
     public static const string version = "0.8.0-alpha";
-    public static const string global_data_path = "@PKGDATADIR@";
+    public static const string prefix_path = "@PREFIX@";
 
+    public static string global_data_path { get; private set; }
     public static string user_database { get; private set; }
     public static string global_database { get; private set; }
 
@@ -48,6 +49,7 @@ namespace icp {
         public static bool launched_by_ibus;
         public static bool do_not_connect_ibus;
         public static bool show_xml;
+        public static bool user_db_in_memory; 
       }
 
     // timeouts, unit: 1 second
@@ -120,7 +122,8 @@ namespace icp {
       public class Limits {
         public Limits() { assert_not_reached(); }
 
-        public static int database_query_limit = 128;
+        public static int global_db_query_limit = 128;
+        public static int user_db_query_limit = 5;
       }
 
     // enables
@@ -337,6 +340,8 @@ namespace icp {
 
     // init
     public static void init(string[] args) {
+      global_data_path = prefix_path + "/share/ibus-cloud-pinyin";
+
       Colors.init();
       KeyActions.init();
       CandidateLabels.init();
@@ -351,6 +356,9 @@ namespace icp {
       OptionEntry entrie_version = { "version", 'i', 0, OptionArg.NONE,
         out CommandlineOptions.show_version, "show version information", 
         null };
+      OptionEntry entrie_user_db_in_mem = { "memory-db", 'm', 0, 
+        OptionArg.NONE, out CommandlineOptions.user_db_in_memory,
+        "do not use user database on disk", null };
       OptionEntry entrie_ibus = { "ibus", 'b', 0, OptionArg.NONE,
         out CommandlineOptions.launched_by_ibus, "run by ibus", null };
       OptionEntry entrie_no_ibus = { "no-ibus", 'n', 0, OptionArg.NONE,
@@ -366,7 +374,9 @@ namespace icp {
         new OptionContext("- cloud pinyin client for ibus");
 
       context.add_main_entries({entrie_script, entrie_version, entrie_ibus,
-          entrie_no_ibus, entrie_xml, entrie_null}, null);
+          entrie_no_ibus, entrie_xml, entrie_user_db_in_mem, entrie_null},
+          null
+          );
 
       try {
         context.parse(ref args);
@@ -386,7 +396,9 @@ namespace icp {
       user_config_path = "%s/ibus/cloud-pinyin".printf(
         Environment.get_user_config_dir()
         );
-      user_database = "%s/userdb.db".printf(user_cache_path);
+
+      user_database = CommandlineOptions.user_db_in_memory ? ":memory:" 
+        : "%s/userdb.db".printf(user_cache_path);
       global_database = "%s/db/main.db".printf(global_data_path);
     }
 

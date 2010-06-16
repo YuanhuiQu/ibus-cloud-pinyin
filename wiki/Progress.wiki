@@ -2,15 +2,15 @@
 
 Lua and DBus Binding
 
-http://ibus-cloud-pinyin.googlecode.com/svn/trunk/icons/idle-2.png
+http://ibus-cloud-pinyin.googlecode.com/svn/trunk/icons/idle-3.png
 
 Open-phrase Database
 
 http://ibus-cloud-pinyin.googlecode.com/svn/trunk/icons/idle-4.png
 
-User Database
+User Database, Cloud Requests Manager
 
-http://ibus-cloud-pinyin.googlecode.com/svn/trunk/icons/idle-1.png
+http://ibus-cloud-pinyin.googlecode.com/svn/trunk/icons/idle-2.png
 
 Lua Scripts
 
