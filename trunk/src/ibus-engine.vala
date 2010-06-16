@@ -220,7 +220,7 @@ namespace icp {
         // TODO: use mixed greedy convert if cloud client impled.
         // TODO: send request here
         if (pinyin_buffer.size > 0) {
-          commit(Pinyin.Database.greedy_convert(pinyin_buffer));
+          commit(Database.global_db.greedy_convert(pinyin_buffer));
           last_is_chinese = true;
         }
         raw_buffer = "";
@@ -312,7 +312,7 @@ namespace icp {
                     + Frontend.clipboard_update_time) {
                   string selection = Frontend.get_selection();
                   if (!selection.contains("\n")
-                      && Pinyin.Database.reverse_convert(
+                      && Database.global_db.reverse_convert(
                         selection, out pinyin_buffer)) {
                     // reverse convert successful
                     // erase client text
@@ -522,7 +522,7 @@ namespace icp {
         //     if cloud client impled.
         {
           var text = new Text.from_string(
-              Pinyin.Database.greedy_convert(
+              Database.global_db.greedy_convert(
                 pinyin_buffer
                 ));
           if (correction_mode)
@@ -555,7 +555,7 @@ namespace icp {
             candidates.clear();
             table.clear();
             page_index = 0;
-            Pinyin.Database.query(pinyin_buffer, candidates, 
+            Database.global_db.query(pinyin_buffer, candidates, 
               Config.Limits.database_query_limit
               );
 

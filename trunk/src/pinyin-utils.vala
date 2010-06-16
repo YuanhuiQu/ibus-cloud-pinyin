@@ -36,7 +36,7 @@ namespace icp {
     // length: 4 to 8
     HashMap<string, string> cutting_adjusts;
 
-    class Id {
+    public class Id {
       public int consonant { get; private set; }
       public int vowel { get; private set; }
 
@@ -93,7 +93,7 @@ namespace icp {
       }
     }
 
-    class Sequence {
+    public class Sequence {
       private ArrayList<Id> id_sequence;
 
       private static bool is_valid_pinyin_begin(string pinyins, 
@@ -238,7 +238,7 @@ namespace icp {
       }
     }
 
-    class DoublePinyin {
+    public class DoublePinyin {
       private static HashMap<Id, string> reverse_scheme;
       private static HashMap<string, Id> scheme;
       private static HashSet<uint> valid_keys;
@@ -969,6 +969,9 @@ namespace icp {
       cutting_adjusts["zhuangao"] = "zhuan gao";
       cutting_adjusts["zhuangei"] = "zhuan gei";
       cutting_adjusts["zunao"] = "zu nao";
+
+      // init double pinyin
+      DoublePinyin.init();
     }
   }
 }

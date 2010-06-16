@@ -27,7 +27,14 @@ namespace icp {
     public static const string version = "0.8.0-alpha";
     public static const string global_data_path = "@PKGDATADIR@";
 
-    // PKGDATADIR should looked like: "/usr/share/ibus-cloud-pinyin"
+    public static string user_database { get; private set; }
+    public static string global_database { get; private set; }
+
+    public static string user_config_path { get; private set; }
+    public static string user_data_path { get; private set; }
+    public static string user_cache_path { get; private set; }
+
+    // PKGDATADIR should look like: "/usr/share/ibus-cloud-pinyin"
     // since Vala has a very poor preprocessor, i need to 
     // replace all "@PKGDATADIR@" in C code using scripts
 
@@ -369,6 +376,18 @@ namespace icp {
 
       if (CommandlineOptions.startup_script == null)
         CommandlineOptions.startup_script = global_data_path + "/config.lua";
+
+      user_cache_path = "%s/ibus/cloud-pinyin".printf(
+        Environment.get_user_cache_dir()
+        );
+      user_data_path = "%s/ibus/cloud-pinyin".printf(
+        Environment.get_user_data_dir()
+        );
+      user_config_path = "%s/ibus/cloud-pinyin".printf(
+        Environment.get_user_config_dir()
+        );
+      user_database = "%s/userdb.db".printf(user_cache_path);
+      global_database = "%s/db/main.db".printf(global_data_path);
     }
 
     // this class is used as namespace

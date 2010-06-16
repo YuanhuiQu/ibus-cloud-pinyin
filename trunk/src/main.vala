@@ -48,12 +48,9 @@ namespace icp {
       }
 
       Pinyin.init();
-      Pinyin.DoublePinyin.init();
-      Pinyin.Database.init();
-      Pinyin.UserDatabase.init();
-
       LuaBinding.init();
       Frontend.init();
+      Database.init();
       DBusBinding.init();
       IBusBinding.init();
 
@@ -61,7 +58,7 @@ namespace icp {
 
       if (!Config.CommandlineOptions.do_not_connect_ibus) {
         // give lua thread some time to set up
-        // currently no lock to  protect complex settings
+        // currently no lock to protect complex settings
         Thread.usleep(100000);
         IBusBinding.register();
       }

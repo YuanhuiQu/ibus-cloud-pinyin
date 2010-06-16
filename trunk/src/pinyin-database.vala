@@ -20,9 +20,14 @@
  *****************************************************************************/
 
 using Gee;
+using icp.Pinyin;
 
 namespace icp {
-  namespace Pinyin {
+  namespace Database {
+    static PhraseDatabase user_db;
+    static PhraseDatabase global_db;
+
+/*
     class UserDatabase {
       private static HashMap<string, Response> responses;
 
@@ -63,26 +68,57 @@ namespace icp {
         responses = new HashMap<string, Response>();
       }
     }
+*/
 
-    class Database {
-      private static Sqlite.Database db;
-      private static const int PHASE_LENGTH_MAX = 15;
 
-      private Database() {
-        // this class is used as a namespace
-      }
+    public class PhraseDatabase {
+      private Sqlite.Database db;
+      private bool user_db;
+      private const int PHRASE_LENGTH_MAX = 15;
 
-      public static void* init() {
-        assert(Sqlite.Database.open("/usr/share/ibus-cloud-pinyin/db/main.db",
-              out db) == Sqlite.OK
+      public PhraseDatabase(string? filename = null, bool user_db = false) {
+        if (filename == null) filename = Config.global_database;
+        assert(Sqlite.Database.open_v2(filename, out db, 
+              user_db ? 
+              Sqlite.OPEN_READWRITE | Sqlite.OPEN_CREATE
+              : Sqlite.OPEN_READONLY) 
+            == Sqlite.OK
             );
-        db.exec("PRAGMA cache_size = 16384;\n PRAGMA temp_store = MEMORY;");
+        this.user_db = user_db;
 
-        return null;
+        if (user_db) {
+          StringBuilder builder = new StringBuilder();
+          builder.append("BEGIN TRANSACTION;\n");
+          // create tables and indexes
+          for (int i = 0; i < PHRASE_LENGTH_MAX; i++) {
+            builder.append("CREATE TABLE IF NOT EXISTS py_phrase_%d"
+                .printf(i)
+                );
+            builder.append("(phrase TEXT, freq INTEGER, last DATETIME");
+            for (int j = 0; j <= i; j++) {
+              builder.append(",s%d INTEGER,y%d INTEGER".printf(j, j));
+            }
+            builder.append(");\n");
+
+            string columns = "";
+            for (int j = 0; j <= (i > 4 ? 4 : i); j++) {
+              if (j > 0) columns += ",";
+              columns += "s%d,y%d".printf(j, j);
+            }
+            builder.append(
+                "CREATE INDEX IF NOT EXISTS index_%d_%d ON py_phrase_%d (%s);\n"
+                .printf(i, 0, i, columns)
+                );
+          }
+          builder.append("COMMIT;");
+
+          assert (db.exec(builder.str) == Sqlite.OK);
+        }
+        db.exec("PRAGMA cache_size = 16384;\n PRAGMA temp_store = MEMORY;");
       }
 
-      public static bool reverse_convert(string content, 
-          out Sequence pinyins) {
+      public bool reverse_convert(string content, 
+          out Pinyin.Sequence pinyins) {
         bool successful = true;
         ArrayList<Pinyin.Id> ids = new ArrayList<Pinyin.Id>();
 
@@ -160,11 +196,11 @@ namespace icp {
           }
         }
 
-        pinyins = new Sequence.ids(ids);
+        pinyins = new Pinyin.Sequence.ids(ids);
         return successful;
       }
 
-      public static void query(Sequence pinyins, 
+      public void query(Pinyin.Sequence pinyins, 
           ArrayList<string> candidates, 
           int limit = 0, double phrase_adjust = 2.4) {
 
@@ -172,7 +208,7 @@ namespace icp {
         string where = "", query = "SELECT phrase, freqadj FROM (";
 
         for (int id = 0; id < pinyins.size; ++id) {
-          if (id > PHASE_LENGTH_MAX) break;
+          if (id > PHRASE_LENGTH_MAX) break;
 
           Id pinyin_id = pinyins.get_id(id);
           int cid = pinyin_id.consonant, vid = pinyin_id.vowel;
@@ -226,7 +262,7 @@ namespace icp {
         }
       }
 
-      public static string greedy_convert(Sequence pinyins, 
+      public string greedy_convert(Pinyin.Sequence pinyins, 
           double phrase_adjust = 4) {
 
         string r = "";
@@ -234,7 +270,7 @@ namespace icp {
 
         for (int id = (int) pinyins.size - 1; id >= 0;) {
           int length_max = id + 1;
-          if (length_max > PHASE_LENGTH_MAX) length_max = PHASE_LENGTH_MAX;
+          if (length_max > PHRASE_LENGTH_MAX) length_max = PHRASE_LENGTH_MAX;
 
           string query = "SELECT phrase, freqadj FROM (", phrase = "";
 
@@ -300,8 +336,20 @@ namespace icp {
         }
         return r;
       }
+    } // class PhraseDatabase
+
+    static void init() {
+      // create essential directories
+      string path = "";
+      foreach (string dir in Config.user_cache_path.split("/")) {
+        path += "/%s".printf(dir);
+        Posix.mkdir(path, Posix.S_IRWXU);
+      }
+
+      global_db = new PhraseDatabase();
+      user_db = new PhraseDatabase(Config.user_database, false);
     }
-  }
-}
+  } // namespace Database
+} // namespace icp
 
 /* vim:set et sts=2 tabstop=2 shiftwidth=2: */
