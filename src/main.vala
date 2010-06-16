@@ -62,7 +62,6 @@ namespace icp {
         Thread.usleep(100000);
         IBusBinding.register();
       }
-
       main_loop = new MainLoop (null, false);
       main_loop.run();
 

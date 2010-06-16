@@ -258,8 +258,11 @@ namespace icp {
         int* bind_value = null;
 
         switch(k) {
-          case "database_query_limit":
-            bind_value = &Config.Limits.database_query_limit;
+          case "global_db_query_limit":
+            bind_value = &Config.Limits.global_db_query_limit;
+          break;
+          case "user_db_query_limit":
+            bind_value = &Config.Limits.user_db_query_limit;
           break;
         }
         *bind_value = v;

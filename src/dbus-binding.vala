@@ -46,14 +46,20 @@ namespace icp {
         }
 
         public string quick_convert (string pinyins) {
-          return Database.global_db.greedy_convert(
+          return Database.greedy_convert(
             new Pinyin.Sequence(pinyins)
             );
         }
 
+        public void remember(string phrase) {
+          Pinyin.Sequence sequence;
+          Database.reverse_convert(phrase, out sequence);
+          Database.insert(phrase, sequence);
+        }
+
         public string quick_reverse_convert (string content) {
           Pinyin.Sequence ps;
-          Database.global_db.reverse_convert(content, out ps);
+          Database.reverse_convert(content, out ps);
           return ps.to_string();
         }
 

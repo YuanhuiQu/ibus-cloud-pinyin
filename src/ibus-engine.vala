@@ -156,7 +156,12 @@ namespace icp {
           table.append_label(new Text.from_string("."));
         }
 
-        // TODO: dlopen opencv ...
+        // user phrase
+        user_pinyins = new ArrayList<Pinyin.Id>();
+        user_phrase = "";
+        user_phrase_count = 0;
+
+        // TODO: dlopen opencc ...
         inited = true;
       }
 
@@ -214,17 +219,19 @@ namespace icp {
         if (content.length > 0) {
           commit_text(new Text.from_string(content));
         }
+        if (content.size() < 2) user_phrase_clear();
       }
 
       private void commit_buffer() {
         // TODO: use mixed greedy convert if cloud client impled.
         // TODO: send request here
         if (pinyin_buffer.size > 0) {
-          commit(Database.global_db.greedy_convert(pinyin_buffer));
+          commit(Database.greedy_convert(pinyin_buffer));
           last_is_chinese = true;
         }
         raw_buffer = "";
         pinyin_buffer.clear();
+        user_phrase_clear();
       }
 
       // process key event, most important func in engine
@@ -312,7 +319,7 @@ namespace icp {
                     + Frontend.clipboard_update_time) {
                   string selection = Frontend.get_selection();
                   if (!selection.contains("\n")
-                      && Database.global_db.reverse_convert(
+                      && Database.reverse_convert(
                         selection, out pinyin_buffer)) {
                     // reverse convert successful
                     // erase client text
@@ -464,6 +471,17 @@ namespace icp {
         }
       }
 
+      // used to insert to user database
+      private ArrayList<Pinyin.Id> user_pinyins;
+      private string user_phrase;
+      private int user_phrase_count;
+
+      private void user_phrase_clear() {
+        user_phrase = "";
+        user_phrase_count = 0;
+        user_pinyins.clear();
+      }
+
       private override void candidate_clicked (uint index, uint button,
           uint state) {
 
@@ -472,6 +490,15 @@ namespace icp {
         string content = candidate.text;
         int len = (int)content.length;
         commit(content);
+
+        // append to user dict, insert to user dict
+        user_phrase += content;
+        for (int i = 0; i < content.length; i++)
+          user_pinyins.add(pinyin_buffer.get_id(i));
+
+        Pinyin.Sequence pinyins = new Pinyin.Sequence.ids(user_pinyins);
+        Database.insert(user_phrase, pinyins);
+        if (user_phrase_count++ > 3) user_phrase_clear();
 
         // remove heading pinyins (rebuild buffer)
         if (Config.Switches.double_pinyin) {
@@ -522,7 +549,7 @@ namespace icp {
         //     if cloud client impled.
         {
           var text = new Text.from_string(
-              Database.global_db.greedy_convert(
+              Database.greedy_convert(
                 pinyin_buffer
                 ));
           if (correction_mode)
@@ -555,8 +582,8 @@ namespace icp {
             candidates.clear();
             table.clear();
             page_index = 0;
-            Database.global_db.query(pinyin_buffer, candidates, 
-              Config.Limits.database_query_limit
+            Database.query(pinyin_buffer, candidates, 
+              Config.Limits.global_db_query_limit
               );
 
             // update lookup table labels
@@ -625,8 +652,8 @@ namespace icp {
           "Cloud Pinyin", Config.version, "GPL",
           "WU Jun <quark@lihdd.net>",
           "http://code.google.com/p/ibus-cloud-pinyin/",
-          Config.global_data_path
-          + "/engine/ibus-cloud-pinyin --ibus",
+          Config.prefix_path
+          + "/lib/ibus/ibus-engine-cloud-pinyin --ibus",
           "ibus-cloud-pinyin");
       engine = new EngineDesc ("cloud-pinyin",
           "Cloud Pinyin",
