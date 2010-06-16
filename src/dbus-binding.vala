@@ -35,23 +35,25 @@ namespace icp {
         // key interface for child processes to call
         public bool
         response (string pinyins, string content, int priority) {
-          return Pinyin.UserDatabase.response(pinyins, content, priority);
+          // return Database.user_db.response(pinyins, content, priority);
+          return false;
         }
 
         // other programs use ...
         public string try_request (string pinyins) {
-          return Pinyin.UserDatabase.query(pinyins);
+          // return Database.user_db.query(pinyins);
+          return "";
         }
 
         public string quick_convert (string pinyins) {
-          return Pinyin.Database.greedy_convert(
+          return Database.global_db.greedy_convert(
             new Pinyin.Sequence(pinyins)
             );
         }
 
         public string quick_reverse_convert (string content) {
           Pinyin.Sequence ps;
-          Pinyin.Database.reverse_convert(content, out ps);
+          Database.global_db.reverse_convert(content, out ps);
           return ps.to_string();
         }
 

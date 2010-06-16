@@ -90,7 +90,8 @@ namespace icp {
         string content = vm.to_string(2);
         int priority = 127;
         if (vm.is_number(3)) priority = vm.to_integer(3);
-        icp.Pinyin.UserDatabase.response(pinyins, content, priority);
+        // TODO: set response
+        // icp.Database.user_db.response(pinyins, content, priority);
       }
       return 0;
     }
@@ -355,6 +356,14 @@ namespace icp {
 
       vm = new LuaVM();
       vm.open_libs();
+
+      vm.check_stack(1);
+      vm.push_string(Config.user_config_path);
+      vm.set_global("config_path");
+      vm.push_string(Config.user_data_path);
+      vm.set_global("data_path");
+      vm.push_string(Config.user_cache_path);
+      vm.set_global("cache_path");
 
       vm.register("go_background", l_go_background);
       vm.register("notify", l_notify);
