@@ -108,6 +108,7 @@ namespace icp {
       // idle animation start and stop
       private int waiting_index = 0;
       private int waiting_index_acc = 1;
+      private int waiting_subindex = 0;
 
       private void start_requesting() {
         if (waiting_animation_timer != null) return;
@@ -119,7 +120,8 @@ namespace icp {
             update_preedit();
             }
             // update status icon
-            // TODO: use idle icon when possible
+            if (waiting_subindex > 2) {
+            waiting_subindex = 0;
             if (request_list.size == 0 && prerequest_done) {
             status_icon.set_icon("%s/icons/idle-%d.png"
               .printf(Config.global_data_path, 
@@ -127,14 +129,15 @@ namespace icp {
               );
             } else {
             waiting_index += waiting_index_acc;
-            if (waiting_index == (3 * 4 - 1) || waiting_index == 0)
+            if (waiting_index == 3 || waiting_index == 0)
             waiting_index_acc = - waiting_index_acc;
             status_icon.set_icon("%s/icons/waiting-%d.png"
-              .printf(Config.global_data_path, waiting_index / 3));
+              .printf(Config.global_data_path, waiting_index));
             }
             // update the whole panel
             update_properties();
             // stop if offline mode
+            } else waiting_subindex ++;
             if (offline_mode) stop_requesting();
             return true;
         });

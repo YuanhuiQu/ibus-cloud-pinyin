@@ -113,7 +113,6 @@ namespace icp {
         // hardcoded 3 sec here:
         double t = (end_time - start_time) * 28800;
         // make t between 1 (high delay) and 0 (best)
-        print("t = %f\n", t);
         if (t > 1) t = 1;
         if (t < 0) t = 0; 
         // lowest rank when fail (exit status != 0)
@@ -124,7 +123,7 @@ namespace icp {
             if (response_time_rank > 1)
               response_time_rank = t;
             else
-              response_time_rank = response_time_rank * 0.7 + t * 0.3;
+              response_time_rank = response_time_rank * 0.9 + t * 0.1;
           }
         }
         return null;
@@ -148,7 +147,6 @@ namespace icp {
     private static void* execute_request_timeout_thread() {
       double timeout = Config.CommandlineOptions.request_timeout;
       Thread.usleep((ulong)timeout * 1000000);
-      print("timeout\n");
       Posix.exit(1);
       return null;
     }
@@ -157,6 +155,16 @@ namespace icp {
     public static void execute_request() {
       vm = new LuaVM();
       vm.open_libs();
+
+      vm.check_stack(1);
+      vm.push_string(Config.user_config_path);
+      vm.set_global("user_config_path");
+      vm.push_string(Config.user_data_path);
+      vm.set_global("user_data_path");
+      vm.push_string(Config.user_cache_path);
+      vm.set_global("user_cache_path");
+      vm.push_string(Config.global_data_path);
+      vm.set_global("data_path");
 
       vm.check_stack(1);
       vm.push_string(Config.CommandlineOptions.request_pinyins);
