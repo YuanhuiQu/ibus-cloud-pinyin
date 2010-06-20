@@ -20,13 +20,17 @@
  along with ibus-cloud-pinyin.  If not, see <http://www.gnu.org/licenses/>.
 --]]----------------------------------------------------------------------------
 
+-- for run standalone
+user_cache_path = user_cache_path or '/tmp'
+pinyin = pinyin or arg[1]
+response = response or print
+
 http = require 'socket.http'
 socket = require 'socket'
+url = require 'socket.url'
 
-http = require('socket.http')
-url = require('socket.url')
 http.USERAGENT = "ibus-cloud-pinyin"
-key_file = '/tmp/.sogoucloud-key'
+key_file = user_cache_path..'/.sogou-key'
 
 py = pinyin:gsub("[^a-z]", '')
 

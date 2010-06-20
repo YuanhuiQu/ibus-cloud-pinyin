@@ -22,8 +22,6 @@
 
 socket, http, url = require 'socket', require 'socket.http', require 'socket.url'
 
-notify('test', 'hello world 2')
-
 -- constants
 keys = {
 	backspace = 0xff08,
@@ -107,7 +105,7 @@ end
 -- some engines, may be outdated
 
 register_engine("sogou", data_path .. '/lua/engine_sogou.lua')
---register_engine("qq", data_path .. '/lua/engine_qq.lua')
+register_engine("qq", data_path .. '/lua/engine_qq.lua')
 
 -- load various script files if exists
 try_dofile(user_config_path)
