@@ -37,7 +37,7 @@ namespace icp {
       }
     }
 
-    private static double get_atime() {
+    public static double get_atime() {
       return (double)Frontend.get_current_time()
         / ((double)(24) * 3600 * 1000000);
     }

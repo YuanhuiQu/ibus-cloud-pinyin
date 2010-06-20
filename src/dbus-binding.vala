@@ -46,12 +46,26 @@ namespace icp {
     }
 
     public static bool set_response(string pinyins, string content, int priority = 1) {
-      print("set response:%s,%s,%d\n", pinyins, content, priority);
       if (!responses.contains(pinyins) || responses[pinyins].priority
           < priority) {
         responses[pinyins] = new Response(content, priority);
         return true;
       } return false;
+    }
+
+    // this convert mix cloud results and local database
+    public static string convert(Pinyin.Sequence pinyins, out int cloud_length) {
+      for(int i = pinyins.size; i > 0; i--) {
+        string result = query(pinyins.to_string(0, i));
+        if (result.size() > 0) {
+          cloud_length = (int)result.length;
+          return result + Database.greedy_convert(
+            new Pinyin.Sequence.copy(pinyins, i)
+            );
+        }
+      }
+      cloud_length = 0;
+      return Database.greedy_convert(pinyins);
     }
 
     // server dbus object
@@ -72,10 +86,9 @@ namespace icp {
           return DBusBinding.query(pinyins);
         }
 
-        public string local_convert(string pinyins) {
-          return Database.greedy_convert(
-              new Pinyin.Sequence(pinyins)
-              );
+        public string convert(string pinyins) {
+          int l;
+          return DBusBinding.convert(new Pinyin.Sequence(pinyins), out l);
         }
 
         public void local_remember_phrase(string phrase) {

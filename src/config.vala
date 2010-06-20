@@ -65,8 +65,8 @@ namespace icp {
       public class Timeouts {
         public Timeouts() { assert_not_reached(); }
 
-        public static double request = 10.0;
-        public static double prerequest = 1.0;
+        public static double request = 15.0;
+        public static double prerequest = 3.0;
         public static double selection = 2.0;
       }
 
@@ -120,7 +120,7 @@ namespace icp {
 
         preedit_correcting = new Color(null, 0xFFB442);
         preedit_local = new Color(0x8C8C8C);
-        preedit_remote = new Color(0x0024B2);
+        preedit_remote = new Color(0x0D88FF);
         preedit_fixed = new Color(0x242322);
       }
     }
@@ -434,6 +434,7 @@ namespace icp {
 
       program_path = Environment.get_current_dir();
       program_main_file = "%s/%s".printf(program_path, args[0]);
+      // program_main_file = "/home/quark/src/vala/ibus-cloud-pinyin/src/ibus-engine-cloud-pinyin";
     }
 
     // this class is used as namespace
