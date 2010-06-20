@@ -1,38 +1,23 @@
-=== 0.8.0-alpha ===
+==== Done ====
+
+Notification
+Text Selection Monitor
+Internal Pinyin Utilities
+Open-phrase Database
+User Database
+Icons
+
+==== Almost Done ====
 
 Lua and DBus Binding
 
-http://ibus-cloud-pinyin.googlecode.com/svn/trunk/icons/idle-3.png
-
-Open-phrase Database
-
-http://ibus-cloud-pinyin.googlecode.com/svn/trunk/icons/idle-4.png
-
-User Database, Cloud Requests Manager
-
-http://ibus-cloud-pinyin.googlecode.com/svn/trunk/icons/idle-2.png
-
-Lua Scripts
-
-http://ibus-cloud-pinyin.googlecode.com/svn/trunk/icons/idle-1.png
-
-Pinyin Utilities, Notification, Text Selection Monitor
-
-http://ibus-cloud-pinyin.googlecode.com/svn/trunk/icons/idle-4.png
+==== Working on ====
 
 IBus Engine
 
-http://ibus-cloud-pinyin.googlecode.com/svn/trunk/icons/idle-2.png
+==== To be done ====
 
-Icons
-
-http://ibus-cloud-pinyin.googlecode.com/svn/trunk/icons/idle-4.png
-
+Lua Scripts
+.scel Import Tool
 libopencc Support
-
-http://ibus-cloud-pinyin.googlecode.com/svn/trunk/icons/idle-0.png
-
 User Guide
-
-http://ibus-cloud-pinyin.googlecode.com/svn/trunk/icons/idle-0.png
-
