@@ -190,6 +190,19 @@ namespace icp {
         }
       }
 
+      public Sequence.copy(Sequence that, int start = 0, int len = -1) {
+        id_sequence = new ArrayList<Id>();
+
+        while (start < 0) start = start + that.size;
+        while (len < 0) len = that.size;
+
+        int end = start + len;
+        if (end > that.size) end = that.size;
+
+        for (int i = start; i < end; i++)
+          id_sequence.add(that.get_id(i));
+      }
+
       public string to_string(int start = 0, int len = -1) {
         while (start < 0) start = start + id_sequence.size;
         while (len < 0) len = id_sequence.size;
@@ -736,7 +749,6 @@ namespace icp {
           valid_partial_pinyins.add(s[0:i]);
         }
       }
-
 
       // hardcoded consonant <-> id, vowel <-> id tables
       consonant_ids = new HashMap<string, int>();

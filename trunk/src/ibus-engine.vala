@@ -41,18 +41,19 @@ namespace icp {
     public class CloudPinyinEngine : Engine {
       private string raw_buffer = "";
       private Pinyin.Sequence pinyin_buffer;
+      private string pinyin_buffer_preedit;
 
       // engine states
       private bool chinese_mode;
       private bool correction_mode = false;
-      private bool offline_mode ;
+      private bool offline_mode;
       private bool traditional_mode;
       private bool last_is_chinese = true;
-      
+
       // external request list
       class Request {
-        public double start_time;
-        public double end_time;
+        public double deadline;
+
         // multi engines share this 'done'
         public bool done;
       }
@@ -66,7 +67,7 @@ namespace icp {
       }
 
       LinkedList<Request> request_list;
-      LinkedList<PendingSegment> pending_segments_list;
+      LinkedList<PendingSegment> pending_segment_listst;
 
       // only one prerequest per engine allowed
       bool prerequest_done;
@@ -109,18 +110,34 @@ namespace icp {
       private int waiting_index_acc = 1;
 
       private void start_requesting() {
-        waiting_animation_timer = new TimeoutSource(200);
+        if (waiting_animation_timer != null) return;
+        waiting_animation_timer = new TimeoutSource(64);
         waiting_animation_timer.set_callback(() => {
+            // send another prerequest if current one is done
+            if (prerequest_done) {
+            send_prerequest();
+            update_preedit();
+            }
             // update status icon
+            // TODO: use idle icon when possible
+            if (request_list.size == 0 && prerequest_done) {
+            status_icon.set_icon("%s/icons/idle-%d.png"
+              .printf(Config.global_data_path, 
+              LuaBinding.get_engine_speed_rank())
+              );
+            } else {
             waiting_index += waiting_index_acc;
-            if (waiting_index == 3 || waiting_index == 0)
+            if (waiting_index == (3 * 4 - 1) || waiting_index == 0)
             waiting_index_acc = - waiting_index_acc;
             status_icon.set_icon("%s/icons/waiting-%d.png"
-              .printf(Config.global_data_path, waiting_index));
+              .printf(Config.global_data_path, waiting_index / 3));
+            }
             // update the whole panel
             update_properties();
+            // stop if offline mode
+            if (offline_mode) stop_requesting();
             return true;
-            });
+        });
         waiting_animation_timer.attach(icp.main_loop.get_context());
       }
 
@@ -146,6 +163,7 @@ namespace icp {
         chinese_mode = Config.Switches.default_chinese_mode;
         traditional_mode = Config.Switches.default_traditional_mode;
         offline_mode = Config.Switches.default_offline_mode;
+        if (LuaBinding.get_engine_count() == 0) offline_mode = true;
         correction_mode = false;
 
         // load properties into property list
@@ -168,8 +186,9 @@ namespace icp {
         user_phrase = "";
         user_phrase_count = 0;
 
-        // request list
+        // request list and pending segment list
         request_list = new LinkedList<Request>();
+        pending_segment_listst = new LinkedList<PendingSegment>();
         prerequest_done = true;
 
         // TODO: dlopen opencc ...
@@ -177,13 +196,22 @@ namespace icp {
       }
 
       private void send_prerequest() {
-        if (prerequest_done && pinyin_buffer.size > 0 
-        && DBusBinding.query(pinyin_buffer.to_string()) == "") {
+        if (offline_mode || !prerequest_done) return;
+        // scan to a complete pinyin
+        int i = pinyin_buffer.size - 1;
+        for (; i >= 0 && pinyin_buffer.get_id(i).vowel <= 0; i--);
+        if (i <= 0) return;
+
+        string pinyins = pinyin_buffer.to_string(0, i + 1);
+        if (DBusBinding.query(pinyins) == "") {
+
           prerequest_done = false;
-          LuaBinding.start_requests(pinyin_buffer.to_string(),
-            Config.Timeouts.prerequest,
-            &prerequest_done
-            );
+          LuaBinding.start_requests(
+              pinyins,
+              Config.Timeouts.prerequest,
+              &prerequest_done
+              );
+          start_requesting();
         }
       }
 
@@ -229,7 +257,7 @@ namespace icp {
             traditional_mode = !traditional_mode;
           break;
           case "status":
-            offline_mode = !offline_mode;
+            switch_offline_mode();
           break;
         }
         update_properties();
@@ -244,11 +272,27 @@ namespace icp {
         if (content.size() < 2) user_phrase_clear();
       }
 
+      private void switch_offline_mode() {
+        offline_mode = !offline_mode;
+        if (!offline_mode) {
+          if (LuaBinding.get_engine_count() == 0) {
+            Frontend.notify(
+                "在线模式",
+                "无法切换到在线模式\n没有注册过云请求脚本", 
+                "error"
+                );
+            offline_mode = true;
+          } else {
+            send_prerequest();
+          }
+        }
+      }
+
       private void commit_buffer() {
         // TODO: use mixed greedy convert if cloud client impled.
         // TODO: send request here
         if (pinyin_buffer.size > 0) {
-          commit(Database.greedy_convert(pinyin_buffer));
+          commit(pinyin_buffer_preedit);
           last_is_chinese = true;
         }
         raw_buffer = "";
@@ -317,7 +361,7 @@ namespace icp {
 
           if ((offline_mode && ("online" in actions))
               || (!offline_mode && ("offline" in actions))) {
-            offline_mode = !offline_mode;
+            switch_offline_mode();
             handled = true; break;
           }
 
@@ -377,7 +421,7 @@ namespace icp {
               // note that ';' can not occur at the beginning
               if ((Pinyin.DoublePinyin.is_valid_key(keyval)
                     && state == 0 && ('z' >= keyval >= 'a'
-                    || raw_buffer.length > 0)) || is_backspace) {
+                      || raw_buffer.length > 0)) || is_backspace) {
                 if (is_backspace) raw_buffer = raw_buffer[0:-1];
                 else raw_buffer += "%c".printf((int)keyval);
                 Pinyin.DoublePinyin.convert(raw_buffer, out pinyin_buffer);
@@ -523,6 +567,10 @@ namespace icp {
 
         Pinyin.Sequence pinyins = new Pinyin.Sequence.ids(user_pinyins);
         Database.insert(user_phrase, pinyins);
+
+        // also update cloud cache with priority = 128
+        DBusBinding.set_response(pinyins.to_string(), user_phrase, 128);
+
         if (user_phrase_count++ > 4) user_phrase_clear();
 
         // remove heading pinyins (rebuild buffer)
@@ -573,20 +621,29 @@ namespace icp {
         // TODO: use mixed greedy convert and their color
         //     if cloud client impled.
         {
-          var text = new Text.from_string(
-              Database.greedy_convert(
-                pinyin_buffer
-                ));
+          int cloud_length;
+          string preedit = DBusBinding.convert(
+              pinyin_buffer, 
+              out cloud_length
+              );
+          pinyin_buffer_preedit = preedit;
+
+          var text = new Text.from_string(preedit);
+
           if (correction_mode)
             Config.Colors.preedit_correcting.apply(text);
-          else 
-            Config.Colors.preedit_local.apply(text);
+          else {
+            // remote result
+            Config.Colors.preedit_remote.apply(text, 0, cloud_length);
+            // local database
+            Config.Colors.preedit_local.apply(text, cloud_length);
+          }
+
           // apply underline
           text.append_attribute(AttrType.UNDERLINE, 
               AttrUnderline.SINGLE, 0,
               (int)text.get_length()
               );
-          // TODO: only try query ...
 
           update_preedit_text(text,
               correction_mode ? 0 : (int)text.get_length(), true
@@ -601,15 +658,15 @@ namespace icp {
         if (pinyin_buffer.size > 0 && 
             (Config.Switches.always_show_candidates || correction_mode)) {
           if (last_pinyin_buffer_string != pinyin_buffer.to_string()
-          || last_correction_mode != correction_mode) {
+              || last_correction_mode != correction_mode) {
             // should update lookup table
             // TODO: append results from userdb
             candidates.clear();
             table.clear();
             page_index = 0;
             Database.query(pinyin_buffer, candidates, 
-              Config.Limits.global_db_query_limit
-              );
+                Config.Limits.global_db_query_limit
+                );
 
             // update lookup table labels
             for (int i = 0; i < Config.CandidateLabels.size; i++) {

@@ -86,7 +86,7 @@ set_double_pinyin{
 }
 
 set_switch{
-	default_offline_mode = true,
+	-- default_offline_mode = true,
 	-- default_traditional_mode = true,
 	double_pinyin = true,
 	show_raw_in_auxiliary = true,
@@ -106,7 +106,7 @@ end
 
 -- some engines, may be outdated
 
---register_engine("sogou", data_path .. '/lua/engine_sogou.lua')
+register_engine("sogou", data_path .. '/lua/engine_sogou.lua')
 --register_engine("qq", data_path .. '/lua/engine_qq.lua')
 
 -- load various script files if exists

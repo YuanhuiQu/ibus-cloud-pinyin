@@ -31,6 +31,22 @@ namespace icp {
 
     private static HashMap<string, CloudEngine> engines;
 
+    public static int get_engine_count() {
+      return engines.size;
+    }
+
+    public static int get_engine_speed_rank(int low = 0, int high = 4) {
+      double rank_best = 1;
+      foreach (CloudEngine engine in engines.values) {
+        double rank = engine.get_speed_rank();
+        if (rank < rank_best) rank_best = rank;
+      }
+      int r = low + (int)Math.floor((high - low + 1) * (1 - rank_best));
+      if (r > high) r = high;
+      if (r < low) r = low;
+      return r;
+    }
+
     // only in_configuration = true, can some settings be done.
     // this provides extended thread safty.
     // main glib loop will be delayed ~0.1s. in this time, global
@@ -39,12 +55,18 @@ namespace icp {
     private static bool in_configuration;
 
     class CloudEngine {
-      int priority { get; private set; }
-      string script { get; private set; }
+      public int priority { get; private set; }
+      public string script { get; private set; }
+      private double response_time_rank;
 
-      public CloudEngine(string script, int priority = 64) {
+      public double get_speed_rank() {
+        return response_time_rank;
+      }
+
+      public CloudEngine(string script, int priority = 1) {
         this.priority = priority;
         this.script = script;
+        response_time_rank = 2;
       }
 
       private string pinyins;
@@ -53,6 +75,8 @@ namespace icp {
 
       private void* request_thread() {
         bool* done = this.done;
+        double timeout = this.timeout;
+        string pinyins = "%s".printf(this.pinyins);
 
         string[] argv = {
           Config.program_main_file,
@@ -69,8 +93,13 @@ namespace icp {
         // time out is controlled by child process
         // to restrict timeout, only spawn self, provide only
         // dbus api to lua script
+
+        var start_time = Database.get_atime();
+        int exit_code;
         try {
-          Process.spawn_sync(null, argv, null, 0, null, null, null, null);
+          Process.spawn_sync(null, argv, null, 0, null, null, null, 
+              out exit_code
+              );
         } catch (SpawnError e) {
           stderr.printf("ERROR: Can not spawn self to send request: '%s'\n",
               pinyins
@@ -78,8 +107,26 @@ namespace icp {
         }
 
         // done
+        var end_time = Database.get_atime();
         *done = true;
-        print("request done\n");
+
+        // hardcoded 3 sec here:
+        double t = (end_time - start_time) * 28800;
+        // make t between 1 (high delay) and 0 (best)
+        print("t = %f\n", t);
+        if (t > 1) t = 1;
+        if (t < 0) t = 0; 
+        // lowest rank when fail (exit status != 0)
+        if (exit_code != 0) t = 1;
+        // do not record fail or timeout in low-timeout request
+        if (t < 1 || timeout > 3) {
+          lock(response_time_rank) {
+            if (response_time_rank > 1)
+              response_time_rank = t;
+            else
+              response_time_rank = response_time_rank * 0.7 + t * 0.3;
+          }
+        }
         return null;
       }
 
@@ -106,19 +153,21 @@ namespace icp {
       return null;
     }
 
+    private static bool execute_request_responsed;
     public static void execute_request() {
       vm = new LuaVM();
       vm.open_libs();
-      
+
       vm.check_stack(1);
       vm.push_string(Config.CommandlineOptions.request_pinyins);
       vm.set_global("pinyin");
-      
+
       vm.register("response", l_response);
+      execute_request_responsed = false;
 
       vm.load_string("dofile([[%s]])"
-        .printf(Config.CommandlineOptions.startup_script)
-        );
+          .printf(Config.CommandlineOptions.startup_script)
+          );
 
       Thread.create(execute_request_timeout_thread, false);
       if (vm.pcall(0, 0, 0) != 0) {
@@ -126,7 +175,7 @@ namespace icp {
         stderr.printf("FATAL: %s\n", error_message);
       }
 
-      Posix.exit(0);
+      Posix.exit(execute_request_responsed ? 0 : 2);
     }
 
     // 
@@ -157,17 +206,17 @@ namespace icp {
       }
       return true;
     }
-    
+
     private static int l_response(LuaVM vm) {
       // used by client request engine, no permission check needed
-      print("l_res\n");
       if (vm.is_string(1)) {
+        execute_request_responsed = true;
         string content = vm.to_string(1);
         DBusBinding.send_response(
-          Config.CommandlineOptions.request_pinyins,
-          content,
-          Config.CommandlineOptions.request_priority
-          );
+            Config.CommandlineOptions.request_pinyins,
+            content,
+            Config.CommandlineOptions.request_priority
+            );
       }
       return 0;
     }
@@ -205,7 +254,8 @@ namespace icp {
       if (vm.is_string(1) && vm.is_string(2)) {
         string pinyins = vm.to_string(1);
         string content = vm.to_string(2);
-        int priority = 127;
+        // high priority, user set.
+        int priority = 128;
         if (vm.is_number(3)) priority = vm.to_integer(3);
         DBusBinding.set_response(pinyins, content, priority);
       }
@@ -452,11 +502,10 @@ namespace icp {
 
       string name = vm.to_string(1);
       string script_filename = vm.to_string(2);
-      int priority = 64;
+      int priority = 1;
       if (vm.is_number(3)) priority = vm.to_integer(3);
       engines[name] = new CloudEngine(script_filename, priority);
 
-      print("engine reg: %s\n", name);
       return 0;
     }
 

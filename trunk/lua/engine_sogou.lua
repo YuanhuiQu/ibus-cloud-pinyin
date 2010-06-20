@@ -40,7 +40,6 @@ start_time = os.time()
 http.TIMEOUT, retry = 2, 100
 
 -- get key
-print('to get key ...')
 local file = io.open(key_file, 'r')
 if file then key = file:read("*line") or '' file:close() end
 for attempt = 1, retry do
@@ -52,8 +51,9 @@ end
 function try_convert(tail, tail_len)
 	local py_tail = (tail or ''):gsub(' ','')
 	tail_len = tail_len or 0
-	http.TIMEOUT, retry = 0.5
+	http.TIMEOUT, retry = 1.2
 	while true do
+		-- print('requesting, timeout = '..http.TIMEOUT)
 		local ret = http.request('http://web.pinyin.sogou.com/api/py?key='..key..'&query='..py..py_tail)
 		local res = ret and ret:match('ime_callback%("(.-)"')
 		if res then
@@ -73,7 +73,6 @@ function try_convert(tail, tail_len)
 	return 0
 end
 
-print('py = ', pinyin)
 -- try various tails
 for _, v in pairs{{'', 0}, {'ne', 1}, {'a', 1}, {'le', 1}, {'ma', 1}, {'zhe', 1}, {'na', 1}, {'zhe yang de', 3}, {'zhen de ma', 3}, {'ting hao de', 3}, {'shui xiang xin', 3}, {'zhe shi zhen de ma', 5}, {'na shi bu ke neng de', 6}, {'ni zhi dao ma', 4}, {'ni bu zhi dao', 4}, {'bie wang le a', 4}} do
 	local r = try_convert(v[1], v[2])
