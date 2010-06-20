@@ -20,6 +20,7 @@
  *****************************************************************************/
 
 using Lua;
+using Gee;
 
 namespace icp {
   class LuaBinding {
@@ -28,12 +29,114 @@ namespace icp {
     private static Posix.pid_t main_pid;
     private static Gee.LinkedList<string> script_pool;
 
+    private static HashMap<string, CloudEngine> engines;
+
     // only in_configuration = true, can some settings be done.
     // this provides extended thread safty.
     // main glib loop will be delayed ~0.1s. in this time, global
     // configuration should make all settings done...
     // i hate locks ...
     private static bool in_configuration;
+
+    class CloudEngine {
+      int priority { get; private set; }
+      string script { get; private set; }
+
+      public CloudEngine(string script, int priority = 64) {
+        this.priority = priority;
+        this.script = script;
+      }
+
+      private string pinyins;
+      private double timeout;
+      private bool* done;
+
+      private void* request_thread() {
+        bool* done = this.done;
+
+        string[] argv = {
+          Config.program_main_file,
+          "-c",
+          "%s".printf(script),
+          "-r",
+          "%s".printf(pinyins),
+          "-p",
+          "%d".printf(priority),
+          "-t",
+          "%f".printf(timeout)
+        };
+
+        // time out is controlled by child process
+        // to restrict timeout, only spawn self, provide only
+        // dbus api to lua script
+        try {
+          Process.spawn_sync(null, argv, null, 0, null, null, null, null);
+        } catch (SpawnError e) {
+          stderr.printf("ERROR: Can not spawn self to send request: '%s'\n",
+              pinyins
+              );
+        }
+
+        // done
+        *done = true;
+        print("request done\n");
+        return null;
+      }
+
+      public void request(string pinyins, double timeout = -1, bool* done) {
+        if (timeout <= 0) timeout = Config.Timeouts.request;
+        // create a dummy thread and fork from that thread
+        this.timeout = timeout;
+        this.pinyins = pinyins;
+        this.done = done;
+        Thread.create(request_thread, false);
+      }
+    }
+
+    // execute_request is called by client, no init() needed
+    // execute_request() will execute lua script in current thread
+    // (blocking) and terminate whole process when done or
+    // timeout.
+
+    private static void* execute_request_timeout_thread() {
+      double timeout = Config.CommandlineOptions.request_timeout;
+      Thread.usleep((ulong)timeout * 1000000);
+      print("timeout\n");
+      Posix.exit(1);
+      return null;
+    }
+
+    public static void execute_request() {
+      vm = new LuaVM();
+      vm.open_libs();
+      
+      vm.check_stack(1);
+      vm.push_string(Config.CommandlineOptions.request_pinyins);
+      vm.set_global("pinyin");
+      
+      vm.register("response", l_response);
+
+      vm.load_string("dofile([[%s]])"
+        .printf(Config.CommandlineOptions.startup_script)
+        );
+
+      Thread.create(execute_request_timeout_thread, false);
+      if (vm.pcall(0, 0, 0) != 0) {
+        string error_message = vm.to_string(-1);
+        stderr.printf("FATAL: %s\n", error_message);
+      }
+
+      Posix.exit(0);
+    }
+
+    // 
+    public static void start_requests(string pinyins, double timeout,
+        bool* done) {
+      // TODO: remove this func
+      foreach (CloudEngine engine in engines.values) {
+        engine.request(pinyins, timeout, done);
+      }
+    }
 
     private LuaBinding() {
       // this class is used as namespace
@@ -53,6 +156,20 @@ namespace icp {
         return false;
       }
       return true;
+    }
+    
+    private static int l_response(LuaVM vm) {
+      // used by client request engine, no permission check needed
+      print("l_res\n");
+      if (vm.is_string(1)) {
+        string content = vm.to_string(1);
+        DBusBinding.send_response(
+          Config.CommandlineOptions.request_pinyins,
+          content,
+          Config.CommandlineOptions.request_priority
+          );
+      }
+      return 0;
     }
 
     private static int l_get_selection(LuaVM vm) {
@@ -90,8 +207,7 @@ namespace icp {
         string content = vm.to_string(2);
         int priority = 127;
         if (vm.is_number(3)) priority = vm.to_integer(3);
-        // TODO: set response
-        // icp.Database.user_db.response(pinyins, content, priority);
+        DBusBinding.set_response(pinyins, content, priority);
       }
       return 0;
     }
@@ -332,6 +448,15 @@ namespace icp {
     private static int l_register_engine(LuaVM vm) {
       if (!check_permissions()) return 0;
       // TODO: register request engine at Config...
+      if (!vm.is_string(1) || !vm.is_string(2)) return 0;
+
+      string name = vm.to_string(1);
+      string script_filename = vm.to_string(2);
+      int priority = 64;
+      if (vm.is_number(3)) priority = vm.to_integer(3);
+      engines[name] = new CloudEngine(script_filename, priority);
+
+      print("engine reg: %s\n", name);
       return 0;
     }
 
@@ -356,22 +481,25 @@ namespace icp {
     public static void init() {
       in_configuration = false;
       script_pool = new Gee.LinkedList<string>();
+      engines = new HashMap<string, CloudEngine>();
 
       vm = new LuaVM();
       vm.open_libs();
 
       vm.check_stack(1);
       vm.push_string(Config.user_config_path);
-      vm.set_global("config_path");
+      vm.set_global("user_config_path");
       vm.push_string(Config.user_data_path);
-      vm.set_global("data_path");
+      vm.set_global("user_data_path");
       vm.push_string(Config.user_cache_path);
-      vm.set_global("cache_path");
+      vm.set_global("user_cache_path");
+      vm.push_string(Config.global_data_path);
+      vm.set_global("data_path");
 
       vm.register("go_background", l_go_background);
       vm.register("notify", l_notify);
       vm.register("get_selection", l_get_selection);
-      
+
       vm.register("set_response", l_set_response);
       vm.register("set_double_pinyin", l_set_double_pinyin);
       vm.register("set_key", l_set_key);
@@ -394,6 +522,9 @@ namespace icp {
       }
 
       main_pid = Posix.getpid();
+
+      // auto load configuration
+      load_configuration();
     }
 
     private static void do_string_internal(void* data) {
@@ -440,7 +571,7 @@ namespace icp {
 
     public static void load_configuration() {
       in_configuration = true;
-      do_string("dofile('%s')".printf(
+      do_string("dofile([[%s]])".printf(
             Config.CommandlineOptions.startup_script)
           );
       do_string(".stop_conf");

@@ -41,20 +41,28 @@ namespace icp {
         return 0;
       }
 
+      // show component xml and done
       if (Config.CommandlineOptions.show_xml) {
         IBusBinding.init();
         stdout.printf("%s", IBusBinding.get_component_xml());
         return 0;
       }
 
+      // run as a client to send request
+      if (Config.CommandlineOptions.request_pinyins != null) {
+        if (Config.CommandlineOptions.request_pinyins.length > 0
+          && Config.CommandlineOptions.request_timeout > 0) {
+        LuaBinding.execute_request();
+        }
+        return 0;
+      }
+
       Pinyin.init();
-      LuaBinding.init();
       Frontend.init();
       Database.init();
       DBusBinding.init();
       IBusBinding.init();
-
-      LuaBinding.load_configuration();
+      LuaBinding.init();
 
       if (!Config.CommandlineOptions.do_not_connect_ibus) {
         // give lua thread some time to set up

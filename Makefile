@@ -2,6 +2,7 @@ PREFIX ?= /usr
 
 SRCS=src/main.vala src/dbus-binding.vala src/pinyin-utils.vala src/frontend-utils.vala src/config.vala src/database.vala src/lua-binding.vala src/ibus-engine.vala
 ICONFILES=icons/ibus-cloud-pinyin.png icons/idle-0.png icons/idle-1.png icons/idle-2.png icons/idle-3.png icons/idle-4.png icons/waiting-0.png icons/waiting-1.png icons/waiting-2.png icons/waiting-3.png icons/pinyin-disabled.png icons/pinyin-enabled.png icons/traditional-disabled.png icons/traditional-enabled.png icons/offline.png
+LUAFILES=lua/config.lua lua/engine_sogou.lua lua/engine_qq.lua
 EXEFILES=src/ibus-engine-cloud-pinyin
 
 CFLAGFILE=c-flags.txt
@@ -30,13 +31,14 @@ $(CFLAGFILE) $(VALACFLAGFILE): find-dependencies.sh
 	@$(ECHO) "$(MSG_PREFIX)Finding dependencies ...$(MSG_SUFFIX)"
 	@find-dependencies.sh
 
-install: $(EXEFILES) $(ICONFILES) main.db cloud-pinyin.xml config.lua
+install: $(EXEFILES) $(ICONFILES) main.db cloud-pinyin.xml $(LUAFILES)
 	@$(ECHO) "$(MSG_PREFIX)Installing (prefix=$(PREFIX)) ...$(MSG_SUFFIX)"
 	@$(MKDIR) $(PREFIX)/share/ibus-cloud-pinyin/db/
 	@$(MKDIR) $(PREFIX)/share/ibus-cloud-pinyin/icons/
+	@$(MKDIR) $(PREFIX)/share/ibus-cloud-pinyin/lua/
 	@$(MKDIR) $(PREFIX)/lib/ibus/
 	@$(MKDIR) $(PREFIX)/share/ibus/component/
-	$(INSTALL_DATA) config.lua $(PREFIX)/share/ibus-cloud-pinyin/
+	$(INSTALL_DATA) $(LUAFILES) $(PREFIX)/share/ibus-cloud-pinyin/lua/
 	$(INSTALL_DATA) main.db $(PREFIX)/share/ibus-cloud-pinyin/db/
 	$(INSTALL_DATA) $(ICONFILES) $(PREFIX)/share/ibus-cloud-pinyin/icons/
 	$(INSTALL_DATA) cloud-pinyin.xml $(PREFIX)/share/ibus/component/
@@ -52,13 +54,13 @@ main.db: db/main.db create-index.sql
 	@$(ECHO) "$(MSG_PREFIX)Creating index. This may takes minutes. Please be patient ...$(MSG_SUFFIX)"
 	@sqlite3 main.db < create-index.sql
 
-db/main.db: pinyin-database-1.2.99.tar.bz2
+db/main.db: pinyin-database-1.2.99.tar.xz
 	@$(ECHO) "$(MSG_PREFIX)Extracting open-phrase database ...$(MSG_SUFFIX)"
-	@tar --no-same-owner -xjmf pinyin-database-1.2.99.tar.bz2
+	@tar --no-same-owner -xJmf pinyin-database-1.2.99.tar.xz
 
-pinyin-database-1.2.99.tar.bz2:
+pinyin-database-1.2.99.tar.xz:
 	@$(ECHO) "$(MSG_PREFIX)Downloading open-phrase database ...$(MSG_SUFFIX)"
-	@wget -c http://ibus.googlecode.com/files/pinyin-database-1.2.99.tar.bz2
+	@wget -c http://ibus-cloud-pinyin.googlecode.com/files/pinyin-database-1.2.99.tar.xz
 
 clean:
 	@$(ECHO) "$(MSG_PREFIX)Cleaning ...$(MSG_SUFFIX)"

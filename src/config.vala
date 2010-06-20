@@ -35,6 +35,9 @@ namespace icp {
     public static string user_data_path { get; private set; }
     public static string user_cache_path { get; private set; }
 
+    public static string program_main_file { get; private set; }
+    public static string program_path { get; private set; }
+
     // PKGDATADIR should look like: "/usr/share/ibus-cloud-pinyin"
     // since Vala has a very poor preprocessor, i need to 
     // replace all "@PKGDATADIR@" in C code using scripts
@@ -44,7 +47,12 @@ namespace icp {
       public class CommandlineOptions {
         public CommandlineOptions() { assert_not_reached(); }
 
-        public static string? startup_script = null;
+        // script is also for request
+        public static string startup_script = null;
+        public static string request_pinyins = null;
+        public static double request_timeout;
+        public static int request_priority;
+        
         public static bool show_version;
         public static bool launched_by_ibus;
         public static bool do_not_connect_ibus;
@@ -126,7 +134,7 @@ namespace icp {
         public static int user_db_query_limit = 5;
       }
 
-    // enables
+    // switches
     [Compact]
       public class Switches {
         public Switches() { assert_not_reached(); }
@@ -347,34 +355,55 @@ namespace icp {
       CandidateLabels.init();
       Punctuations.init();
 
+      // set default values
+      CommandlineOptions.request_timeout = 1.0;
+      CommandlineOptions.request_priority = 16;
+
       // command line options
       // workaround for vala 0.8.0 and 0.9.0 not allowing nested
       // struct assignments
       OptionEntry entrie_script = { "script", 'c', 0, OptionArg.FILENAME, 
-        out CommandlineOptions.startup_script, "specify a startup script",
+        out CommandlineOptions.startup_script, "Specify a (startup) script",
         "filename" };
       OptionEntry entrie_version = { "version", 'i', 0, OptionArg.NONE,
-        out CommandlineOptions.show_version, "show version information", 
+        out CommandlineOptions.show_version, "Show version information", 
         null };
-      OptionEntry entrie_user_db_in_mem = { "memory-db", 'm', 0, 
+      OptionEntry entrie_user_db_in_mem = { "userdb-in-memory", 'm', 0, 
         OptionArg.NONE, out CommandlineOptions.user_db_in_memory,
-        "do not use user database on disk", null };
+        "Use user database in memory", null };
       OptionEntry entrie_ibus = { "ibus", 'b', 0, OptionArg.NONE,
-        out CommandlineOptions.launched_by_ibus, "run by ibus", null };
+        out CommandlineOptions.launched_by_ibus, 
+        "Take ownship of registered ibus component",
+        null };
       OptionEntry entrie_no_ibus = { "no-ibus", 'n', 0, OptionArg.NONE,
         out CommandlineOptions.do_not_connect_ibus,
-        "do not register at ibus, use this if ibus-daemon is not running",
+        "Do not connect to ibus-daemon",
         null };
       OptionEntry entrie_xml = { "dump-xml", 'x', 0, OptionArg.NONE,
-        out CommandlineOptions.show_xml, "print ibus engine description xml", 
+        out CommandlineOptions.show_xml, "Dump ibus component xml", 
         null };
+      OptionEntry entrie_request_pinyins = { "request-pinyins", 'r', 
+        OptionFlags.HIDDEN, OptionArg.STRING,
+        out CommandlineOptions.request_pinyins, 
+        "", null };
+      OptionEntry entrie_request_priority = { "request-priority", 'p', 
+        OptionFlags.HIDDEN, OptionArg.INT,
+        out CommandlineOptions.request_priority, 
+        "", null };
+      OptionEntry entrie_request_timeout = { "request-timeout", 't', 
+        OptionFlags.HIDDEN, OptionArg.DOUBLE,
+        out CommandlineOptions.request_timeout, 
+        "", null };
       OptionEntry entrie_null = { null };
 
       OptionContext context =
         new OptionContext("- cloud pinyin client for ibus");
-
-      context.add_main_entries({entrie_script, entrie_version, entrie_ibus,
-          entrie_no_ibus, entrie_xml, entrie_user_db_in_mem, entrie_null},
+      
+      context.add_main_entries({entrie_version, entrie_script, entrie_ibus,
+          entrie_no_ibus, entrie_xml, entrie_user_db_in_mem, 
+          entrie_request_pinyins, entrie_request_timeout, 
+          entrie_request_priority,
+          entrie_null},
           null
           );
 
@@ -385,7 +414,8 @@ namespace icp {
       }
 
       if (CommandlineOptions.startup_script == null)
-        CommandlineOptions.startup_script = global_data_path + "/config.lua";
+        CommandlineOptions.startup_script = global_data_path 
+          + "/lua/config.lua";
 
       user_cache_path = "%s/ibus/cloud-pinyin".printf(
         Environment.get_user_cache_dir()
@@ -399,7 +429,11 @@ namespace icp {
 
       user_database = CommandlineOptions.user_db_in_memory ? ":memory:" 
         : "%s/userdb.db".printf(user_cache_path);
+
       global_database = "%s/db/main.db".printf(global_data_path);
+
+      program_path = Environment.get_current_dir();
+      program_main_file = "%s/%s".printf(program_path, args[0]);
     }
 
     // this class is used as namespace
