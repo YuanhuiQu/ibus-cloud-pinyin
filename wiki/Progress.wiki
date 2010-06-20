@@ -1,23 +1,23 @@
 ==== Done ====
 
-Notification
-Text Selection Monitor
-Internal Pinyin Utilities
-Open-phrase Database
-User Database
-Icons
+ * Notification
+ * Text Selection Monitor
+ * Internal Pinyin Utilities
+ * Open-phrase Database
+ * User Database
+ * Icons
 
 ==== Almost Done ====
 
-Lua and DBus Binding
+ * Lua and DBus Binding
 
 ==== Working on ====
 
-IBus Engine
+ * IBus Engine
 
 ==== To be done ====
 
-Lua Scripts
-.scel Import Tool
-libopencc Support
-User Guide
+ * Lua Scripts
+ * .scel Import Tool
+ * libopencc Support
+ * User Guide
