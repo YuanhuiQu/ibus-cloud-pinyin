@@ -154,7 +154,7 @@ namespace icp {
       sql_builder.append("BEGIN TRANSACTION;\n");
 
       // create tables and indexes
-      for (int i = 0; i < PHRASE_LENGTH_MAX; i++) {
+      for (int i = 0; i <= PHRASE_LENGTH_MAX; i++) {
         sql_builder.append("CREATE TABLE IF NOT EXISTS userdb.py_phrase_%d"
             .printf(i)
             );
@@ -200,7 +200,7 @@ namespace icp {
       sql_builder.append("INSERT OR IGNORE INTO userdb.py_phrase_%d VALUES("
           .printf(length - 1)
           );
-      double freq = 3000.0;
+      double freq = 2400.0;
       // query freq
       string query =
         "SELECT freq FROM main.py_phrase_%d WHERE phrase=\"%s\" LIMIT 1"

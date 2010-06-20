@@ -38,22 +38,6 @@ namespace icp {
       | ModifierType.SUPER_MASK | ModifierType.RELEASE_MASK
       | ModifierType.META_MASK;
 
-    // active engines
-    /*
-       public static HashSet<CloudPinyinEngine*> active_engines;
-
-       protected static void set_active(CloudPinyinEngine* pengine, 
-       bool actived = true) {
-       lock (active_engines) {
-       if (actived)
-       active_engines.add(pengine);
-       else
-    // it is ok to remove an non-existed item
-    active_engines.remove(pengine);
-    }
-    }
-     */
-
     public class CloudPinyinEngine : Engine {
       private string raw_buffer = "";
       private Pinyin.Sequence pinyin_buffer;
@@ -64,6 +48,28 @@ namespace icp {
       private bool offline_mode ;
       private bool traditional_mode;
       private bool last_is_chinese = true;
+      
+      // external request list
+      class Request {
+        public double start_time;
+        public double end_time;
+        // multi engines share this 'done'
+        public bool done;
+      }
+
+      // pending segments
+      class PendingSegment {
+        public bool need_request;
+        public string content;
+        public Pinyin.Sequence pinyins;
+        public double start_time;
+      }
+
+      LinkedList<Request> request_list;
+      LinkedList<PendingSegment> pending_segments_list;
+
+      // only one prerequest per engine allowed
+      bool prerequest_done;
 
       // lookup table and candidates
       LookupTable table;
@@ -102,7 +108,7 @@ namespace icp {
       private int waiting_index = 0;
       private int waiting_index_acc = 1;
 
-      private void start_waiting_animation() {
+      private void start_requesting() {
         waiting_animation_timer = new TimeoutSource(200);
         waiting_animation_timer.set_callback(() => {
             // update status icon
@@ -118,7 +124,8 @@ namespace icp {
         waiting_animation_timer.attach(icp.main_loop.get_context());
       }
 
-      private void stop_waiting_animation() {
+      private void stop_requesting() {
+        // TODO: force convert all pending
         if (waiting_animation_timer == null) return;
         if (!waiting_animation_timer.is_destroyed())
           waiting_animation_timer.destroy();
@@ -161,8 +168,23 @@ namespace icp {
         user_phrase = "";
         user_phrase_count = 0;
 
+        // request list
+        request_list = new LinkedList<Request>();
+        prerequest_done = true;
+
         // TODO: dlopen opencc ...
         inited = true;
+      }
+
+      private void send_prerequest() {
+        if (prerequest_done && pinyin_buffer.size > 0 
+        && DBusBinding.query(pinyin_buffer.to_string()) == "") {
+          prerequest_done = false;
+          LuaBinding.start_requests(pinyin_buffer.to_string(),
+            Config.Timeouts.prerequest,
+            &prerequest_done
+            );
+        }
       }
 
       public override void reset() {
@@ -283,6 +305,7 @@ namespace icp {
               || (chinese_mode == true && ("eng" in actions))) {
             // TODO: do something here
             chinese_mode = !chinese_mode;
+            if (chinese_mode) last_is_chinese = true;
             handled = true; break;
           }
 
@@ -387,6 +410,7 @@ namespace icp {
                   );
               commit_buffer();
               last_is_chinese = (punc.size() > 2);
+              user_phrase_clear();
               commit(punc);
               handled = true; break;
             }
@@ -449,6 +473,7 @@ namespace icp {
         } while (false);
 
         if (handled) {
+          send_prerequest();
           update_preedit();
           update_properties();
           update_candidates();
@@ -498,7 +523,7 @@ namespace icp {
 
         Pinyin.Sequence pinyins = new Pinyin.Sequence.ids(user_pinyins);
         Database.insert(user_phrase, pinyins);
-        if (user_phrase_count++ > 3) user_phrase_clear();
+        if (user_phrase_count++ > 4) user_phrase_clear();
 
         // remove heading pinyins (rebuild buffer)
         if (Config.Switches.double_pinyin) {
@@ -634,7 +659,7 @@ namespace icp {
           last_traditional_mode = traditional_mode;
         }
         if (last_offline_mode != offline_mode) {
-          if (offline_mode) stop_waiting_animation();
+          if (offline_mode) stop_requesting();
           status_icon.set_icon("%s/icons/%s.png"
               .printf(Config.global_data_path,
                 offline_mode ? "offline" : "idle-4"));

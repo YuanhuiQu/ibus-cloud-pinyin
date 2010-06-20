@@ -1,6 +1,28 @@
-require 'socket'
+--[[----------------------------------------------------------------------------
+ ibus-cloud-pinyin - cloud pinyin client for ibus
+ Configuration Script
 
-notify('test', 'hello world 1')
+ Copyright (C) 2010 WU Jun <quark@lihdd.net>
+
+ This file is part of ibus-cloud-pinyin.
+
+ ibus-cloud-pinyin is free software: you can redistribute it and/or modify
+ it under the terms of the GNU General Public License as published by
+ the Free Software Foundation, either version 3 of the License, or
+ (at your option) any later version.
+
+ ibus-cloud-pinyin is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ GNU General Public License for more details.
+
+ You should have received a copy of the GNU General Public License
+ along with ibus-cloud-pinyin.  If not, see <http://www.gnu.org/licenses/>.
+--]]----------------------------------------------------------------------------
+
+socket, http, url = require 'socket', require 'socket.http', require 'socket.url'
+
+notify('test', 'hello world 2')
 
 -- constants
 keys = {
@@ -70,3 +92,51 @@ set_switch{
 	show_raw_in_auxiliary = true,
 	always_show_candidates = true,
 }
+
+-- paths
+local user_config_path = user_config_path .. '/config.lua'
+local engines_file_path = user_config_path .. '/engines.lua'
+local autoload_file_path = '/tmp/.cloud-pinyin-autoload.lua'
+
+-- wrapped dofile
+function try_dofile(path)
+	local file = io.open(path, 'r')
+	if file then file:close() pcall(dofile(path)) end
+end
+
+-- some engines, may be outdated
+
+--register_engine("sogou", data_path .. '/lua/engine_sogou.lua')
+--register_engine("qq", data_path .. '/lua/engine_qq.lua')
+
+-- load various script files if exists
+try_dofile(user_config_path)
+try_dofile(engines_file_path)
+try_dofile(autoload_file_path)
+
+
+-- update various things in background
+go_background()
+http.TIMEOUT = 10
+if false and not do_not_update_cloud_engines then
+	os.execute("mkdir '"..config_path.."' -p 2> /dev/null")
+	local ret, c = http.request('http://ibus-cloud-pinyin.googlecode.com/svn/trunk/engines.lua')
+	if c == 200 and ret and ret:match('ibus%-cloud%-pinyin%-engines%-end') then
+		local engines_file = io.open(engines_file_path, 'w')
+		engines_file:write(ret)
+		engines_file:close()
+	end
+end
+
+if false and not do_not_load_remote_script then
+	http.TIMEOUT = 5
+	os.execute("mkdir '"..ime.USERCACHEDIR.."' -p")
+	local autoload_file_path = ime.USERCACHEDIR..'/autoload.lua'
+	local ret, c = http.request('http://ibus-cloud-pinyin.googlecode.com/svn/trunk/autoload.lua')
+	if c == 200 and ret and ret:match('ibus%-cloud%-pinyin%-autoload%-end') then
+		local autoload_file = io.open(autoload_file_path, 'w')
+		autoload_file:write(ret)
+		autoload_file:close()
+	end
+end
+
