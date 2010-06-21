@@ -78,7 +78,8 @@ set_double_pinyin{
 ['va'] = 'zha', ['vb'] = 'zhou', ['ve'] = 'zhe', ['vd'] = 'zhuang', ['vg'] = 'zheng', ['vf'] = 'zhen', ['vi'] = 'zhi', ['vh'] = 'zhang', ['vk'] = 'zhao', ['vj'] = 'zhan', ['vl'] = 'zhai', ['vo'] = 'zhuo', ['vp'] = 'zhun', ['vs'] = 'zhong', ['vr'] = 'zhuan', ['vu'] = 'zhu', ['vw'] = 'zhua', ['vv'] = 'zhui', ['vy'] = 'zhuai', 
 ['ya'] = 'ya', ['yb'] = 'you', ['ye'] = 'ye', ['yi'] = 'yi', ['yh'] = 'yang', ['yk'] = 'yao', ['yj'] = 'yan', ['yl'] = 'yai', ['yo'] = 'yo', ['yn'] = 'yin', ['yp'] = 'yun', ['ys'] = 'yong', ['yr'] = 'yuan', ['yu'] = 'yu', ['yt'] = 'yue', ['yv'] = 'yue', ['y;'] = 'ying', 
 ['xc'] = 'xiao', ['xd'] = 'xiang', ['xi'] = 'xi', ['xm'] = 'xian', ['xn'] = 'xin', ['xq'] = 'xiu', ['xp'] = 'xun', ['xs'] = 'xiong', ['xr'] = 'xuan', ['xu'] = 'xu', ['xt'] = 'xue', ['xw'] = 'xia', ['xv'] = 'xue', ['xx'] = 'xie', ['x;'] = 'xing', 
-['za'] = 'za', ['zb'] = 'zou', ['ze'] = 'ze', ['zg'] = 'zeng', ['zf'] = 'zen', ['zi'] = 'zi', ['zh'] = 'zang', ['zk'] = 'zao', ['zj'] = 'zan', ['zl'] = 'zai', ['zo'] = 'zuo', ['zp'] = 'zun', ['zs'] = 'zong', ['zr'] = 'zuan', ['zu'] = 'zu', ['zv'] = 'zui', ['zz'] = 'zei', 
+['za'] = 'za', ['zb'] = 'zou', ['ze'] = 'ze', ['zg'] = 'zeng', ['zf'] = 'zen', ['zi'] = 'zi', ['zh'] = 'zang', ['zk'] = 'zao', ['zj'] = 'zan', ['zl'] = 'zai', ['zo'] = 'zuo', ['zp'] = 'zun', ['zs'] = 'zong', ['zr'] = 'zuan', ['zu'] = 'zu', ['zv'] = 'zui', ['zz'] = 'zei',
+['v'] = 'zh', ['i'] = 'ch', ['u'] = 'sh',
 }
 
 --[[

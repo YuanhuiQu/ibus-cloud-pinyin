@@ -25,7 +25,8 @@ set_double_pinyin{
 ['va'] = 'zha', ['vb'] = 'zhou', ['ve'] = 'zhe', ['vd'] = 'zhuang', ['vg'] = 'zheng', ['vf'] = 'zhen', ['vi'] = 'zhi', ['vh'] = 'zhang', ['vk'] = 'zhao', ['vj'] = 'zhan', ['vl'] = 'zhai', ['vo'] = 'zhuo', ['vp'] = 'zhun', ['vs'] = 'zhong', ['vr'] = 'zhuan', ['vu'] = 'zhu', ['vw'] = 'zhua', ['vv'] = 'zhui', ['vy'] = 'zhuai', 
 ['ya'] = 'ya', ['yb'] = 'you', ['ye'] = 'ye', ['yi'] = 'yi', ['yh'] = 'yang', ['yk'] = 'yao', ['yj'] = 'yan', ['yl'] = 'yai', ['yo'] = 'yo', ['yn'] = 'yin', ['yp'] = 'yun', ['ys'] = 'yong', ['yr'] = 'yuan', ['yu'] = 'yu', ['yt'] = 'yue', ['yv'] = 'yue', ['y;'] = 'ying', 
 ['xc'] = 'xiao', ['xd'] = 'xiang', ['xi'] = 'xi', ['xm'] = 'xian', ['xn'] = 'xin', ['xq'] = 'xiu', ['xp'] = 'xun', ['xs'] = 'xiong', ['xr'] = 'xuan', ['xu'] = 'xu', ['xt'] = 'xue', ['xw'] = 'xia', ['xv'] = 'xue', ['xx'] = 'xie', ['x;'] = 'xing', 
-['za'] = 'za', ['zb'] = 'zou', ['ze'] = 'ze', ['zg'] = 'zeng', ['zf'] = 'zen', ['zi'] = 'zi', ['zh'] = 'zang', ['zk'] = 'zao', ['zj'] = 'zan', ['zl'] = 'zai', ['zo'] = 'zuo', ['zp'] = 'zun', ['zs'] = 'zong', ['zr'] = 'zuan', ['zu'] = 'zu', ['zv'] = 'zui', ['zz'] = 'zei', 
+['za'] = 'za', ['zb'] = 'zou', ['ze'] = 'ze', ['zg'] = 'zeng', ['zf'] = 'zen', ['zi'] = 'zi', ['zh'] = 'zang', ['zk'] = 'zao', ['zj'] = 'zan', ['zl'] = 'zai', ['zo'] = 'zuo', ['zp'] = 'zun', ['zs'] = 'zong', ['zr'] = 'zuan', ['zu'] = 'zu', ['zv'] = 'zui', ['zz'] = 'zei',
+['v'] = 'zh', ['i'] = 'ch', ['u'] = 'sh',
 }
 }}}
  * 搜狗拼音
@@ -55,6 +56,7 @@ set_double_pinyin{
 ['ya'] = 'ya', ['yb'] = 'you', ['ye'] = 'ye', ['yi'] = 'yi', ['yh'] = 'yang', ['yk'] = 'yao', ['yj'] = 'yan', ['yl'] = 'yai', ['yo'] = 'yo', ['yn'] = 'yin', ['yp'] = 'yun', ['ys'] = 'yong', ['yr'] = 'yuan', ['yu'] = 'yu', ['yt'] = 'yue', ['y;'] = 'ying', 
 ['xc'] = 'xiao', ['xd'] = 'xiang', ['xi'] = 'xi', ['xm'] = 'xian', ['xn'] = 'xin', ['xq'] = 'xiu', ['xp'] = 'xun', ['xs'] = 'xiong', ['xr'] = 'xuan', ['xu'] = 'xu', ['xt'] = 'xue', ['xw'] = 'xia', ['xx'] = 'xie', ['x;'] = 'xing', 
 ['za'] = 'za', ['zb'] = 'zou', ['ze'] = 'ze', ['zg'] = 'zeng', ['zf'] = 'zen', ['zi'] = 'zi', ['zh'] = 'zang', ['zk'] = 'zao', ['zj'] = 'zan', ['zl'] = 'zai', ['zo'] = 'zuo', ['zp'] = 'zun', ['zs'] = 'zong', ['zr'] = 'zuan', ['zu'] = 'zu', ['zv'] = 'zui', ['zz'] = 'zei', 
+['v'] = 'zh', ['i'] = 'ch', ['u'] = 'sh',
 }
 }}}
  * 智能 ABC
@@ -63,7 +65,8 @@ set_double_pinyin{
 ['aa'] = 'zha', ['ac'] = 'zhuai', ['ab'] = 'zhou', ['ae'] = 'zhe', ['ad'] = 'zhua', ['ag'] = 'zheng', ['af'] = 'zhen', ['ai'] = 'zhi', ['ah'] = 'zhang', ['ak'] = 'zhao', ['aj'] = 'zhan', ['am'] = 'zhui', ['al'] = 'zhai', ['ao'] = 'zhuo', ['an'] = 'zhun', ['ap'] = 'zhuan', ['as'] = 'zhong', ['au'] = 'zhu', ['at'] = 'zhuang', 
 ['ca'] = 'ca', ['cb'] = 'cou', ['ce'] = 'ce', ['cg'] = 'ceng', ['cf'] = 'cen', ['ci'] = 'ci', ['ch'] = 'cang', ['ck'] = 'cao', ['cj'] = 'can', ['cm'] = 'cui', ['cl'] = 'cai', ['co'] = 'cuo', ['cn'] = 'cun', ['cp'] = 'cuan', ['cs'] = 'cong', ['cu'] = 'cu', 
 ['ba'] = 'ba', ['bc'] = 'bin', ['bg'] = 'beng', ['bf'] = 'ben', ['bi'] = 'bi', ['bh'] = 'bang', ['bk'] = 'bao', ['bj'] = 'ban', ['bl'] = 'bai', ['bo'] = 'bo', ['bq'] = 'bei', ['bu'] = 'bu', ['bw'] = 'bian', ['by'] = 'bing', ['bx'] = 'bie', ['bz'] = 'biao', 
-['da'] = 'da', ['db'] = 'dou', ['de'] = 'de', ['dg'] = 'deng', ['di'] = 'di', ['dh'] = 'dang', ['dk'] = 'dao', ['dj'] = 'dan', ['dm'] = 'dui', ['dl'] = 'dai', ['do'] = 'duo', ['dn'] = 'dun', ['dq'] = 'dei', ['dp'] = 'duan', ['ds'] = 'dong', ['dr'] = 'diu', ['du'] = 'du', ['dw'] = 'dian', ['dy'] = 'ding', ['dx'] = 'die', ['dz'] = 'diao', 
+['da'] = 'da', ['db'] = 'dou', ['de'] = 'de', ['dg'] = 'deng', ['di'] = 'di', ['dh'] = 'dang', ['dk'] = 'dao', ['dj'] = 'dan', ['dm'] = 'dui', ['dl'] = 'dai', ['do'] = 'duo', ['dn'] = 'dun', ['dq'] = 'dei', ['dp'] = 'duan', ['ds'] = 'dong', ['dr'] = 'diu', ['du'] = 'du', ['dw'] = 'dian', ['dy'] = 'ding', ['dx'] = 'die', ['dz'] = 'diao',
+['ea'] = 'cha', ['ec'] = 'chuai', ['eb'] = 'chou', ['ee'] = 'che', ['eg'] = 'cheng', ['ef'] = 'chen', ['ei'] = 'chi', ['eh'] = 'chang', ['ek'] = 'chao', ['ej'] = 'chan', ['em'] = 'chui', ['el'] = 'chai', ['eo'] = 'chuo', ['en'] = 'chun', ['ep'] = 'chuan', ['es'] = 'chong', ['eu'] = 'chu', ['et'] = 'chuang', 
 ['ga'] = 'ga', ['gc'] = 'guai', ['gb'] = 'gou', ['ge'] = 'ge', ['gd'] = 'gua', ['gg'] = 'geng', ['gf'] = 'gen', ['gh'] = 'gang', ['gk'] = 'gao', ['gj'] = 'gan', ['gm'] = 'gui', ['gl'] = 'gai', ['go'] = 'guo', ['gn'] = 'gun', ['gq'] = 'gei', ['gp'] = 'guan', ['gs'] = 'gong', ['gu'] = 'gu', ['gt'] = 'guang', 
 ['fa'] = 'fa', ['fb'] = 'fou', ['fg'] = 'feng', ['ff'] = 'fen', ['fh'] = 'fang', ['fj'] = 'fan', ['fo'] = 'fo', ['fq'] = 'fei', ['fu'] = 'fu', 
 ['ha'] = 'ha', ['hc'] = 'huai', ['hb'] = 'hou', ['he'] = 'he', ['hd'] = 'hua', ['hg'] = 'heng', ['hf'] = 'hen', ['hh'] = 'hang', ['hk'] = 'hao', ['hj'] = 'han', ['hm'] = 'hui', ['hl'] = 'hai', ['ho'] = 'huo', ['hn'] = 'hun', ['hq'] = 'hei', ['hp'] = 'huan', ['hs'] = 'hong', ['hu'] = 'hu', ['ht'] = 'huang', 
@@ -83,34 +86,7 @@ set_double_pinyin{
 ['ya'] = 'ya', ['yc'] = 'yin', ['yb'] = 'you', ['ye'] = 'ye', ['yi'] = 'yi', ['yh'] = 'yang', ['yk'] = 'yao', ['yj'] = 'yan', ['ym'] = 'yue', ['yl'] = 'yai', ['yo'] = 'yo', ['yn'] = 'yun', ['yp'] = 'yuan', ['ys'] = 'yong', ['yu'] = 'yu', ['yv'] = 'yue', ['yy'] = 'ying', 
 ['xc'] = 'xin', ['xd'] = 'xia', ['xi'] = 'xi', ['xm'] = 'xue', ['xn'] = 'xun', ['xp'] = 'xuan', ['xs'] = 'xiong', ['xr'] = 'xiu', ['xu'] = 'xu', ['xt'] = 'xiang', ['xw'] = 'xian', ['xv'] = 'xu', ['xy'] = 'xing', ['xx'] = 'xie', ['xz'] = 'xiao', 
 ['za'] = 'za', ['zb'] = 'zou', ['ze'] = 'ze', ['zg'] = 'zeng', ['zf'] = 'zen', ['zi'] = 'zi', ['zh'] = 'zang', ['zk'] = 'zao', ['zj'] = 'zan', ['zm'] = 'zui', ['zl'] = 'zai', ['zo'] = 'zuo', ['zn'] = 'zun', ['zq'] = 'zei', ['zp'] = 'zuan', ['zs'] = 'zong', ['zu'] = 'zu', 
-}
-}}}
- * 紫光拼音
-{{{
-set_double_pinyin{
-['ca'] = 'ca', ['ce'] = 'ce', ['ci'] = 'ci', ['ch'] = 'cong', ['cm'] = 'cun', ['cl'] = 'cuan', ['co'] = 'cuo', ['cn'] = 'cui', ['cq'] = 'cao', ['cp'] = 'cai', ['cs'] = 'cang', ['cr'] = 'can', ['cu'] = 'cu', ['ct'] = 'ceng', ['cw'] = 'cen', ['cv'] = 'cui', ['cz'] = 'cou', 
-['ba'] = 'ba', ['bb'] = 'biao', ['bd'] = 'bie', ['bf'] = 'bian', ['bi'] = 'bi', ['bk'] = 'bei', ['bo'] = 'bo', ['bq'] = 'bao', ['bp'] = 'bai', ['bs'] = 'bang', ['br'] = 'ban', ['bu'] = 'bu', ['bt'] = 'beng', ['bw'] = 'ben', ['by'] = 'bin', ['b;'] = 'bing', 
-['da'] = 'da', ['db'] = 'diao', ['de'] = 'de', ['dd'] = 'die', ['df'] = 'dian', ['di'] = 'di', ['dh'] = 'dong', ['dk'] = 'dei', ['dj'] = 'diu', ['dm'] = 'dun', ['dl'] = 'duan', ['do'] = 'duo', ['dn'] = 'dui', ['dq'] = 'dao', ['dp'] = 'dai', ['ds'] = 'dang', ['dr'] = 'dan', ['du'] = 'du', ['dt'] = 'deng', ['dv'] = 'dui', ['d;'] = 'ding', ['dz'] = 'dou', 
-['ga'] = 'ga', ['ge'] = 'ge', ['gg'] = 'guang', ['gh'] = 'gong', ['gk'] = 'gei', ['gm'] = 'gun', ['gl'] = 'guan', ['go'] = 'guo', ['gn'] = 'gui', ['gq'] = 'gao', ['gp'] = 'gai', ['gs'] = 'gang', ['gr'] = 'gan', ['gu'] = 'gu', ['gt'] = 'geng', ['gw'] = 'gen', ['gv'] = 'gui', ['gy'] = 'guai', ['gx'] = 'gua', ['gz'] = 'gou', 
-['fa'] = 'fa', ['fk'] = 'fei', ['fo'] = 'fo', ['fs'] = 'fang', ['fr'] = 'fan', ['fu'] = 'fu', ['ft'] = 'feng', ['fw'] = 'fen', ['fz'] = 'fou', 
-['ia'] = 'sha', ['ie'] = 'she', ['ig'] = 'shuang', ['ii'] = 'shi', ['ik'] = 'shei', ['im'] = 'shun', ['il'] = 'shuan', ['io'] = 'shuo', ['in'] = 'shui', ['iq'] = 'shao', ['ip'] = 'shai', ['is'] = 'shang', ['ir'] = 'shan', ['iu'] = 'shu', ['it'] = 'sheng', ['iw'] = 'shen', ['iv'] = 'shui', ['iy'] = 'shuai', ['ix'] = 'shua', ['iz'] = 'shou', 
-['ha'] = 'ha', ['he'] = 'he', ['hg'] = 'huang', ['hh'] = 'hong', ['hk'] = 'hei', ['hm'] = 'hun', ['hl'] = 'huan', ['ho'] = 'huo', ['hn'] = 'hui', ['hq'] = 'hao', ['hp'] = 'hai', ['hs'] = 'hang', ['hr'] = 'han', ['hu'] = 'hu', ['ht'] = 'heng', ['hw'] = 'hen', ['hv'] = 'hui', ['hy'] = 'huai', ['hx'] = 'hua', ['hz'] = 'hou', 
-['ka'] = 'ka', ['ke'] = 'ke', ['kg'] = 'kuang', ['kh'] = 'kong', ['km'] = 'kun', ['kl'] = 'kuan', ['ko'] = 'kuo', ['kn'] = 'kui', ['kq'] = 'kao', ['kp'] = 'kai', ['ks'] = 'kang', ['kr'] = 'kan', ['ku'] = 'ku', ['kt'] = 'keng', ['kw'] = 'ken', ['kv'] = 'kui', ['ky'] = 'kuai', ['kx'] = 'kua', ['kz'] = 'kou', 
-['jb'] = 'jiao', ['jd'] = 'jie', ['jg'] = 'jiang', ['jf'] = 'jian', ['ji'] = 'ji', ['jh'] = 'jiong', ['jj'] = 'jiu', ['jm'] = 'jun', ['jl'] = 'juan', ['jn'] = 'jue', ['ju'] = 'ju', ['jy'] = 'jin', ['jx'] = 'jia', ['j;'] = 'jing', 
-['ma'] = 'ma', ['mb'] = 'miao', ['me'] = 'me', ['md'] = 'mie', ['mf'] = 'mian', ['mi'] = 'mi', ['mk'] = 'mei', ['mj'] = 'miu', ['mo'] = 'mo', ['mq'] = 'mao', ['mp'] = 'mai', ['ms'] = 'mang', ['mr'] = 'man', ['mu'] = 'mu', ['mt'] = 'meng', ['mw'] = 'men', ['my'] = 'min', ['m;'] = 'ming', ['mz'] = 'mou', 
-['la'] = 'la', ['lb'] = 'liao', ['le'] = 'le', ['ld'] = 'lie', ['lg'] = 'liang', ['lf'] = 'lian', ['li'] = 'li', ['lh'] = 'long', ['lk'] = 'lei', ['lj'] = 'liu', ['lm'] = 'lun', ['ll'] = 'luan', ['lo'] = 'luo', ['ln'] = 'lve', ['lq'] = 'lao', ['lp'] = 'lai', ['ls'] = 'lang', ['lr'] = 'lan', ['lu'] = 'lu', ['lt'] = 'leng', ['lv'] = 'lv', ['ly'] = 'lin', ['l;'] = 'ling', ['lz'] = 'lou', 
-['oa'] = 'a', ['oe'] = 'e', ['ok'] = 'ei', ['oj'] = 'er', ['oo'] = 'o', ['oq'] = 'ao', ['op'] = 'ai', ['os'] = 'ang', ['or'] = 'an', ['ow'] = 'en', ['oz'] = 'ou', 
-['na'] = 'na', ['nb'] = 'niao', ['ne'] = 'ne', ['nd'] = 'nie', ['ng'] = 'niang', ['nf'] = 'nian', ['ni'] = 'ni', ['nh'] = 'nong', ['nk'] = 'nei', ['nj'] = 'niu', ['nl'] = 'nuan', ['no'] = 'nuo', ['nn'] = 'nve', ['nq'] = 'nao', ['np'] = 'nai', ['ns'] = 'nang', ['nr'] = 'nan', ['nu'] = 'nu', ['nt'] = 'neng', ['nw'] = 'nen', ['nv'] = 'nv', ['ny'] = 'nin', ['n;'] = 'ning', ['nz'] = 'nou', 
-['qb'] = 'qiao', ['qd'] = 'qie', ['qg'] = 'qiang', ['qf'] = 'qian', ['qi'] = 'qi', ['qh'] = 'qiong', ['qj'] = 'qiu', ['qm'] = 'qun', ['ql'] = 'quan', ['qn'] = 'que', ['qu'] = 'qu', ['qy'] = 'qin', ['qx'] = 'qia', ['q;'] = 'qing', 
-['pa'] = 'pa', ['pb'] = 'piao', ['pd'] = 'pie', ['pf'] = 'pian', ['pi'] = 'pi', ['pk'] = 'pei', ['po'] = 'po', ['pq'] = 'pao', ['pp'] = 'pai', ['ps'] = 'pang', ['pr'] = 'pan', ['pu'] = 'pu', ['pt'] = 'peng', ['pw'] = 'pen', ['py'] = 'pin', ['p;'] = 'ping', ['pz'] = 'pou', 
-['sa'] = 'sa', ['se'] = 'se', ['si'] = 'si', ['sh'] = 'song', ['sm'] = 'sun', ['sl'] = 'suan', ['so'] = 'suo', ['sn'] = 'sui', ['sq'] = 'sao', ['sp'] = 'sai', ['ss'] = 'sang', ['sr'] = 'san', ['su'] = 'su', ['st'] = 'seng', ['sw'] = 'sen', ['sv'] = 'sui', ['sz'] = 'sou', 
-['re'] = 're', ['ri'] = 'ri', ['rh'] = 'rong', ['rm'] = 'run', ['rl'] = 'ruan', ['ro'] = 'ruo', ['rn'] = 'rui', ['rq'] = 'rao', ['rs'] = 'rang', ['rr'] = 'ran', ['ru'] = 'ru', ['rt'] = 'reng', ['rw'] = 'ren', ['rv'] = 'rui', ['rz'] = 'rou', 
-['ua'] = 'zha', ['ue'] = 'zhe', ['ug'] = 'zhuang', ['ui'] = 'zhi', ['uh'] = 'zhong', ['um'] = 'zhun', ['ul'] = 'zhuan', ['uo'] = 'zhuo', ['un'] = 'zhui', ['uq'] = 'zhao', ['up'] = 'zhai', ['us'] = 'zhang', ['ur'] = 'zhan', ['uu'] = 'zhu', ['ut'] = 'zheng', ['uw'] = 'zhen', ['uv'] = 'zhui', ['uy'] = 'zhuai', ['ux'] = 'zhua', ['uz'] = 'zhou', 
-['ta'] = 'ta', ['tb'] = 'tiao', ['te'] = 'te', ['td'] = 'tie', ['tf'] = 'tian', ['ti'] = 'ti', ['th'] = 'tong', ['tm'] = 'tun', ['tl'] = 'tuan', ['to'] = 'tuo', ['tn'] = 'tui', ['tq'] = 'tao', ['tp'] = 'tai', ['ts'] = 'tang', ['tr'] = 'tan', ['tu'] = 'tu', ['tt'] = 'teng', ['tv'] = 'tui', ['t;'] = 'ting', ['tz'] = 'tou', 
-['wa'] = 'wa', ['wk'] = 'wei', ['wo'] = 'wo', ['wp'] = 'wai', ['ws'] = 'wang', ['wr'] = 'wan', ['wu'] = 'wu', ['wt'] = 'weng', ['ww'] = 'wen', 
-['ya'] = 'ya', ['ye'] = 'ye', ['yi'] = 'yi', ['yh'] = 'yong', ['ym'] = 'yun', ['yl'] = 'yuan', ['yo'] = 'yo', ['yn'] = 'yue', ['yq'] = 'yao', ['yp'] = 'yai', ['ys'] = 'yang', ['yr'] = 'yan', ['yu'] = 'yu', ['yy'] = 'yin', ['y;'] = 'ying', ['yz'] = 'you', 
-['xb'] = 'xiao', ['xd'] = 'xie', ['xg'] = 'xiang', ['xf'] = 'xian', ['xi'] = 'xi', ['xh'] = 'xiong', ['xj'] = 'xiu', ['xm'] = 'xun', ['xl'] = 'xuan', ['xn'] = 'xue', ['xu'] = 'xu', ['xy'] = 'xin', ['xx'] = 'xia', ['x;'] = 'xing', 
-['za'] = 'za', ['ze'] = 'ze', ['zi'] = 'zi', ['zh'] = 'zong', ['zk'] = 'zei', ['zm'] = 'zun', ['zl'] = 'zuan', ['zo'] = 'zuo', ['zn'] = 'zui', ['zq'] = 'zao', ['zp'] = 'zai', ['zs'] = 'zang', ['zr'] = 'zan', ['zu'] = 'zu', ['zt'] = 'zeng', ['zw'] = 'zen', ['zv'] = 'zui', ['zz'] = 'zou', 
+['a'] = 'zh', ['e'] = 'ch', ['v'] = 'sh',
 }
 }}}
  * 拼音加加
@@ -139,7 +115,8 @@ set_double_pinyin{
 ['va'] = 'zha', ['vc'] = 'zhuan', ['vb'] = 'zhua', ['ve'] = 'zhe', ['vd'] = 'zhao', ['vg'] = 'zhang', ['vf'] = 'zhan', ['vi'] = 'zhi', ['vh'] = 'zhuang', ['vo'] = 'zhuo', ['vp'] = 'zhou', ['vs'] = 'zhai', ['vr'] = 'zhen', ['vu'] = 'zhu', ['vt'] = 'zheng', ['vv'] = 'zhui', ['vy'] = 'zhong', ['vx'] = 'zhuai', ['vz'] = 'zhun', 
 ['ya'] = 'ya', ['yc'] = 'yuan', ['ye'] = 'ye', ['yd'] = 'yao', ['yg'] = 'yang', ['yf'] = 'yan', ['yi'] = 'yi', ['yl'] = 'yin', ['yo'] = 'yo', ['yq'] = 'ying', ['yp'] = 'you', ['ys'] = 'yai', ['yu'] = 'yu', ['yy'] = 'yong', ['yx'] = 'yue', ['yz'] = 'yun', 
 ['xc'] = 'xuan', ['xb'] = 'xia', ['xi'] = 'xi', ['xh'] = 'xiang', ['xk'] = 'xiao', ['xj'] = 'xian', ['xm'] = 'xie', ['xl'] = 'xin', ['xn'] = 'xiu', ['xq'] = 'xing', ['xu'] = 'xu', ['xy'] = 'xiong', ['xx'] = 'xue', ['xz'] = 'xun', 
-['za'] = 'za', ['zc'] = 'zuan', ['ze'] = 'ze', ['zd'] = 'zao', ['zg'] = 'zang', ['zf'] = 'zan', ['zi'] = 'zi', ['zo'] = 'zuo', ['zp'] = 'zou', ['zs'] = 'zai', ['zr'] = 'zen', ['zu'] = 'zu', ['zt'] = 'zeng', ['zw'] = 'zei', ['zv'] = 'zui', ['zy'] = 'zong', ['zz'] = 'zun', 
+['za'] = 'za', ['zc'] = 'zuan', ['ze'] = 'ze', ['zd'] = 'zao', ['zg'] = 'zang', ['zf'] = 'zan', ['zi'] = 'zi', ['zo'] = 'zuo', ['zp'] = 'zou', ['zs'] = 'zai', ['zr'] = 'zen', ['zu'] = 'zu', ['zt'] = 'zeng', ['zw'] = 'zei', ['zv'] = 'zui', ['zy'] = 'zong', ['zz'] = 'zun',
+['v'] = 'zh', ['u'] = 'ch', ['i'] = 'sh',
 }
 }}}
  * UCDOS 6 智能双拼
@@ -169,6 +146,7 @@ set_double_pinyin{
 ['ya'] = 'ya', ['yb'] = 'you', ['ye'] = 'ye', ['yi'] = 'yi', ['yh'] = 'yang', ['yk'] = 'yao', ['yj'] = 'yan', ['yl'] = 'yai', ['yo'] = 'yo', ['yn'] = 'yin', ['yp'] = 'yun', ['ys'] = 'yong', ['yr'] = 'yuan', ['yu'] = 'yu', ['yt'] = 'yue', ['yy'] = 'ying', 
 ['xc'] = 'xiao', ['xd'] = 'xiang', ['xi'] = 'xi', ['xm'] = 'xian', ['xn'] = 'xin', ['xq'] = 'xiu', ['xp'] = 'xun', ['xs'] = 'xiong', ['xr'] = 'xuan', ['xu'] = 'xu', ['xt'] = 'xue', ['xw'] = 'xia', ['xy'] = 'xing', ['xx'] = 'xie', 
 ['za'] = 'za', ['zb'] = 'zou', ['ze'] = 'ze', ['zg'] = 'zeng', ['zf'] = 'zen', ['zi'] = 'zi', ['zh'] = 'zang', ['zk'] = 'zao', ['zj'] = 'zan', ['zl'] = 'zai', ['zo'] = 'zuo', ['zp'] = 'zun', ['zs'] = 'zong', ['zr'] = 'zuan', ['zu'] = 'zu', ['zv'] = 'zui', ['zz'] = 'zei', 
+['v'] = 'zh', ['i'] = 'ch', ['u'] = 'sh',
 }
 }}}
  * 自然码
@@ -198,5 +176,6 @@ set_double_pinyin{
 ['xc'] = 'xiao', ['xd'] = 'xiang', ['xi'] = 'xi', ['xm'] = 'xian', ['xn'] = 'xin', ['xq'] = 'xiu', ['xp'] = 'xun', ['xs'] = 'xiong', ['xr'] = 'xuan', ['xu'] = 'xu', ['xt'] = 'xue', ['xw'] = 'xia', ['xy'] = 'xing', ['xx'] = 'xie', 
 ['za'] = 'za', ['zb'] = 'zou', ['ze'] = 'ze', ['zg'] = 'zeng', ['zf'] = 'zen', ['zi'] = 'zi', ['zh'] = 'zang', ['zk'] = 'zao', ['zj'] = 'zan', ['zl'] = 'zai', ['zo'] = 'zuo', ['zp'] = 'zun', ['zs'] = 'zong', ['zr'] = 'zuan', ['zu'] = 'zu', ['zv'] = 'zui', ['zz'] = 'zei',
 ['aa'] = 'a', ['ai'] = 'ai', ['an'] = 'an', ['ah'] = 'ang', ['ao'] = 'ao', ['ee'] = 'e', ['ei'] = 'ei', ['en'] = 'en', ['er'] = 'er', ['oo'] = 'o', ['ou'] = 'ou',
+['v'] = 'zh', ['i'] = 'ch', ['u'] = 'sh',
 }
 }}}

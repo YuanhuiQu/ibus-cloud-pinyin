@@ -8,10 +8,7 @@
  * Sogou, QQ Web IME Client Scripts
  * Lua and DBus Binding
  * Icons
-
-==== Improving ====
-
- * Management of requesting processes
+ * Requesting Processes Management
 
 ==== To Do ====
 
