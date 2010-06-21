@@ -568,7 +568,11 @@ namespace icp {
       string script_filename = vm.to_string(2);
       int priority = 1;
       if (vm.is_number(3)) priority = vm.to_integer(3);
-      engines[name] = new CloudEngine(script_filename, priority);
+
+      if (script_filename.length == 0 || priority <= 0) {
+        if (engines.contains(name)) engines.remove(name);
+      } else
+        engines[name] = new CloudEngine(script_filename, priority);
 
       return 0;
     }
