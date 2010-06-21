@@ -45,6 +45,7 @@ require_program wget
 require_program tar
 require_program lua
 require_program sqlite3
+require_program xz
 
 [ -e $CFLAGFILE ] && rm $CFLAGFILE
 [ -e $VALACFLAGFILE ] && rm $VALACFLAGFILE
