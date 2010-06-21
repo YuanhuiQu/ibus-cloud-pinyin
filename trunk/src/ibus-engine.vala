@@ -31,7 +31,7 @@ namespace icp {
     private static Factory factory;
 
     // active engine
-    public CloudPinyinEngine active_engine;
+    public static CloudPinyinEngine active_engine;
 
     // constants
     public static const uint key_state_filter
@@ -378,7 +378,7 @@ namespace icp {
         update_properties();
       }
 
-      private void commit(string content) {
+      public void commit(string content) {
         // TODO: check previous commit,
         //       force convert previous if no background allowed
         if (content.length > 0) {
