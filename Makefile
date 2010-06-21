@@ -36,7 +36,7 @@ $(REQUESTEXE): $(VALACLITEFLAGFILE) $(REQUESTSRCS)
 
 $(CFLAGFILE) $(VALACFLAGFILE) $(VALACLITEFLAGFILE): find-dependencies.sh
 	@$(ECHO) "$(MSG_PREFIX)Finding dependencies ...$(MSG_SUFFIX)"
-	@find-dependencies.sh
+	@./find-dependencies.sh
 
 install: $(IBUSEXE) $(REQUESTEXE) $(ICONFILES) main.db cloud-pinyin.xml $(LUAFILES)
 	@$(ECHO) "$(MSG_PREFIX)Installing (prefix=$(PREFIX)) ...$(MSG_SUFFIX)"
