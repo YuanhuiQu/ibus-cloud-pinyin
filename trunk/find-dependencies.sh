@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 CFLAGFILE=src/c-flags.txt
 VALACFLAGFILE=src/valac-flags.txt
