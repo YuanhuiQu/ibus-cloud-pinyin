@@ -128,8 +128,7 @@ namespace icp {
       public class Limits {
         public Limits() { assert_not_reached(); }
 
-        public static int global_db_query_limit = 128;
-        public static int user_db_query_limit = 5;
+        public static int db_query_limit = 128;
       }
 
     // switches

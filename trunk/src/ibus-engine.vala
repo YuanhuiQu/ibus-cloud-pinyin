@@ -844,7 +844,7 @@ namespace icp {
             table.clear();
             page_index = 0;
             Database.query(pinyin_buffer, candidates, 
-                Config.Limits.global_db_query_limit
+                Config.Limits.db_query_limit
                 );
 
             // update lookup table labels
