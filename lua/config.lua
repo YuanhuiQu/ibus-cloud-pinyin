@@ -39,14 +39,53 @@ socket, http, url = require 'socket', require 'socket.http', require 'socket.url
 -- 设定云请求结果缓存，pinyins 相同时，只有更高 priority 才能改写 content
 
 --------------------------------------------------------------------------------
--- set_key
+-- 一些常量
+keys, masks = {	backspace = 0xff08,	tab = 0xff09,	enter = 0xff0d,	escape = 0xff1b,	delete = 0xffff,	page_up = 0xff55,	page_down = 0xff56,	shift_left = 0xffe1,	shift_right = 0xffe2,	ctrl_left = 0xffe3,	ctrl_right = 0xffe4,	alt_left = 0xffe9,	alt_right = 0xffea,	super_left = 0xffeb,	super_right = 0xffec,	space = 0x020,}, {shift = 1,	lock = 2,	control = 4,	mod1 = 8,	mod4 = 64,	super = 67108864,	meta = 268435456,	release  = 1073741824,}
+
+--------------------------------------------------------------------------------
+-- set_key(key, mask, action)
+-- 设置快捷键动作，默认如下：
+--[[
+        set_key(keys.tab, 0, "correct");
+        set_key(keys.backspace, 0, "back");
+        set_key(keys.space, 0, "commit");
+        set_key(keys.escape, 0, "clear commit");
+        set_key(keys.page_down, 0, "pgdn");
+        set_key('h', 0, "pgdn");
+        set_key(']', 0, "pgdn");
+        set_key('=', 0, "pgdn");
+        set_key(keys.page_up, 0, "pgup");
+        set_key('g', 0, "pgup");
+        set_key('[', 0, "pgup");
+        set_key('-', 0, "pgup");
+        set_key('\'', 0, "sep");
+        set_key('L',
+              IBus.ModifierType.RELEASE_MASK | IBus.ModifierType.CONTROL_MASK 
+              | IBus.ModifierType.SHIFT_MASK), "trad simp");
+        set_key(IBus.Shift_L, 
+              IBus.ModifierType.RELEASE_MASK | IBus.ModifierType.SHIFT_MASK),
+            "eng chs"
+           );
+        set_key(IBus.Shift_R, 
+              IBus.ModifierType.RELEASE_MASK | IBus.ModifierType.SHIFT_MASK),
+            "online offline"
+           );
+        set_key(keys.enter, "raw");
+
+        string labels = "jkl;asdf";
+        for (int i = 0; i < labels.length; i++) {
+          set(new Key(labels[i]), "cand:%d".printf(i));
+          set(new Key(i + '1'), "cand:%d".printf(i));
+        }
+      }
+--]]
+
 
 --------------------------------------------------------------------------------
 -- set_candidate_labels(labels1, [labels2 = labels1])
+-- 设置选词列表文字提示，仅文字提示，和按键无关，默认如下：
+-- set_candidate_labels("jkl;asdf", "12345678")
 
---------------------------------------------------------------------------------
--- 一些常量
-keys, masks = {	backspace = 0xff08,	tab = 0xff09,	enter = 0xff0d,	escape = 0xff1b,	delete = 0xffff,	page_up = 0xff55,	page_down = 0xff56,	shift_left = 0xffe1,	shift_right = 0xffe2,	ctrl_left = 0xffe3,	ctrl_right = 0xffe4,	alt_left = 0xffe9,	alt_right = 0xffea,	super_left = 0xffeb,	super_right = 0xffec,	space = 0x020,}, {shift = 1,	lock = 2,	control = 4,	mod1 = 8,	mod4 = 64,	super = 67108864,	meta = 268435456,	release  = 1073741824,}
 
 --------------------------------------------------------------------------------
 -- set_double_pinyin(scheme)
