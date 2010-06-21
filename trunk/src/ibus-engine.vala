@@ -120,7 +120,7 @@ namespace icp {
             update_preedit();
             }
             // update status icon
-            if (waiting_subindex > 2) {
+            if (waiting_subindex > 1) {
             waiting_subindex = 0;
             if (request_list.size == 0 && prerequest_done) {
             status_icon.set_icon("%s/icons/idle-%d.png"
@@ -134,8 +134,8 @@ namespace icp {
             status_icon.set_icon("%s/icons/waiting-%d.png"
               .printf(Config.global_data_path, waiting_index));
             }
-            // update the whole panel
-            update_properties();
+            // update that icon
+            update_property(status_icon);
             // stop if offline mode
             } else waiting_subindex ++;
             if (offline_mode) stop_requesting();
@@ -226,18 +226,17 @@ namespace icp {
         enabled = true;
         if (!inited) init();
         update_properties();
-        // set_active(this);
       }
 
       public override void disable() {
         enabled = false;
         stdout.printf("called disable\n");
-        // set_active(this, false);
       }
 
       public override void focus_in() {
         has_focus = true;
         if (!inited) init();
+        register_properties(panel_prop_list);
         update_properties();
         update_preedit();
         // force update candidates
@@ -627,7 +626,8 @@ namespace icp {
           int cloud_length;
           string preedit = DBusBinding.convert(
               pinyin_buffer, 
-              out cloud_length
+              out cloud_length,
+              offline_mode
               );
           pinyin_buffer_preedit = preedit;
 
@@ -708,6 +708,7 @@ namespace icp {
               .printf(Config.global_data_path,
                 chinese_mode ? "enabled" : "disabled"));
           last_chinese_mode = chinese_mode;
+          update_property(chinese_mode_icon);
         }
         if (last_traditional_mode != traditional_mode) {
           traditional_conversion_icon.set_icon(
@@ -717,17 +718,18 @@ namespace icp {
                 "enabled" : "disabled")
               );
           last_traditional_mode = traditional_mode;
+          update_property(traditional_conversion_icon);
         }
         if (last_offline_mode != offline_mode) {
           if (offline_mode) stop_requesting();
           status_icon.set_icon("%s/icons/%s.png"
               .printf(Config.global_data_path,
-                offline_mode ? "offline" : "idle-4"));
+                offline_mode ? "offline" : "idle-%d"
+                .printf(LuaBinding.get_engine_speed_rank())
+                ));
           last_offline_mode = offline_mode;
-          // TODO: update status info using data
+          update_property(status_icon);
         }
-
-        register_properties(panel_prop_list);
       }
     }
 

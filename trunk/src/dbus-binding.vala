@@ -45,7 +45,8 @@ namespace icp {
       else return "";
     }
 
-    public static bool set_response(string pinyins, string content, int priority = 1) {
+    public static bool set_response(string pinyins,
+      string content, int priority = 1) {
       if (!responses.contains(pinyins) || responses[pinyins].priority
           < priority) {
         responses[pinyins] = new Response(content, priority);
@@ -54,7 +55,9 @@ namespace icp {
     }
 
     // this convert mix cloud results and local database
-    public static string convert(Pinyin.Sequence pinyins, out int cloud_length) {
+    public static string convert(Pinyin.Sequence pinyins,
+      out int cloud_length, bool offline_mode = false) {
+      if (!offline_mode)
       for(int i = pinyins.size; i > 0; i--) {
         string result = query(pinyins.to_string(0, i));
         if (result.size() > 0) {
