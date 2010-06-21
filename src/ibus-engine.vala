@@ -30,6 +30,9 @@ namespace icp {
     private static Bus bus;
     private static Factory factory;
 
+    // active engine
+    public CloudPinyinEngine active_engine;
+
     // constants
     public static const uint key_state_filter
       = ModifierType.SHIFT_MASK | ModifierType.LOCK_MASK
@@ -347,11 +350,13 @@ namespace icp {
         // force update candidates
         last_pinyin_buffer_string = ".";
         update_candidates();
+        active_engine = this;
       }
 
       public override void focus_out() {
         force_commit_pending_list();
         has_focus = false;
+        active_engine = null;
       }
 
       public override void property_activate(string prop_name, 
