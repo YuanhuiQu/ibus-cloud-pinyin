@@ -83,14 +83,16 @@ set_double_pinyin{
 	['m;'] = 'ming',
 }
 
+--[[
 set_switch{
-	-- default_offline_mode = true,
-	-- default_traditional_mode = true,
-	double_pinyin = true,
-	--show_raw_in_auxiliary = true,
-	--always_show_candidates = true,
-	--show_pinyin_auxiliary = false,
+	default_offline_mode = false,
+	default_traditional_mode = false,
+	double_pinyin = false,
+	show_raw_in_auxiliary = false,
+	always_show_candidates = false,
+	show_pinyin_auxiliary = true,
 }
+--]]
 
 -- paths
 local user_config_path = user_config_path .. '/config.lua'
@@ -100,7 +102,7 @@ local autoload_file_path = '/tmp/.cloud-pinyin-autoload.lua'
 -- wrapped dofile
 function try_dofile(path)
 	local file = io.open(path, 'r')
-	if file then file:close() pcall(dofile(path)) end
+	if file then file:close() pcall(function() dofile(path) end) end
 end
 
 -- some engines, may be outdated
