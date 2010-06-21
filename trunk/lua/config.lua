@@ -104,9 +104,9 @@ function try_dofile(path)
 end
 
 -- some engines, may be outdated
-
-register_engine("sogou", data_path .. '/lua/engine_sogou.lua')
-register_engine("qq", data_path .. '/lua/engine_qq.lua')
+-- TODO: move these settings into user config file
+register_engine("Sogou", data_path .. '/lua/engine_sogou.lua')
+register_engine("QQ", data_path .. '/lua/engine_qq.lua')
 
 -- load various script files if exists
 try_dofile(user_config_path)
