@@ -9,10 +9,10 @@
  * Lua and DBus Binding
  * Icons
  * Requesting Processes Management
+ * Pending Segments Support
 
 ==== To Do ====
 
- * Pending Segments Support
  * .scel Import Tool
  * libopencc Support
  * User Guide
