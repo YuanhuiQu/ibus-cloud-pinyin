@@ -254,7 +254,7 @@ namespace icp {
         set(new Key(IBus.Tab), "correct");
         set(new Key(IBus.BackSpace), "back");
         set(new Key(IBus.space), "commit");
-        set(new Key(IBus.Escape), "clear");
+        set(new Key(IBus.Escape), "clear commit");
         set(new Key(IBus.Page_Down), "pgdn");
         set(new Key((uint)'h'), "pgdn");
         set(new Key((uint)']'), "pgdn");

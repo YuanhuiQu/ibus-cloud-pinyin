@@ -50,24 +50,33 @@ namespace icp {
       private bool traditional_mode;
       private bool last_is_chinese = true;
 
-      // external request list
-      class Request {
-        public double deadline;
-
-        // multi engines share this 'done'
-        public bool done;
-      }
-
       // pending segments
       class PendingSegment {
-        public bool need_request;
+        public bool done;
+        // if done = true, then use content
+        // otherwise use pinyins and request is not
+        // done yet (when pinyins != null)
         public string content;
         public Pinyin.Sequence pinyins;
-        public double start_time;
+        public int retry;
+
+        // no timeout control at this level
+        public PendingSegment.from_content(string content) {
+          this.content = content;
+          pinyins = null;
+          done = true;
+          retry = 0;
+        }
+        public PendingSegment.from_pinyins(Pinyin.Sequence pinyins) {
+          content = null;
+          this.pinyins = new Pinyin.Sequence.copy(pinyins);
+          // allow another request
+          done = true;
+          retry = 5;
+        }
       }
 
-      LinkedList<Request> request_list;
-      LinkedList<PendingSegment> pending_segment_listst;
+      LinkedList<PendingSegment> pending_segment_list;
 
       // only one prerequest per engine allowed
       bool prerequest_done;
@@ -140,10 +149,13 @@ namespace icp {
             send_prerequest();
             update_preedit();
             }
+            if (process_pending_list()) {
+              update_preedit();
+            }
             // update status icon
             if (waiting_subindex > 1) {
             waiting_subindex = 0;
-            if (request_list.size == 0 && prerequest_done) {
+            if (pending_segment_list.size == 0 && prerequest_done) {
             status_icon.set_icon("%s/icons/idle-%d.png"
               .printf(Config.global_data_path, 
               LuaBinding.get_engine_speed_rank())
@@ -216,12 +228,79 @@ namespace icp {
         user_phrase_count = 0;
 
         // request list and pending segment list
-        request_list = new LinkedList<Request>();
-        pending_segment_listst = new LinkedList<PendingSegment>();
+        pending_segment_list = new LinkedList<PendingSegment>();
         prerequest_done = true;
 
         // TODO: dlopen opencc ...
         inited = true;
+      }
+     
+      private void force_commit_pending_list() {
+        commit_buffer();
+        foreach (PendingSegment seg in pending_segment_list) {
+          if (seg.content != null) {
+            commit_text(new Text.from_string(seg.content));
+            seg.content = null;
+          } else if (seg.pinyins != null) {
+            int cloud_len;
+            string content = DBusBinding.convert(seg.pinyins, 
+              out cloud_len, offline_mode
+              );
+            commit_text(new Text.from_string(content));
+            seg.pinyins = null;
+          }
+        }
+      }
+
+      // return whether preedit should be updated
+      private bool process_pending_list() {
+        bool preedit_should_update = false;
+        bool first_items = true;
+        int committed_item_count = 0;
+        foreach (PendingSegment seg in pending_segment_list) {
+          // seg.done == false means requesting, just do nothing
+          if (!seg.done) {
+            first_items = false;
+            continue;
+          }
+          if (seg.content == null && seg.pinyins != null) {
+            string content = DBusBinding.query(seg.pinyins.to_string());
+            if (content.size() > 0) {
+              seg.content = content;
+              // only keep content
+              seg.pinyins = null;
+            }
+          }
+          if (seg.pinyins == null) {
+            // seg.content may be null
+            if (first_items) committed_item_count ++;
+            continue;
+          }
+          first_items = false;
+          if (seg.content == null) {
+            preedit_should_update = true;
+            // send request about pinyins
+            seg.done = false;
+            LuaBinding.start_requests(seg.pinyins.to_string(),
+                Config.Timeouts.request,
+                &(seg.done)
+                );
+            first_items = false;
+          }
+        } // foreach
+
+        // commit first committed_item_count items and delete them
+        if (committed_item_count > 0) {
+          preedit_should_update = true;
+          LinkedList<PendingSegment> head_segs = new LinkedList<PendingSegment>();
+          pending_segment_list.drain_head(head_segs, committed_item_count);
+
+          foreach (PendingSegment seg in head_segs) {
+            if (seg.content != null)
+              commit_text(new Text.from_string(seg.content));
+          }
+        }
+        return preedit_should_update;
       }
 
       private void send_prerequest() {
@@ -271,8 +350,8 @@ namespace icp {
       }
 
       public override void focus_out() {
+        force_commit_pending_list();
         has_focus = false;
-        print("focus out\n");
       }
 
       public override void property_activate(string prop_name, 
@@ -298,9 +377,19 @@ namespace icp {
         // TODO: check previous commit,
         //       force convert previous if no background allowed
         if (content.length > 0) {
-          commit_text(new Text.from_string(content));
+          if (pending_segment_list.size == 0)
+            commit_text(new Text.from_string(content));
+          else
+            pending_segment_list.add(new PendingSegment.from_content(content));
         }
         if (content.size() < 2) user_phrase_clear();
+      }
+
+      private void commit_pinyins(Pinyin.Sequence pinyins) {
+        if (pinyins.size > 0) {
+          pending_segment_list.add(new PendingSegment.from_pinyins(pinyins));
+          process_pending_list();
+        }
       }
 
       private void switch_offline_mode() {
@@ -320,10 +409,11 @@ namespace icp {
       }
 
       private void commit_buffer() {
-        // TODO: use mixed greedy convert if cloud client impled.
-        // TODO: send request here
         if (pinyin_buffer.size > 0) {
-          commit(pinyin_buffer_preedit);
+          if (Config.Switches.background_request)
+            commit_pinyins(pinyin_buffer);
+          else
+            commit(pinyin_buffer_preedit);
           last_is_chinese = true;
         }
         raw_buffer = "";
@@ -335,19 +425,6 @@ namespace icp {
       private uint last_state = 0;
       public override bool process_key_event(uint keyval, uint keycode, 
           uint state) {
-        /*
-           keys handle precedence
-           chinese mode:
-           backspace / escape(stop all pending, call reset?)
-           pinyin input (include ';' in some double pinyin scheme)
-           (' ' in full pinyin (seperator))
-           candidates (page up, page down, select)
-           submit (punc, enter, mode switch)
-
-           english mode:
-           backspace / escape
-           submit directly
-         */
         bool handled = false;
         state = state & key_state_filter;
 
@@ -411,10 +488,10 @@ namespace icp {
                 // user select some thing, currently buffer is empty,
                 // test if it can be reverse converted to pinyin
 
-                // TODO: check no pending requests
                 if (Frontend.get_current_time()
                     <= (uint64)(1000000 * Config.Timeouts.selection)
-                    + Frontend.clipboard_update_time) {
+                    + Frontend.clipboard_update_time
+                    && pending_segment_list.size == 0) {
                   string selection = Frontend.get_selection();
                   if (!selection.contains("\n")
                       && Database.reverse_convert(
@@ -479,12 +556,10 @@ namespace icp {
                 && 128 > keyval >= 32 
                 && Config.Punctuations.exists((int)keyval)) {
 
-              if (pinyin_buffer.size > 0) last_is_chinese = true;
+              commit_buffer();
               string punc = Config.Punctuations.get(
                   (int)keyval, last_is_chinese
                   );
-              commit_buffer();
-              last_is_chinese = (punc.size() > 2);
               user_phrase_clear();
               commit(punc);
               handled = true; break;
@@ -497,7 +572,6 @@ namespace icp {
             commit(raw_buffer);
             raw_buffer = "";
             pinyin_buffer.clear();
-            last_is_chinese = true;
             handled = true; break;
           }
 
@@ -535,9 +609,11 @@ namespace icp {
           }
 
           // non-chinese puncs
+          // special handle enter, convert it to ASCII 13
+          if (keyval == IBus.Return) keyval = 13;
           if (((state ^ IBus.ModifierType.SHIFT_MASK)
                 == 0 || state == 0)
-              && 128 > keyval >= 32) {
+              && (128 > keyval >= 32 || keyval == 13)) {
             commit_buffer();
 
             string punc = "%c".printf((int)keyval);
@@ -620,6 +696,20 @@ namespace icp {
         }
       }
 
+      class ColorSegment {
+        Config.Colors.Color color;
+        uint start;
+        int end;
+        public ColorSegment(Config.Colors.Color color, uint start, int end) {
+          this.color = color;
+          this.start = start;
+          this.end = end;
+        }
+        public void apply(Text text) {
+          color.apply(text, start, end);
+        }
+      }
+
       private void update_preedit() {
         // auxiliary text
         if (pinyin_buffer.size == 0 
@@ -634,7 +724,6 @@ namespace icp {
           string raw_buffer_aux
             = Config.Switches.show_raw_in_auxiliary 
             ? " [%s]".printf(raw_buffer) : "";
-
           var text = new Text.from_string(
               "%s%s".printf(pinyin_buffer_aux, raw_buffer_aux)
               );
@@ -648,32 +737,77 @@ namespace icp {
           update_auxiliary_text(text, true);          
         }
         // preedit
-        // TODO: show request queue
-        // TODO: use mixed greedy convert and their color
-        //     if cloud client impled.
         {
           int cloud_length;
-          string preedit = DBusBinding.convert(
+          string pinyin_buffer_preedit = DBusBinding.convert(
               pinyin_buffer, 
               out cloud_length,
               offline_mode
               );
-          pinyin_buffer_preedit = preedit;
 
+          var color_list = new ArrayList<ColorSegment>();
+
+          string pending_preedit = "";
+          int pending_preedit_length = 0; // (int)pending_preedit.length;
+          foreach (PendingSegment seg in pending_segment_list) {
+            if (seg.content == null && seg.pinyins != null) {
+              // mixed cloud and local
+              int cloud_len;
+              string content =
+                DBusBinding.convert(seg.pinyins, out cloud_len, 
+                    offline_mode
+                    );
+              pending_preedit += content;
+
+              color_list.add(new ColorSegment(Config.Colors.preedit_remote,
+                (uint)pending_preedit_length,
+                pending_preedit_length + cloud_len)
+                );
+              color_list.add(new ColorSegment(Config.Colors.preedit_local,
+                (uint)(pending_preedit_length + cloud_len),
+                pending_preedit_length + (int)content.length)
+                );
+              pending_preedit_length += (int)content.length;
+              continue;
+            }
+            if (seg.content != null) {
+              // fixed
+              pending_preedit += seg.content;
+              color_list.add(new ColorSegment(Config.Colors.preedit_fixed,
+                (uint)pending_preedit_length,
+                pending_preedit_length + (int)seg.content.length)
+                );
+              pending_preedit_length += (int)seg.content.length;
+              continue;
+            }
+          }
+
+          string preedit = pending_preedit + pinyin_buffer_preedit;
           var text = new Text.from_string(preedit);
 
+          foreach (ColorSegment i in color_list) {
+            i.apply(text);
+          }
+
+          // colors
           if (correction_mode)
-            Config.Colors.preedit_correcting.apply(text);
+            Config.Colors.preedit_correcting.apply(text, 
+              pending_preedit_length
+              );
           else {
             // remote result
-            Config.Colors.preedit_remote.apply(text, 0, cloud_length);
+            Config.Colors.preedit_remote.apply(text, pending_preedit_length,
+              cloud_length + pending_preedit_length
+              );
             // local database
-            Config.Colors.preedit_local.apply(text, cloud_length);
+            Config.Colors.preedit_local.apply(text, 
+              cloud_length + pending_preedit_length
+              );
           }
 
           // apply underline
           text.append_attribute(AttrType.UNDERLINE, 
-              AttrUnderline.SINGLE, 0,
+              AttrUnderline.SINGLE, pending_preedit_length,
               (int)text.get_length()
               );
 
