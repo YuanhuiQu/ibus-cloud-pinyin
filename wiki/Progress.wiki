@@ -5,11 +5,13 @@
  * Internal Pinyin Utilities
  * Open-phrase Database
  * User Database
+ * Sogou, QQ Web IME Client Scripts
+ * Lua and DBus Binding
  * Icons
 
-==== Almost Done ====
+==== Improving ====
 
- * Lua and DBus Binding
+ * Management of requesting processes
 
 ==== Working on ====
 
