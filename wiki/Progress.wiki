@@ -13,13 +13,9 @@
 
  * Management of requesting processes
 
-==== Working on ====
+==== To Do ====
 
- * IBus Engine
-
-==== To be done ====
-
- * Lua Scripts
+ * Pending Segments Support
  * .scel Import Tool
  * libopencc Support
  * User Guide
