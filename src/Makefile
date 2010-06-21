@@ -4,13 +4,15 @@ VALAC=valac
 CC=gcc
 
 CFLAGS = `cat $(CFLAGFILE)` -pthread
-VALAFLAGS= `cat $(VALACFLAGFILE)` --pkg ibus-1.0 --pkg posix --thread --enable-checking --vapidir=.
+VALAFLAGS= `cat $(VALACFLAGFILE)` --pkg posix --thread --enable-checking --vapidir=.
+VALALITEFLAGS= `cat $(VALACLITEFLAGFILE)` --pkg posix --Xcc=-Os
 
 VALASRCS= main.vala dbus-binding.vala pinyin-utils.vala frontend-utils.vala config.vala database.vala lua-binding.vala ibus-engine.vala
 CSRCS= $(VALASRCS:.vala=.c)
 
-CFLAGFILE=../c-flags.txt
-VALACFLAGFILE=../valac-flags.txt
+CFLAGFILE=c-flags.txt
+VALACFLAGFILE=valac-flags.txt
+VALACLITEFLAGFILE=valac-lite-flags.txt
 
 ECHO= echo -e
 
@@ -23,12 +25,15 @@ MSG_SUFFIX=\x1b[33;00m
 
 .DELETE_ON_ERROR: $(CSRCS)
 
-all:
-	$(error Please run make from parent directory)
+all: ibus-engine-cloud-pinyin ibus-cloud-pinyin-request
 
 ibus-engine-cloud-pinyin: $(CFLAGFILE) $(CSRCS)
 	@$(ECHO) "$(MSG_PREFIX)Building $@ ...$(MSG_SUFFIX)"
 	$(CC) $(CFLAGS) $(CSRCS) -g -o $@
+
+ibus-cloud-pinyin-request: request-main.vala $(VALACLITEFLAGFILE)
+	@$(ECHO) "$(MSG_PREFIX)Building $@ ...$(MSG_SUFFIX)"
+	$(VALAC) $(VALALITEFLAGS) --disable-warnings -o $@ $<
 
 $(CSRCS): $(VALACFLAGFILE) $(VALASRCS)
 	@$(ECHO) "$(MSG_PREFIX)Generating C files ...$(MSG_SUFFIX)"

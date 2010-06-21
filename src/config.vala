@@ -37,6 +37,7 @@ namespace icp {
 
     public static string program_main_file { get; private set; }
     public static string program_path { get; private set; }
+    public static string program_request_path { get; private set; }
 
     // PKGDATADIR should look like: "/usr/share/ibus-cloud-pinyin"
     // since Vala has a very poor preprocessor, i need to 
@@ -49,9 +50,6 @@ namespace icp {
 
         // script is also for request
         public static string startup_script = null;
-        public static string request_pinyins = null;
-        public static double request_timeout;
-        public static int request_priority;
         
         public static bool show_version;
         public static bool launched_by_ibus;
@@ -355,10 +353,6 @@ namespace icp {
       CandidateLabels.init();
       Punctuations.init();
 
-      // set default values
-      CommandlineOptions.request_timeout = 1.0;
-      CommandlineOptions.request_priority = 16;
-
       // command line options
       // workaround for vala 0.8.0 and 0.9.0 not allowing nested
       // struct assignments
@@ -382,18 +376,6 @@ namespace icp {
       OptionEntry entrie_xml = { "dump-xml", 'x', 0, OptionArg.NONE,
         out CommandlineOptions.show_xml, "Dump ibus component xml", 
         null };
-      OptionEntry entrie_request_pinyins = { "request-pinyins", 'r', 
-        OptionFlags.HIDDEN, OptionArg.STRING,
-        out CommandlineOptions.request_pinyins, 
-        "", null };
-      OptionEntry entrie_request_priority = { "request-priority", 'p', 
-        OptionFlags.HIDDEN, OptionArg.INT,
-        out CommandlineOptions.request_priority, 
-        "", null };
-      OptionEntry entrie_request_timeout = { "request-timeout", 't', 
-        OptionFlags.HIDDEN, OptionArg.DOUBLE,
-        out CommandlineOptions.request_timeout, 
-        "", null };
       OptionEntry entrie_null = { null };
 
       OptionContext context =
@@ -401,8 +383,6 @@ namespace icp {
       
       context.add_main_entries({entrie_version, entrie_script, entrie_ibus,
           entrie_no_ibus, entrie_xml, entrie_user_db_in_mem, 
-          entrie_request_pinyins, entrie_request_timeout, 
-          entrie_request_priority,
           entrie_null},
           null
           );
@@ -434,6 +414,9 @@ namespace icp {
 
       program_path = Environment.get_current_dir();
       program_main_file = "%s/%s".printf(program_path, args[0]);
+      program_request_path =
+        "%s/lib/ibus-cloud-pinyin/ibus-cloud-pinyin-request"
+        .printf(prefix_path);
       // program_main_file = "/home/quark/src/vala/ibus-cloud-pinyin/src/ibus-engine-cloud-pinyin";
     }
 

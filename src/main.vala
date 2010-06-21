@@ -48,15 +48,6 @@ namespace icp {
         return 0;
       }
 
-      // run as a client to send request
-      if (Config.CommandlineOptions.request_pinyins != null) {
-        if (Config.CommandlineOptions.request_pinyins.length > 0
-          && Config.CommandlineOptions.request_timeout > 0) {
-        LuaBinding.execute_request();
-        }
-        return 0;
-      }
-
       Pinyin.init();
       Frontend.init();
       Database.init();
