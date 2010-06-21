@@ -153,7 +153,7 @@ namespace icp {
             update_preedit();
             }
             if (process_pending_list()) {
-              update_preedit();
+            update_preedit();
             }
             // update status icon
             if (waiting_subindex > 1) {
@@ -161,14 +161,14 @@ namespace icp {
             if (pending_segment_list.size == 0 && prerequest_done) {
             status_icon.set_icon("%s/icons/idle-%d.png"
               .printf(Config.global_data_path, 
-              LuaBinding.get_engine_speed_rank())
+                LuaBinding.get_engine_speed_rank())
               );
             } else {
             waiting_index += waiting_index_acc;
             if (waiting_index == 3 || waiting_index == 0)
             waiting_index_acc = - waiting_index_acc;
             status_icon.set_icon("%s/icons/waiting-%d.png"
-              .printf(Config.global_data_path, waiting_index));
+                .printf(Config.global_data_path, waiting_index));
             }
             // update that icon
             update_property(status_icon);
@@ -237,7 +237,7 @@ namespace icp {
         // TODO: dlopen opencc ...
         inited = true;
       }
-     
+
       private void force_commit_pending_list() {
         commit_buffer();
         foreach (PendingSegment seg in pending_segment_list) {
@@ -247,8 +247,8 @@ namespace icp {
           } else if (seg.pinyins != null) {
             int cloud_len;
             string content = DBusBinding.convert(seg.pinyins, 
-              out cloud_len, offline_mode
-              );
+                out cloud_len, offline_mode
+                );
             commit_text(new Text.from_string(content));
             seg.pinyins = null;
           }
@@ -384,15 +384,22 @@ namespace icp {
         if (content.length > 0) {
           if (pending_segment_list.size == 0)
             commit_text(new Text.from_string(content));
-          else
-            pending_segment_list.add(new PendingSegment.from_content(content));
+          else {
+            pending_segment_list.add(new
+                PendingSegment.from_content(content)
+                );
+            process_pending_list();
+          }
         }
         if (content.size() < 2) user_phrase_clear();
       }
 
+      // call this if background_request is enabled and not in offline mode
       private void commit_pinyins(Pinyin.Sequence pinyins) {
         if (pinyins.size > 0) {
-          pending_segment_list.add(new PendingSegment.from_pinyins(pinyins));
+          pending_segment_list.add(
+              new PendingSegment.from_pinyins(pinyins)
+              );
           process_pending_list();
         }
       }
@@ -415,7 +422,7 @@ namespace icp {
 
       private void commit_buffer() {
         if (pinyin_buffer.size > 0) {
-          if (Config.Switches.background_request)
+          if (Config.Switches.background_request && !offline_mode)
             commit_pinyins(pinyin_buffer);
           else
             commit(pinyin_buffer_preedit);
@@ -744,7 +751,7 @@ namespace icp {
         // preedit
         {
           int cloud_length;
-          string pinyin_buffer_preedit = DBusBinding.convert(
+          pinyin_buffer_preedit = DBusBinding.convert(
               pinyin_buffer, 
               out cloud_length,
               offline_mode
@@ -765,13 +772,13 @@ namespace icp {
               pending_preedit += content;
 
               color_list.add(new ColorSegment(Config.Colors.preedit_remote,
-                (uint)pending_preedit_length,
-                pending_preedit_length + cloud_len)
-                );
+                    (uint)pending_preedit_length,
+                    pending_preedit_length + cloud_len)
+                  );
               color_list.add(new ColorSegment(Config.Colors.preedit_local,
-                (uint)(pending_preedit_length + cloud_len),
-                pending_preedit_length + (int)content.length)
-                );
+                    (uint)(pending_preedit_length + cloud_len),
+                    pending_preedit_length + (int)content.length)
+                  );
               pending_preedit_length += (int)content.length;
               continue;
             }
@@ -779,9 +786,9 @@ namespace icp {
               // fixed
               pending_preedit += seg.content;
               color_list.add(new ColorSegment(Config.Colors.preedit_fixed,
-                (uint)pending_preedit_length,
-                pending_preedit_length + (int)seg.content.length)
-                );
+                    (uint)pending_preedit_length,
+                    pending_preedit_length + (int)seg.content.length)
+                  );
               pending_preedit_length += (int)seg.content.length;
               continue;
             }
@@ -797,17 +804,17 @@ namespace icp {
           // colors
           if (correction_mode)
             Config.Colors.preedit_correcting.apply(text, 
-              pending_preedit_length
-              );
+                pending_preedit_length
+                );
           else {
             // remote result
             Config.Colors.preedit_remote.apply(text, pending_preedit_length,
-              cloud_length + pending_preedit_length
-              );
+                cloud_length + pending_preedit_length
+                );
             // local database
             Config.Colors.preedit_local.apply(text, 
-              cloud_length + pending_preedit_length
-              );
+                cloud_length + pending_preedit_length
+                );
           }
 
           // apply underline

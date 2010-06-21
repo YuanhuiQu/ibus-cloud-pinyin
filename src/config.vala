@@ -264,16 +264,16 @@ namespace icp {
         set(new Key((uint)'['), "pgup");
         set(new Key((uint)'-'), "pgup");
         set(new Key((uint)'\''), "sep");
-        set(new Key((uint)'P',
+        set(new Key((uint)'L',
               IBus.ModifierType.RELEASE_MASK | IBus.ModifierType.CONTROL_MASK 
-              | IBus.ModifierType.SHIFT_MASK), "offline online");
+              | IBus.ModifierType.SHIFT_MASK), "trad simp");
         set(new Key(IBus.Shift_L, 
               IBus.ModifierType.RELEASE_MASK | IBus.ModifierType.SHIFT_MASK),
             "eng chs"
            );
         set(new Key(IBus.Shift_R, 
               IBus.ModifierType.RELEASE_MASK | IBus.ModifierType.SHIFT_MASK),
-            "trad simp"
+            "online offline"
            );
         set(new Key(IBus.Return), "raw");
 
