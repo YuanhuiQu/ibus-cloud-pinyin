@@ -622,12 +622,13 @@ namespace icp {
 
           // non-chinese puncs
           // special handle enter, convert it to ASCII 13
-          if (keyval == IBus.Return) keyval = 13;
           if (((state ^ IBus.ModifierType.SHIFT_MASK)
                 == 0 || state == 0)
-              && (128 > keyval >= 32 || keyval == 13)) {
+              && (128 > keyval >= 32 || (keyval == IBus.Return
+              && pending_segment_list.size > 0))) {
             commit_buffer();
-
+            
+            if (keyval == IBus.Return) keyval = 13;
             string punc = "%c".printf((int)keyval);
             last_is_chinese = false;
             commit(punc);
