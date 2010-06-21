@@ -16,3 +16,4 @@
  * .scel Import Tool
  * libopencc Support
  * User Guide
+ * GUI Setup Tool

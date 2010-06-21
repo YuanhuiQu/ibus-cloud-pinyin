@@ -577,6 +577,18 @@ namespace icp {
       return 0;
     }
 
+    private static int l_commit(LuaVM vm) {
+      if (!vm.is_string(1)) return 0;
+      string content = vm.to_string(1);
+      if (IBusBinding.active_engine != null) {
+        var engine = IBusBinding.active_engine;
+        if (engine != null) {
+          engine.commit(content);
+        }
+      }
+      return 0;
+    }
+
     private static int l_go_background(LuaVM vm) {
       // fork, do nothing if already in background 
       if (!check_permissions(false)) return 0;
@@ -617,6 +629,7 @@ namespace icp {
       vm.register("go_background", l_go_background);
       vm.register("notify", l_notify);
       vm.register("get_selection", l_get_selection);
+      vm.register("commit", l_commit);
 
       vm.register("set_response", l_set_response);
       vm.register("set_double_pinyin", l_set_double_pinyin);
