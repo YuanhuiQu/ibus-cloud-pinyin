@@ -1,7 +1,8 @@
 PREFIX ?= /usr
 
-SRCS=src/main.vala src/dbus-binding.vala src/pinyin-utils.vala src/frontend-utils.vala src/config.vala src/database.vala src/lua-binding.vala src/ibus-engine.vala src/request-main.vala
-ICONFILES=icons/ibus-cloud-pinyin.png icons/idle-0.png icons/idle-1.png icons/idle-2.png icons/idle-3.png icons/idle-4.png icons/waiting-0.png icons/waiting-1.png icons/waiting-2.png icons/waiting-3.png icons/pinyin-disabled.png icons/pinyin-enabled.png icons/traditional-disabled.png icons/traditional-enabled.png icons/offline.png
+SRCS=src/main.vala src/dbus-binding.vala src/pinyin-utils.vala src/frontend-utils.vala src/config.vala src/database.vala src/lua-binding.vala src/ibus-engine.vala
+REQUESTSRCS=src/request-main.vala
+ICONFILES=icons/ibus-cloud-pinyin.png icons/idle-0.png icons/idle-1.png icons/idle-2.png icons/idle-3.png icons/idle-4.png icons/waiting-0.png icons/waiting-1.png icons/waiting-2.png icons/waiting-3.png icons/pinyin-disabled.png icons/pinyin-enabled.png icons/traditional-disabled.png icons/traditional-enabled.png icons/offline.png icons/tools.png
 LUAFILES=lua/config.lua lua/engine_sogou.lua lua/engine_qq.lua
 IBUSEXE=src/ibus-engine-cloud-pinyin
 REQUESTEXE=src/ibus-cloud-pinyin-request
@@ -25,7 +26,11 @@ MSG_SUFFIX=\x1b[33;00m
 
 all: $(IBUSEXE) $(REQUESTEXE) cloud-pinyin.xml main.db
 
-$(IBUSEXE) $(REQUESTEXE): $(CFLAGFILE) $(VALACFLAGFILE) $(VALACLITEFLAGFILE) $(SRCS)
+$(IBUSEXE): $(CFLAGFILE) $(VALACFLAGFILE) $(SRCS)
+	@export PREFIX
+	@$(MAKE) -C src all
+
+$(REQUESTEXE): $(VALACLITEFLAGFILE) $(REQUESTSRCS)
 	@export PREFIX
 	@$(MAKE) -C src all
 

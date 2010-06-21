@@ -94,6 +94,27 @@ namespace icp {
             Config.global_data_path + "/icons/idle-0.png",
             new Text.from_string("切换在线/离线模式"),
             true, true, PropState.INCONSISTENT, null);
+      private Property tools_icon 
+        = new Property("tools", PropType.MENU, null, 
+            Config.global_data_path + "/icons/tools.png",
+            new Text.from_string("工具菜单"),
+            true, true, PropState.INCONSISTENT, null);
+      private Property tools_status_item
+        = new Property("tools_status", PropType.NORMAL, 
+            new Text.from_string("查看网络请求数据"),
+            null, null,
+            true, true, PropState.INCONSISTENT, null);
+      private Property tools_scel_import_item
+        = new Property("tools_scel_import", PropType.NORMAL, 
+            new Text.from_string("导入 scel 词库"),
+            null, null,
+            true, true, PropState.INCONSISTENT, null);
+      private Property tools_setting_item
+        = new Property("tools_setting", PropType.NORMAL,
+            new Text.from_string("输入法设置"),
+            null, null,
+            true, true, PropState.INCONSISTENT, null);
+      private PropList tools_menu_list = new PropList();
       private PropList panel_prop_list = new PropList();
       private TimeoutSource waiting_animation_timer = null;
 
@@ -170,9 +191,14 @@ namespace icp {
         correction_mode = false;
 
         // load properties into property list
+        tools_menu_list.append(tools_status_item);
+        tools_menu_list.append(tools_scel_import_item);
+        tools_menu_list.append(tools_setting_item);
+        tools_icon.set_sub_props(tools_menu_list);
         panel_prop_list.append(chinese_mode_icon);
         panel_prop_list.append(traditional_conversion_icon);
         panel_prop_list.append(status_icon);
+        panel_prop_list.append(tools_icon);
         waiting_animation_timer = null;
         update_properties();
 
@@ -260,6 +286,9 @@ namespace icp {
           break;
           case "status":
             switch_offline_mode();
+          break;
+          case "tools_status":
+            LuaBinding.show_engine_speed_rank();
           break;
         }
         update_properties();

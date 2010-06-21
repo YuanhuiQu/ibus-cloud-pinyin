@@ -38,13 +38,32 @@ namespace icp {
     public static int get_engine_speed_rank(int low = 0, int high = 4) {
       double rank_best = 1;
       foreach (CloudEngine engine in engines.values) {
-        double rank = engine.get_speed_rank();
+        double rank = engine.response_time_rank;
         if (rank < rank_best) rank_best = rank;
       }
       int r = low + (int)Math.floor((high - low + 1) * (1 - rank_best));
       if (r > high) r = high;
       if (r < low) r = low;
       return r;
+    }
+
+    public static void show_engine_speed_rank() {
+      if (engines.size == 0) return;
+      string content = "平均响应时间(仅成功请求):";
+      foreach (var i in engines) {
+        content += "\n    %s: ".printf(i.key);
+        if (i.value.response_count == 0) content += "N/A";
+        else 
+        content += "%.3f s".printf(i.value.response_time 
+          / i.value.response_count
+          );
+      }
+      content += "\n采用次数:";
+      foreach (var i in engines) {
+        content += "\n    %s: %d".printf(i.key, i.value.response_count);
+      }
+      Frontend.notify("网络请求数据", content, Config.global_data_path 
+        + "/icons/ibus-cloud-pinyin.png");
     }
 
     // only in_configuration = true, can some settings be done.
@@ -55,68 +74,32 @@ namespace icp {
     private static bool in_configuration;
 
     class CloudEngine {
+      public double response_time_rank;
+      public int response_count;
+      public double response_time;
+      //{ get; private set; }
       public int priority { get; private set; }
       public string script { get; private set; }
-      private double response_time_rank;
-
-      public double get_speed_rank() {
-        return response_time_rank;
-      }
 
       public CloudEngine(string script, int priority = 1) {
         this.priority = priority;
         this.script = script;
         response_time_rank = 2;
+        response_count = 0;
+        response_time = 0;
       }
 
-      private string pinyins;
-      private double timeout;
-      private bool* done;
-
-      private void* request_thread() {
-        bool* done = this.done;
-        double timeout = this.timeout;
-        string pinyins = "%s".printf(this.pinyins);
-
-        string[] argv = {
-          Config.program_request_path,
-          "-c",
-          "%s".printf(script),
-          "-r",
-          "%s".printf(pinyins),
-          "-p",
-          "%d".printf(priority),
-          "-t",
-          "%f".printf(timeout)
-        };
-
-        // time out is controlled by child process
-        // to restrict timeout, only spawn self, provide only
-        // dbus api to lua script
-
-        var start_time = Database.get_atime();
-        int exit_code;
-        try {
-          Process.spawn_sync(null, argv, null, 0, null, null, null, 
-              out exit_code
-              );
-        } catch (SpawnError e) {
-          stderr.printf("ERROR: Can not spawn self to send request: '%s'\n",
-              pinyins
-              );
-        }
-
-        // done
-        var end_time = Database.get_atime();
-        *done = true;
-
+      public void update_response_time_rank(double time, 
+          bool successful = true,
+          double timeout = 3 
+          ) {
         // hardcoded 3 sec here:
-        double t = (end_time - start_time) * 28800;
+        double t = time / 3; 
         // make t between 1 (high delay) and 0 (best)
         if (t > 1) t = 1;
         if (t < 0) t = 0; 
-        // lowest rank when fail (exit status != 0)
-        if (exit_code != 0) t = 1;
+        // lowest rank when fail
+        if (!successful) t = 1;
         // do not record fail or timeout in low-timeout request
         if (t < 1 || timeout > 3) {
           lock(response_time_rank) {
@@ -126,26 +109,160 @@ namespace icp {
               response_time_rank = response_time_rank * 0.9 + t * 0.1;
           }
         }
-        return null;
-      }
-
-      public void request(string pinyins, double timeout = -1, bool* done) {
-        if (timeout <= 0) timeout = Config.Timeouts.request;
-        // create a dummy thread and fork from that thread
-        this.timeout = timeout;
-        this.pinyins = pinyins;
-        this.done = done;
-        Thread.create(request_thread, false);
+        if (successful) {
+          response_time += time;
+          response_count ++;
+        }
       }
     }
 
-    // 
+    private static HashMap<long, RequestStatus> pid_to_request_status;
+
+    class RequestStatus {
+      double start_time;
+      CloudEngine* pengine;
+
+      public Pid pid;
+      public int id { get; private set; }
+      public bool done;
+
+      RequestGroup group;
+      CloudEngine engine;
+
+      public RequestStatus(RequestGroup group, CloudEngine engine,
+          int status_id) {
+
+        // id, done will be read from RequestGroup
+        id = status_id;
+        done = false;
+
+        this.group = group;
+        this.engine = engine;
+
+        string[] argv = {
+          Config.program_request_path,
+          "-c", "%s".printf(engine.script),
+          "-r", "%s".printf(group.pinyins),
+          "-p", "%d".printf(engine.priority),
+          "-t", "%f".printf(group.timeout)
+        };
+
+        start_time = Database.get_atime();
+        if (group.highest_priority < engine.priority)
+          group.highest_priority = engine.priority;
+
+        // time out is controlled by child process
+        // to restrict timeout, only spawn self, provide only
+        // dbus api to lua script
+
+        try {
+          Process.spawn_async(null, argv, null, 
+              SpawnFlags.DO_NOT_REAP_CHILD, null, out this.pid
+              );
+
+          // put pid - status pair for later lookup
+          pid_to_request_status[pid] = this;
+
+          ChildWatch.add(pid, (p, status) => {
+              bool successful = (status == 0);
+
+              // since directly access class variables will cause
+              // segmentational fault. here a map is used to help
+              // locate related RequestStatus class by pid(p)
+              assert(p in pid_to_request_status);
+              RequestStatus rs = pid_to_request_status[p];
+              pid_to_request_status.remove(p);
+
+              assert(rs.pid == p);
+
+              // do not count failure of requests being killed
+              if (status != 15) {
+              rs.engine.update_response_time_rank(
+                (Database.get_atime() - rs.start_time) * 3600 * 24,
+                successful,
+                rs.group.timeout
+                );
+              }
+
+              // stop other requests in same group if this is enough
+              rs.group.notify_done(rs.id, (successful 
+                  && rs.engine.priority == rs.group.highest_priority)
+                );
+              Process.close_pid(p);
+              }
+              );
+        } catch (SpawnError e) {
+          stderr.printf("ERROR: Can not spawn self to send request: '%s'\n",
+              group.pinyins
+              );
+        }
+      }
+    }
+
+    class RequestGroup {
+      public bool* done;
+      public bool can_clean;
+      public int highest_priority;
+      public string pinyins;
+      public double timeout;
+
+      public ArrayList<RequestStatus> status_list;
+
+      public RequestGroup(string pinyins, double timeout, bool* done) {
+        this.done = done;
+        this.pinyins = pinyins;
+        *(this.done) = false;
+        this.timeout = timeout;
+        can_clean = false;
+
+        highest_priority = 0;
+        status_list = new ArrayList<RequestStatus>();
+
+        int id = 0;
+        foreach (CloudEngine engine in LuaBinding.engines.values) {
+          status_list.add(new RequestStatus(this, engine, ++id));
+        }
+      }
+
+      public void notify_done(int id, bool stop_others = false) {
+        // lock (status_list) {
+        // scan list and mark as done
+        int done_count = 0;
+        foreach(RequestStatus i in status_list) {
+          if (i.id == id) i.done = true;
+          if (i.done) done_count++;
+          else if (stop_others) Posix.kill(i.pid, 15);
+        }
+        // all done ?
+        if (done_count == status_list.size) {
+          *done = true;
+          can_clean = true;
+        }
+      }
+      // }
+    }
+
+    private static ArrayList<RequestGroup> request_group;
+
     public static void start_requests(string pinyins, double timeout,
         bool* done) {
-      // TODO: remove this func
-      foreach (CloudEngine engine in engines.values) {
-        engine.request(pinyins, timeout, done);
+      // clean request_group if it should be cleaned
+      // lock (request_group) {
+      bool can_clean = true;
+      foreach (RequestGroup r in request_group) {
+        if (r.can_clean == false) {
+          can_clean = false;
+          break;
+        }
       }
+      if (can_clean) {
+        request_group.clear();
+      }
+      request_group.add(new RequestGroup(pinyins, timeout, done));
+      // }
+      // TODO: start a thread to handle
+      // TODO: monitor done status
+
     }
 
     private LuaBinding() {
@@ -473,11 +590,12 @@ namespace icp {
       return 0;
     }
 
-
     public static void init() {
       in_configuration = false;
       script_pool = new Gee.LinkedList<string>();
       engines = new HashMap<string, CloudEngine>();
+      request_group = new ArrayList<RequestGroup>();
+      pid_to_request_status = new HashMap<long, RequestStatus>();
 
       vm = new LuaVM();
       vm.open_libs();
