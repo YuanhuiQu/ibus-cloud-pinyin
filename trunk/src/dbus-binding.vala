@@ -104,19 +104,6 @@ namespace icp {
         }
       }
 
-    // for client
-    public static void send_response(string pinyins, string content, 
-      int priority) {
-      var conn = DBus.Bus.get (DBus.BusType. SESSION);
-      dynamic DBus.Object test_server_object 
-        = conn.get_object ("org.ibus.CloudPinyin",
-            "/org/ibus/CloudPinyin",
-            "org.ibus.CloudPinyin");
-      bool ret = test_server_object.cloud_set_response(pinyins, 
-        content, priority
-        );
-    }
-
     // for server init
     public static void init() {
       responses = new HashMap<string, Response>();

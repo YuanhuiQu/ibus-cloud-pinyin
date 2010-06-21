@@ -1,12 +1,14 @@
 PREFIX ?= /usr
 
-SRCS=src/main.vala src/dbus-binding.vala src/pinyin-utils.vala src/frontend-utils.vala src/config.vala src/database.vala src/lua-binding.vala src/ibus-engine.vala
+SRCS=src/main.vala src/dbus-binding.vala src/pinyin-utils.vala src/frontend-utils.vala src/config.vala src/database.vala src/lua-binding.vala src/ibus-engine.vala src/request-main.vala
 ICONFILES=icons/ibus-cloud-pinyin.png icons/idle-0.png icons/idle-1.png icons/idle-2.png icons/idle-3.png icons/idle-4.png icons/waiting-0.png icons/waiting-1.png icons/waiting-2.png icons/waiting-3.png icons/pinyin-disabled.png icons/pinyin-enabled.png icons/traditional-disabled.png icons/traditional-enabled.png icons/offline.png
 LUAFILES=lua/config.lua lua/engine_sogou.lua lua/engine_qq.lua
-EXEFILES=src/ibus-engine-cloud-pinyin
+IBUSEXE=src/ibus-engine-cloud-pinyin
+REQUESTEXE=src/ibus-cloud-pinyin-request
 
-CFLAGFILE=c-flags.txt
-VALACFLAGFILE=valac-flags.txt
+CFLAGFILE=src/c-flags.txt
+VALACFLAGFILE=src/valac-flags.txt
+VALACLITEFLAGFILE=src/valac-lite-flags.txt
 
 ECHO=echo -e
 INSTALL=install -p
@@ -21,32 +23,34 @@ MSG_SUFFIX=\x1b[33;00m
 
 .DELETE_ON_ERROR: main.db cloud-pinyin.xml
 
-all: $(EXEFILES) cloud-pinyin.xml main.db
+all: $(IBUSEXE) $(REQUESTEXE) cloud-pinyin.xml main.db
 
-$(EXEFILES): $(CFLAGFILE) $(VALACFLAGFILE) $(SRCS)
+$(IBUSEXE) $(REQUESTEXE): $(CFLAGFILE) $(VALACFLAGFILE) $(VALACLITEFLAGFILE) $(SRCS)
 	@export PREFIX
-	@$(MAKE) -C src ibus-engine-cloud-pinyin
+	@$(MAKE) -C src all
 
-$(CFLAGFILE) $(VALACFLAGFILE): find-dependencies.sh
+$(CFLAGFILE) $(VALACFLAGFILE) $(VALACLITEFLAGFILE): find-dependencies.sh
 	@$(ECHO) "$(MSG_PREFIX)Finding dependencies ...$(MSG_SUFFIX)"
 	@find-dependencies.sh
 
-install: $(EXEFILES) $(ICONFILES) main.db cloud-pinyin.xml $(LUAFILES)
+install: $(IBUSEXE) $(REQUESTEXE) $(ICONFILES) main.db cloud-pinyin.xml $(LUAFILES)
 	@$(ECHO) "$(MSG_PREFIX)Installing (prefix=$(PREFIX)) ...$(MSG_SUFFIX)"
 	@$(MKDIR) $(PREFIX)/share/ibus-cloud-pinyin/db/
 	@$(MKDIR) $(PREFIX)/share/ibus-cloud-pinyin/icons/
 	@$(MKDIR) $(PREFIX)/share/ibus-cloud-pinyin/lua/
 	@$(MKDIR) $(PREFIX)/lib/ibus/
+	@$(MKDIR) $(PREFIX)/lib/ibus-cloud-pinyin/
 	@$(MKDIR) $(PREFIX)/share/ibus/component/
 	$(INSTALL_DATA) $(LUAFILES) $(PREFIX)/share/ibus-cloud-pinyin/lua/
 	$(INSTALL_DATA) main.db $(PREFIX)/share/ibus-cloud-pinyin/db/
 	$(INSTALL_DATA) $(ICONFILES) $(PREFIX)/share/ibus-cloud-pinyin/icons/
 	$(INSTALL_DATA) cloud-pinyin.xml $(PREFIX)/share/ibus/component/
 	$(INSTALL_EXEC) $< $(PREFIX)/lib/ibus/
+	$(INSTALL_EXEC) $(REQUESTEXE) $(PREFIX)/lib/ibus-cloud-pinyin/
 
-cloud-pinyin.xml: $(EXEFILES)
+cloud-pinyin.xml: $(IBUSEXE)
 	@$(ECHO) "$(MSG_PREFIX)Creating ibus compoment xml file ...$(MSG_SUFFIX)"
-	@$(EXEFILES) -x > cloud-pinyin.xml
+	@$(IBUSEXE) -x > cloud-pinyin.xml
 
 main.db: db/main.db create-index.sql
 	@$(ECHO) "$(MSG_PREFIX)Clone open-phrase database ...$(MSG_SUFFIX)"
@@ -64,5 +68,5 @@ pinyin-database-1.2.99.tar.xz:
 
 clean:
 	@$(ECHO) "$(MSG_PREFIX)Cleaning ...$(MSG_SUFFIX)"
-	-rm -rf ibus-cloud-pinyin *.o $(CFLAGFILE) $(VALACFLAGFILE) pinyin-database-1.2.99.tar.bz2 db/ cloud-pinyin.xml main.db
+	-rm -rf ibus-cloud-pinyin *.o $(CFLAGFILE) $(VALACFLAGFILE) pinyin-database-1.2.99.tar.xz db/ cloud-pinyin.xml main.db
 	-$(MAKE) -C src clean

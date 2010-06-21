@@ -79,7 +79,7 @@ namespace icp {
         string pinyins = "%s".printf(this.pinyins);
 
         string[] argv = {
-          Config.program_main_file,
+          Config.program_request_path,
           "-c",
           "%s".printf(script),
           "-r",
@@ -139,53 +139,6 @@ namespace icp {
       }
     }
 
-    // execute_request is called by client, no init() needed
-    // execute_request() will execute lua script in current thread
-    // (blocking) and terminate whole process when done or
-    // timeout.
-
-    private static void* execute_request_timeout_thread() {
-      double timeout = Config.CommandlineOptions.request_timeout;
-      Thread.usleep((ulong)timeout * 1000000);
-      Posix.exit(1);
-      return null;
-    }
-
-    private static bool execute_request_responsed;
-    public static void execute_request() {
-      vm = new LuaVM();
-      vm.open_libs();
-
-      vm.check_stack(1);
-      vm.push_string(Config.user_config_path);
-      vm.set_global("user_config_path");
-      vm.push_string(Config.user_data_path);
-      vm.set_global("user_data_path");
-      vm.push_string(Config.user_cache_path);
-      vm.set_global("user_cache_path");
-      vm.push_string(Config.global_data_path);
-      vm.set_global("data_path");
-
-      vm.check_stack(1);
-      vm.push_string(Config.CommandlineOptions.request_pinyins);
-      vm.set_global("pinyin");
-
-      vm.register("response", l_response);
-      execute_request_responsed = false;
-
-      vm.load_string("dofile([[%s]])"
-          .printf(Config.CommandlineOptions.startup_script)
-          );
-
-      Thread.create(execute_request_timeout_thread, false);
-      if (vm.pcall(0, 0, 0) != 0) {
-        string error_message = vm.to_string(-1);
-        stderr.printf("FATAL: %s\n", error_message);
-      }
-
-      Posix.exit(execute_request_responsed ? 0 : 2);
-    }
-
     // 
     public static void start_requests(string pinyins, double timeout,
         bool* done) {
@@ -213,20 +166,6 @@ namespace icp {
         return false;
       }
       return true;
-    }
-
-    private static int l_response(LuaVM vm) {
-      // used by client request engine, no permission check needed
-      if (vm.is_string(1)) {
-        execute_request_responsed = true;
-        string content = vm.to_string(1);
-        DBusBinding.send_response(
-            Config.CommandlineOptions.request_pinyins,
-            content,
-            Config.CommandlineOptions.request_priority
-            );
-      }
-      return 0;
     }
 
     private static int l_get_selection(LuaVM vm) {
