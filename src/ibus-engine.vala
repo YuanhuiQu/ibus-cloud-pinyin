@@ -295,7 +295,8 @@ namespace icp {
         // commit first committed_item_count items and delete them
         if (committed_item_count > 0) {
           preedit_should_update = true;
-          LinkedList<PendingSegment> head_segs = new LinkedList<PendingSegment>();
+          LinkedList<PendingSegment> head_segs = 
+            new LinkedList<PendingSegment>();
           pending_segment_list.drain_head(head_segs, committed_item_count);
 
           foreach (PendingSegment seg in head_segs) {
@@ -595,8 +596,7 @@ namespace icp {
           }
 
           // lookup table pgup, pgdn, candidate select
-          if (table_visible /*&& (correction_mode
-                              || !Config.Punctuations.exists((int)keyval) )*/) {
+          if (table_visible) {
             if ("pgup" in actions) { page_up(); handled = true;}
             if ("pgdn" in actions) { page_down(); handled = true;}
             if (handled) {
@@ -620,14 +620,48 @@ namespace icp {
             if (handled) break;
           }
 
+          // backspace
+          if (("back" in actions) && pending_segment_list.size > 0 
+              && raw_buffer.length == 0) {
+            for (int i = pending_segment_list.size - 1; i >= 0; i--) {
+              PendingSegment seg = pending_segment_list.get(i);
+              if (seg.content != null) {
+                // directly shorten or remove that segment
+                if (seg.content.length <= 1) {
+                  pending_segment_list.remove_at(i);
+                } else {
+                  seg.content = seg.content[0:seg.content.length - 1];
+                }
+                break;
+              }
+              if (seg.pinyins != null) {
+                // mute it (for request will write 'done' information back)
+                // reset it to buffer
+                Pinyin.Sequence pinyins = new Pinyin.Sequence.copy(
+                    seg.pinyins, 0, seg.pinyins.size - 1
+                    );
+                seg.pinyins = null;
+                seg.content = null;
+                // put that segment back to buffer
+                if (Config.Switches.double_pinyin) {
+                  raw_buffer = pinyins.to_double_pinyin_string();
+                } else {
+                  raw_buffer = pinyins.to_string();
+                }
+                pinyin_buffer = pinyins;
+                break;
+              }
+            }
+            handled = true; break;
+          }
           // non-chinese puncs
           // special handle enter, convert it to ASCII 13
           if (((state ^ IBus.ModifierType.SHIFT_MASK)
                 == 0 || state == 0)
               && (128 > keyval >= 32 || (keyval == IBus.Return
-              && pending_segment_list.size > 0))) {
+                  && pending_segment_list.size > 0))) {
             commit_buffer();
-            
+
             if (keyval == IBus.Return) keyval = 13;
             string punc = "%c".printf((int)keyval);
             last_is_chinese = false;
@@ -638,6 +672,7 @@ namespace icp {
 
         if (handled) {
           send_prerequest();
+          process_pending_list();
           update_preedit();
           update_properties();
           update_candidates();
@@ -768,8 +803,8 @@ namespace icp {
               int cloud_len;
               string content =
                 DBusBinding.convert(seg.pinyins, offline_mode,
-                  out cloud_len
-                  );
+                    out cloud_len
+                    );
               pending_preedit += content;
 
               color_list.add(new ColorSegment(Config.Colors.preedit_remote,
