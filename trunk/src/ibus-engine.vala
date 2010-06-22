@@ -595,6 +595,7 @@ namespace icp {
               && raw_buffer.length > 0) {
             commit(raw_buffer);
             clear_buffer();
+            last_is_chinese = false;
             handled = true; break;
           }
 
