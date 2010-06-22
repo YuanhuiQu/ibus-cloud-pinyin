@@ -100,6 +100,37 @@ set_key('2', 'cand:1')
 -- set_candidate_labels("jkl;asdf", "12345678")
 
 --------------------------------------------------------------------------------
+-- set_punctuation(half, full, [only_after_chinese = false])
+-- 输入法 API （仅在配置脚本中可用）
+-- 设置全角标点，half 为半角标点，full 为全角标点，如果对应多个全角标点，用
+-- 空格分开。默认如下：
+--[[
+set_punctuation('.', "。", true)
+set_punctuation(',', "，", true)
+set_punctuation('^', "……")
+set_punctuation('@', "·")
+set_punctuation('!', "！")
+set_punctuation('~', "～")
+set_punctuation('?', "？")
+set_punctuation('#', "＃")
+set_punctuation('$', "￥")
+set_punctuation('&', "＆")
+set_punctuation('(', "（")
+set_punctuation(')', "）")
+set_punctuation('{', "｛")
+set_punctuation('}', "｝")
+set_punctuation('[', "［")
+set_punctuation(']', "］")
+set_punctuation(';', "；")
+set_punctuation(':', "：")
+set_punctuation('<', "《")
+set_punctuation('>', "》")
+set_punctuation('\\', "、")
+set_punctuation('\'', "‘ ’")
+set_punctuation('\"', "“ ”")
+--]]
+
+--------------------------------------------------------------------------------
 -- set_double_pinyin(scheme)
 -- 输入法 API （仅在配置脚本中可用）
 -- 设置双拼布局，接受一个双拼到全拼的字符串映射表
@@ -112,9 +143,11 @@ set_double_pinyin{ ['ca'] = 'ca', ['cb'] = 'cou', ['ce'] = 'ce', ['cg'] = 'ceng'
 -- 设置开关，默认值如下
 --[[
 set_switch{
+	default_chinese_mode = true,
 	default_offline_mode = false,
 	default_traditional_mode = false,
 	double_pinyin = false,
+	background_request = true,
 	show_raw_in_auxiliary = false,
 	always_show_candidates = false,
 	show_pinyin_auxiliary = true,
@@ -187,7 +220,6 @@ end
 -- load various script files if exists
 try_dofile(user_config_path)
 try_dofile(autoload_file_path)
-
 
 --------------------------------------------------------------------------------
 -- go_background()

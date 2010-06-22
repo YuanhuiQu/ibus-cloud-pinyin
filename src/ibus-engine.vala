@@ -121,11 +121,6 @@ namespace icp {
             new Text.from_string("导入 scel 词库"),
             null, null,
             true, true, PropState.INCONSISTENT, null);
-      private Property tools_setting_item
-        = new Property("tools_setting", PropType.NORMAL,
-            new Text.from_string("输入法设置"),
-            null, null,
-            true, true, PropState.INCONSISTENT, null);
       private PropList tools_menu_list = new PropList();
       private PropList panel_prop_list = new PropList();
       private TimeoutSource waiting_animation_timer = null;
@@ -208,7 +203,6 @@ namespace icp {
         // load properties into property list
         tools_menu_list.append(tools_status_item);
         tools_menu_list.append(tools_scel_import_item);
-        tools_menu_list.append(tools_setting_item);
         tools_icon.set_sub_props(tools_menu_list);
         panel_prop_list.append(chinese_mode_icon);
         panel_prop_list.append(traditional_conversion_icon);
