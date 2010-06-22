@@ -530,17 +530,17 @@ namespace icp {
       if (!check_permissions()) return 0;
 
       if (vm.get_top() < 3
-        || !(vm.type(1) == Lua.Type.STRING && vm.type(1) == Lua.Type.NUMBER)
+        || !(vm.type(1) == Lua.Type.STRING || vm.type(1) == Lua.Type.NUMBER)
           || !vm.is_string(3) || !vm.is_number(2)) return 0;
 
       uint key_value = 0;
       if (vm.type(1) == Lua.Type.STRING) {
         string s = vm.to_string(1);
         if (s.length > 0) key_value = (uint)s[0];
-      } else key_value = (uint)vm.to_number(1);
+      } else key_value = (uint)vm.to_integer(1);
 
       if (key_value == 0) return 0;
-      Config.Key key = new Config.Key(key_value, (uint)vm.to_number(2));
+      Config.Key key = new Config.Key(key_value, (uint)vm.to_integer(2));
       Config.KeyActions.set(key, vm.to_string(3));
       return 0;
     }
