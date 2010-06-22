@@ -138,13 +138,15 @@ namespace icp {
       private int waiting_index_acc = 1;
       private int waiting_subindex = 0;
 
+      private bool last_prerequest_done;
       private void start_requesting() {
         if (waiting_animation_timer != null) return;
         waiting_animation_timer = new TimeoutSource(64);
         waiting_animation_timer.set_callback(() => {
             // send another prerequest if current one is done
-            if (prerequest_done) {
+            if (prerequest_done && !last_prerequest_done) {
             send_prerequest();
+            last_prerequest_done = prerequest_done;
             update_preedit();
             }
             if (process_pending_list()) {
@@ -229,6 +231,10 @@ namespace icp {
         // request list and pending segment list
         pending_segment_list = new LinkedList<PendingSegment>();
         prerequest_done = true;
+        last_prerequest_done = false;
+
+        // start animations
+        if (!offline_mode) start_requesting();
 
         // TODO: dlopen opencc ...
         inited = true;
@@ -315,7 +321,9 @@ namespace icp {
         if (offline_mode || !prerequest_done) return;
         // scan to a complete pinyin
         int i = pinyin_buffer.size - 1;
-        for (; i >= 0 && pinyin_buffer.get_id(i).vowel <= 0; i--);
+
+        // try not send request when user is typing (pinyin not complete)
+        if (pinyin_buffer.get_id(i).vowel <= 0) i--;
         if (i <= 0) return;
 
         string pinyins = pinyin_buffer.to_string(0, i + 1);
@@ -424,7 +432,7 @@ namespace icp {
                 );
             offline_mode = true;
           } else {
-            send_prerequest();
+            start_requesting();
           }
         }
       }
@@ -682,7 +690,10 @@ namespace icp {
         } while (false);
 
         if (handled) {
-          send_prerequest();
+          if (!offline_mode) {
+            last_prerequest_done = false;
+            start_requesting();
+          }
           process_pending_list();
           update_preedit();
           update_properties();
