@@ -271,7 +271,9 @@ namespace icp {
 
     private static bool check_permissions(bool should_in_configuration = true) {
       if (Posix.getpid() != main_pid) {
-        stderr.printf("LUA-WARNING: IME native functions are disabled after go_background().\n");
+        stderr.printf(
+          "WARNING: IME Lua APIs are disabled after go_background().\n"
+          );
         return false;
       }
 
@@ -524,15 +526,17 @@ namespace icp {
     private static int l_set_key(LuaVM vm) {
       if (!check_permissions()) return 0;
 
-      if (vm.get_top() < 3 || (!vm.is_string(1) && !vm.is_number(1))
+      if (vm.get_top() < 3
+        || !(vm.type(1) == Lua.Type.STRING && vm.type(1) == Lua.Type.NUMBER)
           || !vm.is_string(3) || !vm.is_number(2)) return 0;
 
       uint key_value = 0;
-      if (vm.is_string(1)) {
+      if (vm.type(1) == Lua.Type.STRING) {
         string s = vm.to_string(1);
         if (s.length > 0) key_value = (uint)s[0];
       } else key_value = (uint)vm.to_number(1);
 
+      if (key_value == 0) return 0;
       Config.Key key = new Config.Key(key_value, (uint)vm.to_number(2));
       Config.KeyActions.set(key, vm.to_string(3));
       return 0;
@@ -553,6 +557,26 @@ namespace icp {
             (i < alternative_labels.length) ? alternative_labels[i:i+1] : null
             );
       }
+      return 0;
+    }
+
+    private static int l_set_punctuation(LuaVM vm) {
+      if (!check_permissions()) return 0;
+      if (!(vm.type(1) == Lua.Type.NUMBER || vm.type(1) == Lua.Type.STRING)
+       || !vm.is_string(2)) return 0;
+
+      bool only_after_chinese = false;
+      if (!vm.is_boolean(3)) only_after_chinese = vm.to_boolean(3);
+      
+      int half_punc;
+      if (vm.type(1) == Lua.Type.NUMBER) half_punc = vm.to_integer(1);
+        else {
+          string half_punc_str = vm.to_string(1);
+          if (half_punc_str.length == 0) return 0;
+          half_punc = (int)half_punc_str[0];
+        }
+      string full_punc = vm.to_string(2);
+      Config.Punctuations.set(half_punc, full_punc, only_after_chinese);
       return 0;
     }
 
@@ -632,6 +656,7 @@ namespace icp {
       vm.register("set_double_pinyin", l_set_double_pinyin);
       vm.register("set_key", l_set_key);
       vm.register("set_candidate_labels", l_set_candidate_labels);
+      vm.register("set_punctuation", l_set_punctuation);
 
       vm.register("set_switch", l_set_switch);
       vm.register("set_timeout", l_set_timeout);
