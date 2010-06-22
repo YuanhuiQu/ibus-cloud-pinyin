@@ -74,6 +74,8 @@ namespace icp {
       main_loop = new MainLoop (null, false);
       main_loop.run();
 
+      print("got here\n");
+
       return 0;
     }
   }

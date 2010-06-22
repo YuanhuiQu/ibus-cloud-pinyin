@@ -222,12 +222,6 @@ end
 try_dofile(user_config_path)
 try_dofile(autoload_file_path)
 
---------------------------------------------------------------------------------
--- go_background()
--- go_background 使得后续代码在单独的进程中执行，不再阻塞主 lua 线程，但由于新生
--- 进程和主进程无联系，在此之后不能再使用任何输入法提供的接口。
-go_background()
-
 -- update various things in background
 http.TIMEOUT = 10
 
