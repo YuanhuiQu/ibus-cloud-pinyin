@@ -211,6 +211,9 @@ namespace icp {
         waiting_animation_timer = null;
         update_properties();
 
+        // timeouts
+        prerequest_retry = Config.Limits.prerequest_retry_limit;
+
         // lookup table, insert enough dummy labels first
         page_index = 0;
         table = new LookupTable(Config.CandidateLabels.size, 0, false, false);
@@ -306,6 +309,8 @@ namespace icp {
         return preedit_should_update;
       }
 
+      private int prerequest_retry;
+      private string last_prerequest_pinyins = "";
       private void send_prerequest() {
         if (offline_mode || !prerequest_done) return;
         // scan to a complete pinyin
@@ -314,8 +319,13 @@ namespace icp {
         if (i <= 0) return;
 
         string pinyins = pinyin_buffer.to_string(0, i + 1);
-        if (DBusBinding.query(pinyins) == "") {
-
+        if (last_prerequest_pinyins != pinyins) {
+          prerequest_retry = Config.Limits.prerequest_retry_limit;
+          last_prerequest_pinyins = pinyins;
+        }
+        if (DBusBinding.query(pinyins) == "" 
+          && prerequest_retry > 0) {
+          prerequest_retry--;
           prerequest_done = false;
           LuaBinding.start_requests(
               pinyins,
