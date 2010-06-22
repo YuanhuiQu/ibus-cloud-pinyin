@@ -55,7 +55,8 @@ namespace icp {
       string where = "", query = "SELECT phrase, freqadj FROM (";
       string subquery = "";
       for (int id = 0; id < pinyins.size; ++id) {
-        if (id > PHRASE_LENGTH_MAX || id + pinyins_begin >= pinyins_end) break;
+        if (id > PHRASE_LENGTH_MAX || id + pinyins_begin >= pinyins_end)
+          break;
 
         Id pinyin_id;
         if (!reverse_order) {
@@ -65,7 +66,7 @@ namespace icp {
 
           // refuse to lookup single character with partial pinyin
           // (allow when limit = 1)
-          if (vid == -1 && id == 0 && limit != 1) break;
+          if (vid == -1 && id == 0 && limit != 1 && pinyins.size == 1) break;
 
           if (where.length != 0) where += " AND ";
           where += "s%d=%d".printf(id, cid);
@@ -165,18 +166,25 @@ namespace icp {
         sql_builder.append(");\n");
 
         string columns = "";
-        for (int j = 0; j <= i; j++) {
-          columns += "s%d,y%d,".printf(j, j);
-        }
+        if (i < 3)
+          for (int j = 0; j <= i; j++) {
+            columns += "s%d,y%d,".printf(j, j);
+          }
         columns += "phrase";
         sql_builder.append(
             "CREATE UNIQUE INDEX IF NOT EXISTS userdb.index_%d_%d ON py_phrase_%d (%s);\n"
             .printf(i, 0, i, columns)
             );
-        if (i > 1) {
+        if (i >= 2) {
           sql_builder.append(
-              "CREATE INDEX IF NOT EXISTS userdb.index_%d_%d ON py_phrase_%d (s0, y0, s1, y1);\n"
+              "CREATE INDEX IF NOT EXISTS userdb.index_%d_%d ON py_phrase_%d (s0, y0, s1, y1, s2, y2);\n"
               .printf(i, 1, i)
+              );
+        }
+        if (i >= 3) {
+          sql_builder.append(
+              "CREATE INDEX IF NOT EXISTS userdb.index_%d_%d ON py_phrase_%d (s0, s1, s2, s3);\n"
+              .printf(i, 2, i)
               );
         }
       }
@@ -242,7 +250,7 @@ namespace icp {
         assert_exec(sql_builder.str);
         // update freq OR atime
         double atime = get_atime();
-        
+
         query =
           "SELECT atime FROM userdb.py_phrase_%d WHERE %s LIMIT 1"
           .printf(length - 1, where);
