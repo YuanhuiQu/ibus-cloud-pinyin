@@ -98,11 +98,11 @@ set_switch{ default_offline_mode = true }
 图中没有提到的可设置项：
   * 热键动作
     * 可以为各种组合键指定动作，支持用 lua 脚本完成复杂动作
-  * 超时、限制等设置
+  * 超时、限制、双拼、后台请求等设置
     * 设置超时时间或者词条个数、重试次数的限制，详见全局配置文件中 set_timeouts， set_limits 以及 set_switch
-    * 例如，禁止后台请求（不再会将未有完成请求结果的待定文字段放在后台，每次确认文字段都会直接强制上屏）：
+    * 例如，禁止后台请求（不再会将未有完成请求结果的待定文字段放在后台，每次确认文字段都会直接强制上屏），同时启用双拼：
 {{{
-set_switch{ background_request = false }
+set_switch{ background_request = false, double_pinyin = true }
 }}}
   * 注册、注销云请求脚本
     * 见 register_engine
