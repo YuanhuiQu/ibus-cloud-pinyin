@@ -75,7 +75,7 @@ namespace icp {
           this.pinyins = new Pinyin.Sequence.copy(pinyins);
           // allow another request
           done = true;
-          retry = 5;
+          retry = Config.Limits.request_retry_limit;
         }
       }
 
@@ -239,10 +239,7 @@ namespace icp {
             commit_text(new Text.from_string(seg.content));
             seg.content = null;
           } else if (seg.pinyins != null) {
-            int cloud_len;
-            string content = DBusBinding.convert(seg.pinyins, 
-                out cloud_len, offline_mode
-                );
+            string content = DBusBinding.convert(seg.pinyins, offline_mode);
             commit_text(new Text.from_string(content));
             seg.pinyins = null;
           }
@@ -260,6 +257,7 @@ namespace icp {
             first_items = false;
             continue;
           }
+          // check existing cloud response
           if (seg.content == null && seg.pinyins != null) {
             string content = DBusBinding.query(seg.pinyins.to_string());
             if (content.size() > 0) {
@@ -268,7 +266,14 @@ namespace icp {
               seg.pinyins = null;
             }
           }
+          // retry limit exceed ?
+          if (seg.pinyins != null && seg.retry <= 0) {
+            // force convert
+            seg.content = DBusBinding.convert(seg.pinyins, offline_mode);
+            seg.pinyins = null;
+          }
           if (seg.pinyins == null) {
+            // mark as to be committed
             // seg.content may be null
             if (first_items) committed_item_count ++;
             continue;
@@ -277,12 +282,13 @@ namespace icp {
           if (seg.content == null) {
             preedit_should_update = true;
             // send request about pinyins
+            // check retry
             seg.done = false;
             LuaBinding.start_requests(seg.pinyins.to_string(),
                 Config.Timeouts.request,
                 &(seg.done)
                 );
-            first_items = false;
+            seg.retry --;
           }
         } // foreach
 
@@ -748,8 +754,8 @@ namespace icp {
           int cloud_length;
           pinyin_buffer_preedit = DBusBinding.convert(
               pinyin_buffer, 
-              out cloud_length,
-              offline_mode
+              offline_mode,
+              out cloud_length
               );
 
           var color_list = new ArrayList<ColorSegment>();
@@ -761,9 +767,9 @@ namespace icp {
               // mixed cloud and local
               int cloud_len;
               string content =
-                DBusBinding.convert(seg.pinyins, out cloud_len, 
-                    offline_mode
-                    );
+                DBusBinding.convert(seg.pinyins, offline_mode,
+                  out cloud_len
+                  );
               pending_preedit += content;
 
               color_list.add(new ColorSegment(Config.Colors.preedit_remote,
