@@ -1,0 +1,36 @@
+== 配置 ==
+
+=== 文件位置 ===
+
+ * 全局配置文件：`/usr/share/ibus-cloud-pinyin/lua/config.lua`
+ * 用户配置文件：`${XDG_CONFIG_HOME:-$HOME/.config}/ibus/cloud-pinyin/config.lua`
+
+  配置文件是 lua 脚本，其中可以用 dofile 加载其他的文件。全局配置文件默认加载了用户配置文件
+
+=== 说明 ===
+
+全局配置文件的注释中已经包含了所有输入法提供的接口的说明，配置时请参考该文件。
+
+下图说明一些配置选项应该使用的接口函数，关于具体函数详细使用方法请参考全局配置文件：
+
+http://ibus-cloud-pinyin.googlecode.com/svn/wiki/img/1.png
+
+ # 云服务器提供的结果
+   * 颜色：set_color{ preedit_remote = ... }
+   * 默认为离线模式：set_switch{ default_offline_mode = true }
+ # 本地词库转换结果
+   * 颜色：set_color{ preedit_local = ... }
+ # 候选词列表
+   * 默认在按下 Tab 进入纠正模式后显示
+   * 一直显示：set_switch{ always_show_candidates = true }
+   * 服务器词条颜色：set_color{ candidate_remote = ... }
+   * 本地词条颜色：set_color{ candidate_local = ... }
+   * 标签：set_candidate_labels(labels_correction_mode, labels_normal_mode)
+ # 正在编辑的拼音串
+   * 默认显示，隐藏：set_switch{ show_pinyin_auxiliary = false }
+   * 颜色：set_color{ buffer_pinyin = ... }
+ # 正在编辑的拼音串的原始输入内容
+   * 默认隐藏，显示：set_switch{ show_raw_in_auxiliary = true }
+   * 颜色：set_color{ buffer_raw = ... }
+
+(未完待续 ...)
