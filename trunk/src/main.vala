@@ -31,6 +31,7 @@ namespace icp {
 
       Config.init(args);
 
+      // show version
       if (Config.CommandlineOptions.show_version) {
         stdout.printf(
             "ibus-cloud-pinyin %s [built with ibus %d.%d.%d]\n"
@@ -39,6 +40,16 @@ namespace icp {
             IBus.MAJOR_VERSION, IBus.MINOR_VERSION, IBus.MICRO_VERSION
             );
         return 0;
+      }
+
+      // replace running process
+      if (Config.CommandlineOptions.replace_running_process) {
+        // IMPROVE: use a better way to kill running ibus-engine-cloud-pinyin
+        Posix.system(
+          "for i in `ps -C ibus-engine-cloud-pinyin -o pid=`; do "
+          +"[ \"$i\" = %d ] || kill $i; done".printf(Posix.getpid())
+          );
+        Thread.usleep(100000);
       }
 
       // show component xml and done
@@ -56,9 +67,9 @@ namespace icp {
       LuaBinding.init();
 
       if (!Config.CommandlineOptions.do_not_connect_ibus) {
-        // give lua thread some time to set up
+        // give lua thread some time (0.2 s) to set up
         // currently no lock to protect complex settings
-        Thread.usleep(100000);
+        Thread.usleep(200000);
         IBusBinding.register();
       }
       main_loop = new MainLoop (null, false);

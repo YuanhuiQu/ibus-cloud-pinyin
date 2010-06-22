@@ -56,6 +56,8 @@ namespace icp {
         public static bool do_not_connect_ibus;
         public static bool show_xml;
         public static bool user_db_in_memory; 
+
+        public static bool replace_running_process;
       }
 
     // timeouts, unit: 1 second
@@ -356,6 +358,9 @@ namespace icp {
       // command line options
       // workaround for vala 0.8.0 and 0.9.0 not allowing nested
       // struct assignments
+      OptionEntry entrie_replace = { "replace", 'r', 0, OptionArg.NONE, 
+        out CommandlineOptions.replace_running_process,
+        "Replace running cloud pinyin engine", null};
       OptionEntry entrie_script = { "script", 'c', 0, OptionArg.FILENAME, 
         out CommandlineOptions.startup_script, "Specify a (startup) script",
         "filename" };
@@ -364,7 +369,7 @@ namespace icp {
         null };
       OptionEntry entrie_user_db_in_mem = { "userdb-in-memory", 'm', 0, 
         OptionArg.NONE, out CommandlineOptions.user_db_in_memory,
-        "Use user database in memory", null };
+        "Store user database in memory", null };
       OptionEntry entrie_ibus = { "ibus", 'b', 0, OptionArg.NONE,
         out CommandlineOptions.launched_by_ibus, 
         "Take ownship of registered ibus component",
@@ -382,7 +387,7 @@ namespace icp {
         new OptionContext("- cloud pinyin client for ibus");
       
       context.add_main_entries({entrie_version, entrie_script, entrie_ibus,
-          entrie_no_ibus, entrie_xml, entrie_user_db_in_mem, 
+          entrie_no_ibus, entrie_xml, entrie_user_db_in_mem, entrie_replace,
           entrie_null},
           null
           );
