@@ -92,10 +92,11 @@ namespace icp {
 
         // user db
         subquery +=
-          (" UNION ALL SELECT phrase, freq*%f*max((32-%lf+atime)/32.0, 0.1) "
-           + "AS freqadj FROM userdb.py_phrase_%d WHERE %s")
+          (" UNION ALL SELECT phrase, freq*%f*max((32-%lf+atime)/32.0, %f)"
+           + " AS freqadj FROM userdb.py_phrase_%d WHERE %s")
           .printf(Math.pow(1.0 + (double)id,
-                phrase_adjust), get_atime(), id, where
+                phrase_adjust), get_atime(), Math.pow(0.3, 1 + id),
+                id, where
               );
       } // for
 
