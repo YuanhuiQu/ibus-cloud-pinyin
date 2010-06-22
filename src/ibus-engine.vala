@@ -916,7 +916,7 @@ namespace icp {
           "WU Jun <quark@lihdd.net>",
           "http://code.google.com/p/ibus-cloud-pinyin/",
           Config.prefix_path
-          + "/lib/ibus/ibus-engine-cloud-pinyin --ibus",
+          + "/lib/ibus/ibus-engine-cloud-pinyin --ibus --replace",
           "ibus-cloud-pinyin");
       engine = new EngineDesc ("cloud-pinyin",
           "Cloud Pinyin",

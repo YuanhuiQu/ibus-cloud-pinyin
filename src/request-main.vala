@@ -26,7 +26,7 @@ using Lua;
 using DBus;
 using Posix;
 
-string script;
+string script = null;
 string pinyins;
 int priority;
 double timeout;
@@ -92,6 +92,8 @@ int main(string[] args) {
   } catch (OptionError e) {
     ;
   }
+  // do nothing if request script is null
+  if (script == null) return 4;
 
   // prepare lua vm and execute script
   LuaVM vm = new LuaVM();
