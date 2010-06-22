@@ -24,6 +24,8 @@ MSG_SUFFIX=\x1b[33;00m
 
 .DELETE_ON_ERROR: main.db cloud-pinyin.xml
 
+.NOTPARALLEL: $(CFLAGFILE) $(VALACFLAGFILE) $(VALACLITEFLAGFILE)
+
 all: $(IBUSEXE) $(REQUESTEXE) cloud-pinyin.xml main.db
 
 $(IBUSEXE): $(CFLAGFILE) $(VALACFLAGFILE) $(SRCS)
