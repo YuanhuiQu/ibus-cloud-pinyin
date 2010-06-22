@@ -17,7 +17,7 @@ MKDIR=mkdir -p
 INSTALL_EXEC=$(INSTALL) -s -m 0755
 INSTALL_DATA=$(INSTALL) -m 0644
 
-MSG_PREFIX=\x1b[32;01m=> \x1b[39;01m
+MSG_PREFIX=\x1b[32;01m:: \x1b[39;01m
 MSG_SUFFIX=\x1b[33;00m
 
 .PHONY: all clean install

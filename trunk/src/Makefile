@@ -16,7 +16,7 @@ VALACLITEFLAGFILE=valac-lite-flags.txt
 
 ECHO= echo -e
 
-MSG_PREFIX=\x1b[32;01m=> \x1b[39;01m
+MSG_PREFIX=\x1b[32;01m:: \x1b[39;01m
 MSG_SUFFIX=\x1b[33;00m
 
 .PHONY: all clean
