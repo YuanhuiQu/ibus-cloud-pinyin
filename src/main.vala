@@ -49,7 +49,6 @@ namespace icp {
           "for i in `ps -C ibus-engine-cloud-pinyin -o pid=`; do "
           +"[ \"$i\" = %d ] || kill $i; done".printf(Posix.getpid())
           );
-        Thread.usleep(100000);
       }
 
       // show component xml and done
@@ -69,7 +68,7 @@ namespace icp {
       if (!Config.CommandlineOptions.do_not_connect_ibus) {
         // give lua thread some time (0.2 s) to set up
         // currently no lock to protect complex settings
-        Thread.usleep(200000);
+        Thread.usleep(100000);
         IBusBinding.register();
       }
       main_loop = new MainLoop (null, false);
