@@ -63,7 +63,7 @@ require_pkg $LUAPKG_NAME 5.1 lite
 require_pkg glib-2.0 2
 require_pkg gdk-2.0 2
 require_pkg gtk+-2.0 2
-require_pkg ibus-1.0 1.3
+require_pkg ibus-1.0 1.3.4
 require_pkg atk 1
 require_pkg gee-1.0 0
 require_pkg dbus-glib-1 0 lite

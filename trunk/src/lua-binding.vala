@@ -479,6 +479,9 @@ namespace icp {
           case "request_retry_limit":
             bind_value = &Config.Limits.request_retry_limit;
           break;
+          case "cloud_candidates_limit":
+            bind_value = &Config.Limits.cloud_candidates_limit;
+          break;
         }
         *bind_value = v;
       }
