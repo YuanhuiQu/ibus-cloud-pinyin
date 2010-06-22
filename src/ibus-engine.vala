@@ -86,7 +86,7 @@ namespace icp {
 
       // lookup table and candidates
       LookupTable table;
-      ArrayList<string> candidates;
+      int cloud_candidate_count = 0;
       bool table_visible;
       uint page_index;
 
@@ -214,7 +214,7 @@ namespace icp {
         // lookup table, insert enough dummy labels first
         page_index = 0;
         table = new LookupTable(Config.CandidateLabels.size, 0, false, false);
-        candidates = new ArrayList<string>();
+        var candidates = new ArrayList<string>();
         for (int i = 0; i < Config.CandidateLabels.size; i++) {
           table.append_label(new Text.from_string("."));
         }
@@ -222,7 +222,6 @@ namespace icp {
         // user phrase
         user_pinyins = new ArrayList<Pinyin.Id>();
         user_phrase = "";
-        user_phrase_count = 0;
 
         // request list and pending segment list
         pending_segment_list = new LinkedList<PendingSegment>();
@@ -392,7 +391,6 @@ namespace icp {
             process_pending_list();
           }
         }
-        if (content.size() < 2) user_phrase_clear();
       }
 
       // call this if background_request is enabled and not in offline mode
@@ -429,9 +427,13 @@ namespace icp {
             commit(pinyin_buffer_preedit);
           last_is_chinese = true;
         }
+        clear_buffer();
+      }
+
+      private void clear_buffer() {
         raw_buffer = "";
-        pinyin_buffer.clear();
         user_phrase_clear();
+        pinyin_buffer.clear();
       }
 
       // process key event, most important func in engine
@@ -529,8 +531,7 @@ namespace icp {
             }
 
             if ("clear" in actions) {
-              raw_buffer = "";
-              pinyin_buffer.clear();
+              clear_buffer();
               handled = true; break;
             }
 
@@ -583,8 +584,7 @@ namespace icp {
           if (("raw" in actions)
               && raw_buffer.length > 0) {
             commit(raw_buffer);
-            raw_buffer = "";
-            pinyin_buffer.clear();
+            clear_buffer();
             handled = true; break;
           }
 
@@ -620,7 +620,7 @@ namespace icp {
             if (handled) break;
           }
 
-          // backspace
+          // backspace in pending_segment_list
           if (("back" in actions) && pending_segment_list.size > 0 
               && raw_buffer.length == 0) {
             for (int i = pending_segment_list.size - 1; i >= 0; i--) {
@@ -698,11 +698,9 @@ namespace icp {
       // used to insert to user database
       private ArrayList<Pinyin.Id> user_pinyins;
       private string user_phrase;
-      private int user_phrase_count;
 
       private void user_phrase_clear() {
         user_phrase = "";
-        user_phrase_count = 0;
         user_pinyins.clear();
       }
 
@@ -715,18 +713,21 @@ namespace icp {
         int len = (int)content.length;
         commit(content);
 
-        // append to user dict, insert to user dict
+        // append to user phrase
         user_phrase += content;
         for (int i = 0; i < content.length; i++)
           user_pinyins.add(pinyin_buffer.get_id(i));
 
-        Pinyin.Sequence pinyins = new Pinyin.Sequence.ids(user_pinyins);
-        Database.insert(user_phrase, pinyins);
+        // insert to user dict, ignore if it is first one in db results
+        // but do not ignore if user_phrase is combined from two first one
+        // candidates
+        var pinyins = new Pinyin.Sequence.ids(user_pinyins);
+        if (index != cloud_candidate_count || content != user_phrase) {
+          Database.insert(user_phrase, pinyins);
+        }
 
         // also update cloud cache with priority = 128
         DBusBinding.set_response(pinyins.to_string(), user_phrase, 128);
-
-        if (user_phrase_count++ > 4) user_phrase_clear();
 
         // remove heading pinyins (rebuild buffer)
         if (Config.Switches.double_pinyin) {
@@ -738,6 +739,11 @@ namespace icp {
           pinyin_buffer = new Pinyin.Sequence(raw_buffer);
         }
 
+        // clear user phrase buffer when a phrase is complete
+        if (raw_buffer.size() == 0) user_phrase_clear();
+
+        // button == 128 means it is called from internal function, and
+        // that function will update preedit and candidates.
         if (button != 128) {
           update_preedit();
           update_candidates();
@@ -873,11 +879,40 @@ namespace icp {
             (Config.Switches.always_show_candidates || correction_mode)) {
           if (last_pinyin_buffer_string != pinyin_buffer.to_string()
               || last_correction_mode != correction_mode) {
-            // should update lookup table
-            // TODO: append results from userdb
-            candidates.clear();
+
+            // should update lookup table now
+            var candidates = new ArrayList<string>();
             table.clear();
             page_index = 0;
+
+            // cloud candidates
+            cloud_candidate_count = 0;
+            if (!offline_mode) {
+              int last_cloud_candidate_length = -16;
+              string last_cloud_candidate = ".";
+              for (int i = 2; i < pinyin_buffer.size
+                && cloud_candidate_count
+                  < Config.Limits.cloud_candidates_limit;
+                i ++) {
+                string cloud_candidate = DBusBinding.query(
+                  pinyin_buffer.to_string(0, i)
+                  );
+                if (cloud_candidate.size() > 0
+                  && (cloud_candidate.length - last_cloud_candidate_length
+                  > 2 ||
+                  (cloud_candidate.length > last_cloud_candidate.length
+                    && cloud_candidate[0:last_cloud_candidate.length]
+                    != last_cloud_candidate
+                  ))) {
+                  cloud_candidate_count++;
+                  last_cloud_candidate_length = i;
+                  candidates.insert(0, cloud_candidate);
+                  last_cloud_candidate = cloud_candidate;
+                }
+              }
+            }
+
+            // database results
             Database.query(pinyin_buffer, candidates, 
                 Config.Limits.db_query_limit
                 );
@@ -891,10 +926,20 @@ namespace icp {
                   );
             }
 
+            // prepare a set to detect duplication
+            var candidate_set = new HashSet<string>();
+
             // update candidates
+            int candidate_index = 0;
             foreach (string s in candidates) {
+              if (s in candidate_set) continue;
+              candidate_set.add(s);
+              
               var text = new Text.from_string(s);
-              Config.Colors.candidate_local.apply(text);
+              if (++candidate_index <= cloud_candidate_count)
+                Config.Colors.candidate_remote.apply(text);
+              else
+                Config.Colors.candidate_local.apply(text);
               table.append_candidate(text);
             }
 

@@ -174,6 +174,7 @@ set_timeout{
 set_limit{
 	db_query_limit = 128,
 	request_retry_limit = 3,
+	cloud_candidates_limit = 4,
 }
 --]]
 
