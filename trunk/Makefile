@@ -40,18 +40,18 @@ $(CFLAGFILE) $(VALACFLAGFILE) $(VALACLITEFLAGFILE): find-dependencies.sh
 
 install: $(IBUSEXE) $(REQUESTEXE) $(ICONFILES) main.db cloud-pinyin.xml $(LUAFILES)
 	@$(ECHO) "$(MSG_PREFIX)Installing (prefix=$(PREFIX)) ...$(MSG_SUFFIX)"
-	@$(MKDIR) $(PREFIX)/share/ibus-cloud-pinyin/db/
-	@$(MKDIR) $(PREFIX)/share/ibus-cloud-pinyin/icons/
-	@$(MKDIR) $(PREFIX)/share/ibus-cloud-pinyin/lua/
-	@$(MKDIR) $(PREFIX)/lib/ibus/
-	@$(MKDIR) $(PREFIX)/lib/ibus-cloud-pinyin/
-	@$(MKDIR) $(PREFIX)/share/ibus/component/
-	$(INSTALL_DATA) $(LUAFILES) $(PREFIX)/share/ibus-cloud-pinyin/lua/
-	$(INSTALL_DATA) main.db $(PREFIX)/share/ibus-cloud-pinyin/db/
-	$(INSTALL_DATA) $(ICONFILES) $(PREFIX)/share/ibus-cloud-pinyin/icons/
-	$(INSTALL_DATA) cloud-pinyin.xml $(PREFIX)/share/ibus/component/
-	$(INSTALL_EXEC) $< $(PREFIX)/lib/ibus/
-	$(INSTALL_EXEC) $(REQUESTEXE) $(PREFIX)/lib/ibus-cloud-pinyin/
+	@$(MKDIR) $(DESTDIR)$(PREFIX)/share/ibus-cloud-pinyin/db/
+	@$(MKDIR) $(DESTDIR)$(PREFIX)/share/ibus-cloud-pinyin/icons/
+	@$(MKDIR) $(DESTDIR)$(PREFIX)/share/ibus-cloud-pinyin/lua/
+	@$(MKDIR) $(DESTDIR)$(PREFIX)/lib/ibus/
+	@$(MKDIR) $(DESTDIR)$(PREFIX)/lib/ibus-cloud-pinyin/
+	@$(MKDIR) $(DESTDIR)$(PREFIX)/share/ibus/component/
+	$(INSTALL_DATA) $(LUAFILES) $(DESTDIR)$(PREFIX)/share/ibus-cloud-pinyin/lua/
+	$(INSTALL_DATA) main.db $(DESTDIR)$(PREFIX)/share/ibus-cloud-pinyin/db/
+	$(INSTALL_DATA) $(ICONFILES) $(DESTDIR)$(PREFIX)/share/ibus-cloud-pinyin/icons/
+	$(INSTALL_DATA) cloud-pinyin.xml $(DESTDIR)$(PREFIX)/share/ibus/component/
+	$(INSTALL_EXEC) $< $(DESTDIR)$(PREFIX)/lib/ibus/
+	$(INSTALL_EXEC) $(REQUESTEXE) $(DESTDIR)$(PREFIX)/lib/ibus-cloud-pinyin/
 
 cloud-pinyin.xml: $(IBUSEXE)
 	@$(ECHO) "$(MSG_PREFIX)Creating ibus compoment xml file ...$(MSG_SUFFIX)"
