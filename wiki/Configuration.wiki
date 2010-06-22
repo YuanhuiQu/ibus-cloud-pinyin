@@ -27,7 +27,7 @@ set_color{ preedit_local = ... , preedit_fixed = ... }
 }}}
  # 候选词列表
    * 默认在按下 Tab 进入纠正模式后显示
-   * 一直显示
+   * 设置为一直显示
 {{{
 set_switch{ always_show_candidates = true }
 }}}
@@ -44,7 +44,7 @@ set_color{ candidate_local = ... }
 set_candidate_labels(labels_correction_mode, labels_normal_mode)
 }}}
  # 正在编辑的拼音串
-   * 默认显示，隐藏
+   * 默认显示，设置为隐藏
 {{{
 set_switch{ show_pinyin_auxiliary = false }
 }}}
@@ -53,7 +53,7 @@ set_switch{ show_pinyin_auxiliary = false }
 set_color{ buffer_pinyin = ... }
 }}}
  # 正在编辑的拼音串的原始输入内容
-   * 默认隐藏，显示
+   * 默认隐藏，设置为显示
 {{{
 set_switch{ show_raw_in_auxiliary = true }
 }}}
@@ -106,7 +106,7 @@ set_switch{ background_request = false }
 }}}
   * 注册、注销云请求脚本
     * 见 register_engine
-    * 一个云请求脚本将读入 pinyin 字符串，该字符串内含用空格分开的全拼序列，脚本应该将结果字符串作为 response() 函数第一个参数调用 response。无需刻意在脚本中控制超时
+    * 一个云请求脚本将使用 pinyin 全局变量，该变量是用空格分开的全拼字符串，脚本应该发送该拼音到服务器并将结果字符串作为 response() 函数第一个参数调用 response。无需刻意在脚本中控制超时
   * 设置双拼方案
     * 见 set_double_pinyin
     * 一些方案可参考[http://code.google.com/p/ibus-cloud-pinyin/wiki/DoublePinyinScheme 这里]
