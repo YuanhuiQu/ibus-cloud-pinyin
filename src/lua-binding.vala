@@ -26,7 +26,6 @@ namespace icp {
   class LuaBinding {
     private static LuaVM vm;
     private static ThreadPool thread_pool;
-    private static Posix.pid_t main_pid;
     private static Gee.LinkedList<string> script_pool;
 
     private static HashMap<string, CloudEngine> engines;
@@ -247,6 +246,7 @@ namespace icp {
     public static void start_requests(string pinyins, double timeout,
         bool* done) {
       // clean request_group if it should be cleaned
+      // no need to lock since no multi threads indeed
       // lock (request_group) {
       bool can_clean = true;
       foreach (RequestGroup r in request_group) {
@@ -260,23 +260,15 @@ namespace icp {
       }
       request_group.add(new RequestGroup(pinyins, timeout, done));
       // }
-      // TODO: start a thread to handle
-      // TODO: monitor done status
-
     }
 
     private LuaBinding() {
       // this class is used as namespace
     }
 
-    private static bool check_permissions(bool should_in_configuration = true) {
-      if (Posix.getpid() != main_pid) {
-        stderr.printf(
-          "WARNING: IME Lua APIs are disabled after go_background().\n"
-          );
-        return false;
-      }
-
+    private static bool check_permissions(
+      bool should_in_configuration = true
+      ) {
       if (should_in_configuration && !in_configuration) {
         Frontend.notify("No permission", 
             "Configurations must be done in startup script.", 
@@ -288,11 +280,6 @@ namespace icp {
     }
 
     private static int l_get_selection(LuaVM vm) {
-      // refuse to do anything in non-main process
-      // for example, a requesting thread
-      // it should only return string, no operation to ime
-      if (!check_permissions(false)) return 0;
-
       // lock is no more needed because only one thread per process
       // use this lua vm. however this thread is not main glib loop
       // lock(vm_lock) {
@@ -303,7 +290,6 @@ namespace icp {
     }
 
     private static int l_notify(LuaVM vm) {
-      if (!check_permissions(false)) return 0;
       if (vm.is_string(1)) {
         string title = vm.to_string(1);
         string content = "", icon = "";
@@ -402,7 +388,6 @@ namespace icp {
     }
 
     private static int l_set_switch(LuaVM vm) {
-      if (!check_permissions(false)) return 0;
       if (!vm.is_table(1)) return 0;
 
       vm.check_stack(2);
@@ -447,7 +432,6 @@ namespace icp {
     }
 
     private static int l_set_timeout(LuaVM vm) {
-      if (!check_permissions(false)) return 0;
       if (!vm.is_table(1)) return 0;
 
       vm.check_stack(2);
@@ -477,7 +461,6 @@ namespace icp {
     }
 
     private static int l_set_limit(LuaVM vm) {
-      if (!check_permissions(false)) return 0;
       if (!vm.is_table(1)) return 0;
 
       vm.check_stack(2);
@@ -613,23 +596,6 @@ namespace icp {
       return 0;
     }
 
-    private static int l_go_background(LuaVM vm) {
-      // fork, do nothing if already in background 
-      if (!check_permissions(false)) return 0;
-
-      Posix.pid_t pid;
-      pid = Posix.fork();
-      if (pid == 0) {
-        // child continue to execute lua script
-      } else {
-        // emit an known error to stop execute lua script
-        vm.check_stack(1);
-        vm.push_string("fork_stop");
-        vm.error();
-      }
-      return 0;
-    }
-
     public static void init() {
       in_configuration = false;
       script_pool = new Gee.LinkedList<string>();
@@ -650,7 +616,6 @@ namespace icp {
       vm.push_string(Config.global_data_path);
       vm.set_global("data_path");
 
-      vm.register("go_background", l_go_background);
       vm.register("notify", l_notify);
       vm.register("get_selection", l_get_selection);
       vm.register("commit", l_commit);
@@ -677,15 +642,11 @@ namespace icp {
             );
       }
 
-      main_pid = Posix.getpid();
-
-      // auto load configuration
+      // load configuration
       load_configuration();
     }
 
     private static void do_string_internal(void* data) {
-      if (Posix.getpid() != main_pid) return;
-
       // do not execute other script if being forked
       // prevent executing them two times
       string script = (string)data;
