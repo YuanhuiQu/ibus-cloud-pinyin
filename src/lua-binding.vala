@@ -493,6 +493,9 @@ namespace icp {
           case "db_query_limit":
             bind_value = &Config.Limits.db_query_limit;
           break;
+          case "request_retry_limit":
+            bind_value = &Config.Limits.request_retry_limit;
+          break;
         }
         *bind_value = v;
       }

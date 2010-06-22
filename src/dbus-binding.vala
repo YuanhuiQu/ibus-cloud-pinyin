@@ -26,6 +26,7 @@ namespace icp {
     private static DBus.Connection conn;
     private static dynamic DBus.Object bus;
     private static CloudPinyin server;
+    private static int last_cloud_length;
 
     private class Response {
       public string content { get; private set; }
@@ -56,7 +57,8 @@ namespace icp {
 
     // this convert mix cloud results and local database
     public static string convert(Pinyin.Sequence pinyins,
-      out int cloud_length, bool offline_mode = false) {
+      bool offline_mode = false,
+      out int cloud_length = &(DBusBinding.last_cloud_length)) {
       if (!offline_mode)
       for(int i = pinyins.size; i > 0; i--) {
         string result = query(pinyins.to_string(0, i));
@@ -90,8 +92,7 @@ namespace icp {
         }
 
         public string convert(string pinyins) {
-          int l;
-          return DBusBinding.convert(new Pinyin.Sequence(pinyins), out l);
+          return DBusBinding.convert(new Pinyin.Sequence(pinyins));
         }
 
         public void local_remember_phrase(string phrase) {

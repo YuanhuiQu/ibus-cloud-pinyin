@@ -129,6 +129,7 @@ namespace icp {
         public Limits() { assert_not_reached(); }
 
         public static int db_query_limit = 128;
+        public static int request_retry_limit = 3;
       }
 
     // switches
