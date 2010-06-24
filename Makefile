@@ -10,8 +10,9 @@ IBUSEXE=src/ibus-engine-cloud-pinyin
 REQUESTEXE=src/ibus-cloud-pinyin-request
 
 CFLAGFILE=src/c-flags.txt
+CFLAGFILE2=src/c-flags-2.txt
 VALACFLAGFILE=src/valac-flags.txt
-VALACLITEFLAGFILE=src/valac-lite-flags.txt
+VALACFLAGFILE2=src/valac-flags-2.txt
 
 ECHO=echo -e
 INSTALL=install -p
@@ -26,19 +27,19 @@ MSG_SUFFIX=\x1b[33;00m
 
 .DELETE_ON_ERROR: main.db cloud-pinyin.xml
 
-.NOTPARALLEL: $(CFLAGFILE) $(VALACFLAGFILE) $(VALACLITEFLAGFILE)
+.NOTPARALLEL: $(CFLAGFILE) $(CFLAGFILE2) $(VALACFLAGFILE) $(VALACFLAGFILE2)
 
 all: $(IBUSEXE) $(REQUESTEXE) cloud-pinyin.xml main.db
 
 $(IBUSEXE): $(CFLAGFILE) $(VALACFLAGFILE) $(SRCS)
 	@export PREFIX
-	@$(MAKE) -C src all
+	@$(MAKE) -C src ibus-engine-cloud-pinyin
 
-$(REQUESTEXE): $(VALACLITEFLAGFILE) $(REQUESTSRCS)
+$(REQUESTEXE): $(CFLAGFILE2) $(VALACFLAGFILE2) $(REQUESTSRCS)
 	@export PREFIX
-	@$(MAKE) -C src all
+	@$(MAKE) -C src ibus-cloud-pinyin-request
 
-$(CFLAGFILE) $(VALACFLAGFILE) $(VALACLITEFLAGFILE): find-dependencies.sh
+$(CFLAGFILE) $(CFLAGFILE2) $(VALACFLAGFILE) $(VALACFLAGFILE2): find-dependencies.sh
 	@$(ECHO) "$(MSG_PREFIX)Finding dependencies ...$(MSG_SUFFIX)"
 	@./find-dependencies.sh
 
@@ -77,5 +78,5 @@ pinyin-database-1.2.99.tar.xz:
 
 clean:
 	@$(ECHO) "$(MSG_PREFIX)Cleaning ...$(MSG_SUFFIX)"
-	-rm -rf ibus-cloud-pinyin *.o $(CFLAGFILE) $(VALACFLAGFILE) pinyin-database-1.2.99.tar.xz db/ cloud-pinyin.xml main.db
+	-rm -rf ibus-cloud-pinyin *.o $(CFLAGFILE) $(CFLAGFILE2) $(VALACFLAGFILE) $(VALACFLAGFILE2) pinyin-database-1.2.99.tar.xz db/ cloud-pinyin.xml main.db
 	-$(MAKE) -C src clean

@@ -1,11 +1,13 @@
 #!/bin/bash
 
 CFLAGFILE=src/c-flags.txt
+CFLAGFILE2=src/c-flags-2.txt
 VALACFLAGFILE=src/valac-flags.txt
-VALACLITEFLAGFILE=src/valac-lite-flags.txt
+VALACFLAGFILE2=src/valac-flags-2.txt
 PACKAGES_PKGCONFIG=''
+PACKAGES_PKGCONFIG_2=''
 PACKAGES_VALAC=''
-PACKAGES_VALAC_LITE=''
+PACKAGES_VALAC_2=''
 
 error() {
 	rm -f $CFLAGFILE $VALACFLAGFILE 2>/dev/null
@@ -27,7 +29,8 @@ require_pkg() {
 		PACKAGES_PKGCONFIG="$PACKAGES_PKGCONFIG $1"
 		PACKAGES_VALAC="$PACKAGES_VALAC --pkg $3"
 		if [ -n "$4" ]; then
-			PACKAGES_VALAC_LITE="$PACKAGES_VALAC_LITE --pkg $3"
+			PACKAGES_VALAC_2="$PACKAGES_VALAC_2 --pkg $3"
+			PACKAGES_PKGCONFIG_2="$PACKAGES_PKGCONFIG_2 $1"
 		fi
 	else
 		echo 'not found'
@@ -78,5 +81,6 @@ fi
 
 # output results
 pkg-config --cflags --libs $PACKAGES_PKGCONFIG > $CFLAGFILE
+pkg-config --cflags --libs $PACKAGES_PKGCONFIG_2 > $CFLAGFILE2
 echo -n $PACKAGES_VALAC > $VALACFLAGFILE
-echo -n $PACKAGES_VALAC_LITE > $VALACLITEFLAGFILE
+echo -n $PACKAGES_VALAC_2 > $VALACFLAGFILE2

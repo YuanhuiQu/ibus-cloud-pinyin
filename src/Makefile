@@ -5,15 +5,17 @@ VALAC=valac
 CC=gcc
 
 CFLAGS = `cat $(CFLAGFILE)` -pthread
+CFLAGS2 = `cat $(CFLAGFILE2)`
 VALAFLAGS= `cat $(VALACFLAGFILE)` --pkg posix --thread --enable-checking --vapidir=.
-VALALITEFLAGS= `cat $(VALACLITEFLAGFILE)` --pkg posix --Xcc=-Os
+VALAFLAGS2= `cat $(VALACFLAGFILE2)` --pkg posix
 
 VALASRCS= main.vala dbus-binding.vala pinyin-utils.vala frontend-utils.vala config.vala database.vala lua-binding.vala ibus-engine.vala
 CSRCS= $(VALASRCS:.vala=.c)
 
 CFLAGFILE=c-flags.txt
+CFLAGFILE2=c-flags-2.txt
 VALACFLAGFILE=valac-flags.txt
-VALACLITEFLAGFILE=valac-lite-flags.txt
+VALACFLAGFILE2=valac-flags-2.txt
 
 ECHO= echo -e
 
@@ -32,12 +34,16 @@ ibus-engine-cloud-pinyin: $(CFLAGFILE) $(CSRCS)
 	@$(ECHO) "$(MSG_PREFIX)Building $@ ...$(MSG_SUFFIX)"
 	$(CC) $(CFLAGS) $(CSRCS) -O3 -o $@
 
-ibus-cloud-pinyin-request: request-main.vala $(VALACLITEFLAGFILE)
+ibus-cloud-pinyin-request: request-main.c
 	@$(ECHO) "$(MSG_PREFIX)Building $@ ...$(MSG_SUFFIX)"
-	$(VALAC) $(VALALITEFLAGS) --disable-warnings -o $@ $<
+	$(CC) $(CFLAGS2) -Os -o $@ $^
+
+request-main.c: request-main.vala $(VALACFLAGFILE2)
+	@$(ECHO) "$(MSG_PREFIX)Generating C file for ibus-cloud-pinyin-request ...$(MSG_SUFFIX)"
+	$(VALAC) $(VALAFLAGS2) --disable-warnings -C $<
 
 $(CSRCS): $(VALACFLAGFILE) $(VALASRCS)
-	@$(ECHO) "$(MSG_PREFIX)Generating C files ...$(MSG_SUFFIX)"
+	@$(ECHO) "$(MSG_PREFIX)Generating C files for ibus-engine-cloud-pinyin ...$(MSG_SUFFIX)"
 	@-rm -rf $(CSRCS)
 	$(VALAC) $(VALAFLAGS) --disable-warnings  -C $(VALASRCS)
 	@#$(VALAC) $(VALAFLAGS) -C $(VALASRCS)
