@@ -1,5 +1,6 @@
 PREFIX ?= /usr
 
+SHELL=/bin/bash
 VALAC=valac
 CC=gcc
 
