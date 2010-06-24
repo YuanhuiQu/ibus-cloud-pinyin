@@ -5,7 +5,7 @@
 
 == Archlinux ==
 
- Archlinux 用户可以从 AUR 安装软件的 svn 版本。例如使用 [http://wiki.archlinux.org/index.php/Yaourt yaourt] 来安装，缺失依赖会有系统自动处理:
+ Archlinux 用户可以从 AUR 安装软件的 svn 版本。例如使用 [http://wiki.archlinux.org/index.php/Yaourt yaourt] 来安装:
 {{{
 sudo yaourt -S ibus-cloud-pinyin-svn
 }}}
