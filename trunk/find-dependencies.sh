@@ -25,9 +25,9 @@ require_pkg() {
 	if pkg-config --atleast-version=$2 $1; then
 		pkg-config --modversion $1
 		PACKAGES_PKGCONFIG="$PACKAGES_PKGCONFIG $1"
-		PACKAGES_VALAC="$PACKAGES_VALAC --pkg $1"
-		if [ -n "$3" ]; then
-			PACKAGES_VALAC_LITE="$PACKAGES_VALAC_LITE --pkg $1"
+		PACKAGES_VALAC="$PACKAGES_VALAC --pkg $3"
+		if [ -n "$4" ]; then
+			PACKAGES_VALAC_LITE="$PACKAGES_VALAC_LITE --pkg $3"
 		fi
 	else
 		echo 'not found'
@@ -59,16 +59,17 @@ pkg-config lua5.1 && LUAPKG_NAME="lua5.1"
 pkg-config lua-5.1 && LUAPKG_NAME="lua-5.1"
 pkg-config lua && LUAPKG_NAME="lua"
 
-require_pkg $LUAPKG_NAME 5.1 lite
-require_pkg glib-2.0 2
-require_pkg gdk-2.0 2
-require_pkg gtk+-2.0 2
-require_pkg ibus-1.0 1.3.4
-require_pkg atk 1
-require_pkg gee-1.0 0
-require_pkg dbus-glib-1 0 lite
-require_pkg libnotify 0
-require_pkg sqlite3 3
+# debian uses lua5.1 as pkg-config name, while lua is vala pkg name, annoying ...
+require_pkg $LUAPKG_NAME 5.1 lua lite
+require_pkg glib-2.0 2 glib-2.0
+require_pkg gdk-2.0 2 gdk-2.0
+require_pkg gtk+-2.0 2 gtk+-2.0
+require_pkg ibus-1.0 1.3.4 ibus-1.0
+require_pkg atk 1 atk
+require_pkg gee-1.0 0 gee-1.0
+require_pkg dbus-glib-1 0 dbus-glib-1 lite
+require_pkg libnotify 0 libnotify
+require_pkg sqlite3 3 sqlite3
 
 # check luasocket
 if ! lua -e 'require "socket.http"' 1>/dev/null 2>/dev/null; then
