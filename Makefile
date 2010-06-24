@@ -65,7 +65,7 @@ cloud-pinyin.xml: $(IBUSEXE)
 main.db: db/main.db create-index.sql
 	@$(ECHO) "$(MSG_PREFIX)Clone open-phrase database ...$(MSG_SUFFIX)"
 	@cp db/main.db main.db
-	@$(ECHO) "$(MSG_PREFIX)Creating index. This may takes minutes. Please be patient ...$(MSG_SUFFIX)"
+	@$(ECHO) "$(MSG_PREFIX)Creating index. Please be patient ...$(MSG_SUFFIX)"
 	@sqlite3 main.db < create-index.sql
 
 db/main.db: pinyin-database-1.2.99.tar.xz
