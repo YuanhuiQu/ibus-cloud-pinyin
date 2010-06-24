@@ -888,7 +888,7 @@ namespace icp {
               );
 
           update_preedit_text(text,
-              correction_mode ? 0 : (int)text.get_length(), true
+              correction_mode ? 0 : (int)text.get_length(), preedit.length > 0
               );
         }
       }
