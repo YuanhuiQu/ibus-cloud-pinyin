@@ -575,10 +575,12 @@ namespace icp {
     private static int l_register_engine(LuaVM vm) {
       if (!check_permissions()) return 0;
       // TODO: register request engine at Config...
-      if (!vm.is_string(1) || !vm.is_string(2)) return 0;
+      if (!vm.is_string(1)) return 0;
 
       string name = vm.to_string(1);
-      string script_filename = vm.to_string(2);
+      string script_filename = "";
+      if (vm.is_string(2)) script_filename = vm.to_string(2);
+      
       int priority = 1;
       if (vm.is_number(3)) priority = vm.to_integer(3);
 
