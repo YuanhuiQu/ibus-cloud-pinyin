@@ -1037,7 +1037,7 @@ namespace icp {
       builder.append(
           "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
           );
-      component.output(builder, 4);
+      component.output(builder, 0);
       return builder.str;
     }
 

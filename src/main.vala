@@ -25,13 +25,9 @@ namespace icp {
   public class Main {
     public static int main (string[] args) {
       Gdk.threads_init();
-
-      Gdk.init(ref args);
-      Gtk.init(ref args);
-
       Config.init(args);
-
-      // show version
+      
+      // show version and done
       if (Config.CommandlineOptions.show_version) {
         stdout.printf(
             "ibus-cloud-pinyin %s [built with ibus %d.%d.%d]\n"
@@ -42,6 +38,16 @@ namespace icp {
         return 0;
       }
 
+      // show component xml and done
+      if (Config.CommandlineOptions.show_xml) {
+        IBusBinding.init();
+        stdout.printf("%s", IBusBinding.get_component_xml());
+        return 0;
+      }
+
+      Gdk.init(ref args);
+      Gtk.init(ref args);
+      
       // replace running process
       if (Config.CommandlineOptions.replace_running_process) {
         // IMPROVE: use a better way to kill running ibus-engine-cloud-pinyin
@@ -49,13 +55,6 @@ namespace icp {
           "for i in `ps -C ibus-engine-cloud-pinyin -o pid=`; do "
           +"[ \"$i\" = %d ] || kill $i; done".printf(Posix.getpid())
           );
-      }
-
-      // show component xml and done
-      if (Config.CommandlineOptions.show_xml) {
-        IBusBinding.init();
-        stdout.printf("%s", IBusBinding.get_component_xml());
-        return 0;
       }
 
       Pinyin.init();
