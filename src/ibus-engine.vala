@@ -178,7 +178,7 @@ namespace icp {
       }
 
       private void stop_requesting() {
-        // TODO: force convert all pending
+        force_commit_pending_list();
         if (waiting_animation_timer == null) return;
         if (!waiting_animation_timer.is_destroyed())
           waiting_animation_timer.destroy();
@@ -396,11 +396,20 @@ namespace icp {
         update_properties();
       }
 
+      private bool is_pending_segment_list_empty() {
+        bool r = true;
+        foreach (PendingSegment seg in pending_segment_list) {
+          if (seg.content != null || seg.pinyins != null) {
+            r = false;
+            break;
+          }
+        }
+        return r;
+      }
+
       public void commit(string content) {
-        // TODO: check previous commit,
-        //       force convert previous if no background allowed
         if (content.length > 0) {
-          if (pending_segment_list.size == 0)
+          if (is_pending_segment_list_empty())
             commit_text(new Text.from_string(content));
           else {
             pending_segment_list.add(new
@@ -524,7 +533,7 @@ namespace icp {
                 if (Frontend.get_current_time()
                     <= (uint64)(1000000 * Config.Timeouts.selection)
                     + Frontend.clipboard_update_time
-                    && pending_segment_list.size == 0) {
+                    && is_pending_segment_list_empty()) {
                   string selection = Frontend.get_selection();
                   if (!selection.contains("\n")
                       && Database.reverse_convert(
@@ -548,7 +557,8 @@ namespace icp {
               }
             } // if to enter correction mode
 
-            if (!correction_mode && "clear" in actions) {
+            if (!correction_mode && raw_buffer.length > 0 
+              && "clear" in actions) {
               clear_buffer();
               handled = true; break;
             }
@@ -650,7 +660,7 @@ namespace icp {
           }
 
           // backspace in pending_segment_list
-          if (("back" in actions) && pending_segment_list.size > 0 
+          if (("back" in actions) && !is_pending_segment_list_empty() 
               && raw_buffer.length == 0) {
             for (int i = pending_segment_list.size - 1; i >= 0; i--) {
               PendingSegment seg = pending_segment_list.get(i);
@@ -689,7 +699,7 @@ namespace icp {
           if (((state ^ IBus.ModifierType.SHIFT_MASK)
                 == 0 || state == 0)
               && (128 > keyval >= 32 || (keyval == IBus.Return
-                  && pending_segment_list.size > 0))) {
+                  && !is_pending_segment_list_empty()))) {
             commit_buffer();
 
             if (keyval == IBus.Return) keyval = 13;

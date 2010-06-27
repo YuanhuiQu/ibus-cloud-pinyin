@@ -30,6 +30,7 @@ namespace icp {
     public static string global_data_path { get; private set; }
     public static string user_database { get; private set; }
     public static string global_database { get; private set; }
+    public static string program_main_icon { get; private set; }
 
     public static string user_config_path { get; private set; }
     public static string user_data_path { get; private set; }
@@ -37,7 +38,7 @@ namespace icp {
 
     public static string program_main_file { get; private set; }
     public static string program_path { get; private set; }
-    public static string program_request_path { get; private set; }
+    public static string program_request { get; private set; }
 
     // PKGDATADIR should look like: "/usr/share/ibus-cloud-pinyin"
     // since Vala has a very poor preprocessor, i need to 
@@ -421,10 +422,10 @@ namespace icp {
 
       program_path = Environment.get_current_dir();
       program_main_file = "%s/%s".printf(program_path, args[0]);
-      program_request_path =
+      program_main_icon = global_data_path + "/icons/ibus-cloud-pinyin.png";
+      program_request =
         "%s/lib/ibus-cloud-pinyin/ibus-cloud-pinyin-request"
         .printf(prefix_path);
-      // program_main_file = "/home/quark/src/vala/ibus-cloud-pinyin/src/ibus-engine-cloud-pinyin";
     }
 
     // this class is used as namespace

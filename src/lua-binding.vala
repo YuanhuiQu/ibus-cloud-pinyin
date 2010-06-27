@@ -61,8 +61,7 @@ namespace icp {
       foreach (var i in engines) {
         content += "\n    %s: %d".printf(i.key, i.value.response_count);
       }
-      Frontend.notify("网络请求数据", content, Config.global_data_path 
-        + "/icons/ibus-cloud-pinyin.png");
+      Frontend.notify("网络请求数据", content, Config.program_main_icon);
     }
 
     // only in_configuration = true, can some settings be done.
@@ -139,7 +138,7 @@ namespace icp {
         this.engine = engine;
 
         string[] argv = {
-          Config.program_request_path,
+          Config.program_request,
           "-c", "%s".printf(engine.script),
           "-r", "%s".printf(group.pinyins),
           "-p", "%d".printf(engine.priority),
