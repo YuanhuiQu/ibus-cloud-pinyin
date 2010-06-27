@@ -23,6 +23,19 @@
 socket, http, url = require 'socket', require 'socket.http', require 'socket.url'
 
 --------------------------------------------------------------------------------
+-- 这是 ibus-cloud-pinyin 的全局配置文件，亦为 lua 脚本
+-- 此文件会随着软件升级而被重写，配置应写在用户配置文件里
+-- 用户配置文件的位置在
+-- ${XDG_CONFIG_HOME:-$HOME/.config}/ibus/cloud-pinyin/config.lua
+
+--------------------------------------------------------------------------------
+-- 关于注释：处于双减号后面的部分，直到行尾，是注释。这一行就是注释
+--[[
+处于这两个符号之间的是注释
+这些行是注释
+--]]
+
+--------------------------------------------------------------------------------
 -- notify(title, [body], [icon])
 -- 输入法 API
 -- 显示桌面提示，例如：notify('hello', 'welcome!', 'info')
@@ -148,8 +161,8 @@ set_switch{
 	default_traditional_mode = false,
 	double_pinyin = false,
 	background_request = true,
-	show_raw_in_auxiliary = false,
-	always_show_candidates = false,
+	show_raw_in_auxiliary = true,
+	always_show_candidates = true,
 	show_pinyin_auxiliary = true,
 }
 --]]
