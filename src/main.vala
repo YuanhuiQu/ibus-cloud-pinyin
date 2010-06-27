@@ -25,7 +25,7 @@ namespace icp {
   public class Main {
     public static int main (string[] args) {
       Gdk.threads_init();
-      Config.init(args);
+      Config.init(ref args);
       
       // show version and done
       if (Config.CommandlineOptions.show_version) {
@@ -72,8 +72,6 @@ namespace icp {
       }
       main_loop = new MainLoop (null, false);
       main_loop.run();
-
-      print("got here\n");
 
       return 0;
     }

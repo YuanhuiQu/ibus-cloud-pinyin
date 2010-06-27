@@ -163,7 +163,7 @@ namespace icp {
             } else {
             waiting_index += waiting_index_acc;
             if (waiting_index == 3 || waiting_index == 0)
-            waiting_index_acc = - waiting_index_acc;
+              waiting_index_acc = - waiting_index_acc;
             status_icon.set_icon("%s/icons/waiting-%d.png"
                 .printf(Config.global_data_path, waiting_index));
             }
@@ -332,7 +332,7 @@ namespace icp {
           last_prerequest_pinyins = pinyins;
         }
         if (DBusBinding.query(pinyins) == "" 
-          && prerequest_retry > 0) {
+            && prerequest_retry > 0) {
           prerequest_retry--;
           prerequest_done = false;
           LuaBinding.start_requests(
@@ -582,6 +582,33 @@ namespace icp {
               }
             }
 
+            // consider candidate select
+            // lookup table pgup, pgdn, candidate select
+            if (table_visible) {
+              if ("pgup" in actions) { page_up(); handled = true;}
+              if ("pgdn" in actions) { page_down(); handled = true;}
+              if (handled) {
+                update_lookup_table(table, true);
+                break;
+              }
+
+              foreach (string s in actions) {
+                if (s.has_prefix("cand:")) {
+                  uint index = 0;
+                  s.scanf("cand:%u", &index);
+                  // check if that candidate exists
+                  if (table.get_number_of_candidates() 
+                      > table.get_page_size() * page_index + index) {
+                    candidate_clicked(index, 128, 0);
+                    handled = true;
+                  }
+                  break;
+                }
+              }
+              if (handled) break;
+            }
+
+
             // chinese puncs
             if (((state ^ IBus.ModifierType.SHIFT_MASK)
                   == 0 || state == 0)
@@ -612,31 +639,6 @@ namespace icp {
               && pinyin_buffer.size > 0) {
             commit_buffer();
             handled = true; break;
-          }
-
-          // lookup table pgup, pgdn, candidate select
-          if (table_visible) {
-            if ("pgup" in actions) { page_up(); handled = true;}
-            if ("pgdn" in actions) { page_down(); handled = true;}
-            if (handled) {
-              update_lookup_table(table, true);
-              break;
-            }
-
-            foreach (string s in actions) {
-              if (s.has_prefix("cand:")) {
-                uint index = 0;
-                s.scanf("cand:%u", &index);
-                // check if that candidate exists
-                if (table.get_number_of_candidates() 
-                    > table.get_page_size() * page_index + index) {
-                  candidate_clicked(index, 128, 0);
-                  handled = true;
-                }
-                break;
-              }
-            }
-            if (handled) break;
           }
 
           // backspace in pending_segment_list
@@ -913,19 +915,19 @@ namespace icp {
               int last_cloud_candidate_length = -16;
               string last_cloud_candidate = ".";
               for (int i = 2; i < pinyin_buffer.size
-                && cloud_candidate_count
+                  && cloud_candidate_count
                   < Config.Limits.cloud_candidates_limit;
-                i ++) {
+                  i ++) {
                 string cloud_candidate = DBusBinding.query(
-                  pinyin_buffer.to_string(0, i)
-                  );
+                    pinyin_buffer.to_string(0, i)
+                    );
                 if (cloud_candidate.size() > 0
-                  && (cloud_candidate.length - last_cloud_candidate_length
-                  > 2 ||
-                  (cloud_candidate.length > last_cloud_candidate.length
-                    && cloud_candidate[0:last_cloud_candidate.length]
-                    != last_cloud_candidate
-                  ))) {
+                    && (cloud_candidate.length - last_cloud_candidate_length
+                      > 2 ||
+                      (cloud_candidate.length > last_cloud_candidate.length
+                       && cloud_candidate[0:last_cloud_candidate.length]
+                       != last_cloud_candidate
+                      ))) {
                   cloud_candidate_count++;
                   last_cloud_candidate_length = i;
                   candidates.insert(0, cloud_candidate);
@@ -956,7 +958,7 @@ namespace icp {
             foreach (string s in candidates) {
               if (s in candidate_set) continue;
               candidate_set.add(s);
-              
+
               var text = new Text.from_string(s);
               if (++candidate_index <= cloud_candidate_count)
                 Config.Colors.candidate_remote.apply(text);
