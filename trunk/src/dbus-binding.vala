@@ -22,6 +22,10 @@
 using Gee;
 
 namespace icp {
+  errordomain IOError {
+    NO_MORE_CONTENT
+  }
+
   class DBusBinding {
     private static DBus.Connection conn;
     private static dynamic DBus.Object bus;
@@ -47,7 +51,7 @@ namespace icp {
     }
 
     public static bool set_response(string pinyins,
-      string content, int priority = 1) {
+        string content, int priority = 1) {
       if (!responses.contains(pinyins) || responses[pinyins].priority
           < priority) {
         responses[pinyins] = new Response(content, priority);
@@ -57,24 +61,253 @@ namespace icp {
 
     // this convert mix cloud results and local database
     public static string convert(Pinyin.Sequence pinyins,
-      bool offline_mode = false,
-      out int cloud_length = &(DBusBinding.last_cloud_length)) {
+        bool offline_mode = false,
+        out int cloud_length = &(DBusBinding.last_cloud_length)) {
       if (!offline_mode)
-      for(int i = pinyins.size; i > 0; i--) {
-        string result = query(pinyins.to_string(0, i));
-        if (result.size() > 0) {
-          cloud_length = (int)result.length;
-          return result + Database.greedy_convert(
-            new Pinyin.Sequence.copy(pinyins, i)
-            );
+        for(int i = pinyins.size; i > 0; i--) {
+          string result = query(pinyins.to_string(0, i));
+          if (result.size() > 0) {
+            cloud_length = (int)result.length;
+            return result + Database.greedy_convert(
+                new Pinyin.Sequence.copy(pinyins, i)
+                );
+          }
         }
-      }
       cloud_length = 0;
       return Database.greedy_convert(pinyins);
     }
 
-    // server dbus object
+    // scel tool, import a scel file to user database
+    public class ScelTool {
+      private ScelTool() { }
 
+      static ArrayList<Pinyin.Sequence> pinyin_list;
+      static ArrayList<string> phrase_list;
+      static ArrayList<double?> freq_list;
+
+      static IdleSource idle;
+      static int process_index;
+
+      static void set_idle_source() {
+        if (idle != null) return;
+        process_index = 0;
+        idle = new IdleSource();
+        idle.set_callback(() => {
+            var sequences = new ArrayList<Pinyin.Sequence>();
+            var phrases = new ArrayList<string>();
+            var freqs = new ArrayList<double?>();
+
+            // import at most 1024 items one time
+            for (int import_count = 0; import_count < 1024 
+              && process_index < pinyin_list.size;
+              process_index++) {
+            double freq = freq_list[process_index];
+
+            // do not import gabbage here, hardlimit 10s
+            if (freq > 10) {
+            sequences.add(pinyin_list[process_index]);
+            phrases.add(phrase_list[process_index]);
+            freqs.add(freq);
+            import_count ++;
+            }
+            } // for
+
+            Database.batch_insert(phrases, sequences, freqs);
+
+            if (process_index + 1 >= pinyin_list.size) {
+              // import done
+              Frontend.notify("导入 scel 词库", "后台导入已完成", 
+                  Config.program_main_icon
+                  );
+              pinyin_list.clear();
+              phrase_list.clear();
+              freq_list.clear();
+              process_index = 0;
+              idle = null;
+              return false;
+            }
+            return true;
+        });
+        idle.attach(icp.main_loop.get_context());
+      }
+
+      public static void init() {
+        pinyin_list = new ArrayList<Pinyin.Sequence>();
+        phrase_list = new ArrayList<string>();
+        freq_list = new ArrayList<double?>();
+        idle = null;
+      }
+
+      public static void import(string filename) {
+        // import a scel file
+        File file;
+        FileInputStream fs;
+
+        try {
+          file = File.new_for_path(filename);
+          fs = file.read(null);
+
+          if (!check_segment_md5(fs, 0, 9,"053950cf925005c1f875bd5a3ab70399")
+              || !check_segment_md5(fs, 0x1540, 4, 
+                "b81f3dd20a5a9956cbcd838e2658cc69")) {
+            Frontend.notify("无法导入 scel 文件", "文件格式不兼容", "error");
+            return ;
+          }
+        } catch (Error e) {
+          Frontend.notify("无法导入 scel 文件", "无法访问文件 %s\n%s"
+              .printf(filename, e.message), "error"
+              );
+          return;
+        }
+
+        // header 
+        string title = read_utf16_segment(fs, 0x130, 0x338 - 0x130);
+        string type = read_utf16_segment(fs, 0x338, 0x540 - 0x338);
+        string description = read_utf16_segment(fs, 0x540, 0xd40 - 0x540);
+        string examples = read_utf16_segment(fs, 0xd40, 0x1540 - 0xd40);
+
+        // pinyin map
+        var pinyin_map = new HashMap<int, Pinyin.Id>();
+        fs.seek(0x1540 + 4, SeekType.SET, null);
+        while (true) {
+          uint16[] pinyin_header = new uint16[2];
+          fs.read((uint8[])pinyin_header, 4, null);
+
+          if (pinyin_header[1] == 0) break;
+          if (pinyin_map.contains((int)pinyin_header[0])) break;
+
+          string pinyin_content = read_utf16_segment(fs, -1,
+              (size_t)pinyin_header[1]
+              );
+
+          switch (pinyin_content) {
+            case "lue": pinyin_content = "lve"; break;
+            case "nue": pinyin_content = "nve"; break;
+          }
+          pinyin_map[(int)pinyin_header[0]] = new Pinyin.Id(pinyin_content);
+        }
+
+        // phrase freq stats
+        double max_freq = 0;
+        double all_freq = 0;
+        int phrase_count = 0;
+
+        try {
+          // phrases
+          fs.seek(0x2628, SeekType.SET, null);
+          while (true) {
+            int offset = read_uint16(fs) - 1;
+            int pinyin_count = read_uint16(fs) / 2;
+
+            // pinyins
+            var pinyins = new ArrayList<Pinyin.Id>();
+            for (int i = 0; i < pinyin_count; i++) {
+              uint16 pinyin_id = read_uint16(fs);
+              pinyins.add(pinyin_map[pinyin_id]);
+            }
+
+            // phrase content
+            int phrase_len = read_uint16(fs);
+            string phrase = read_utf16_segment(fs, -1, (size_t)phrase_len);
+
+            // freq
+            int freq_len = 12 + offset * (12 + pinyin_count * 2 + 2);
+
+            uint8[] freq_data = new uint8[freq_len];
+            fs.read((uint8[]) freq_data, freq_len, null);
+
+            double freq = 0;
+            double freq_base = 1;
+
+            for (int i = 2; i <= 3; i++) {
+              freq += freq_base * freq_data[i];
+              freq_base *= 256;
+            }
+            freq_list.add(freq);
+            pinyin_list.add(new Pinyin.Sequence.ids(pinyins));
+            phrase_list.add(phrase);
+
+            phrase_count ++;
+            if (freq > max_freq) max_freq = freq;
+            all_freq += freq;
+          }
+        } catch (IOError.NO_MORE_CONTENT e) {
+          // rewrite freqs
+          double factor = 5000.0 / (max_freq + all_freq / phrase_count);
+          int freq_list_index = freq_list.size;
+          for (int i = 0; i < phrase_count; i++) {
+            if (--freq_list_index < 0) break;
+            double freq = freq_list[freq_list_index];
+            freq_list[freq_list_index] = freq * factor;
+          }
+
+          Frontend.notify("正在后台导入 scel 词库: %s".printf(title),
+              "词条数: %d\n类别: %s\n描述: %s".printf(phrase_count, 
+                type, description
+                ), 
+              Config.program_main_icon
+              );
+          // start to insert phrases into user database
+          set_idle_source();
+
+        } catch (Error e) {
+          Frontend.notify("无法导入 scel 文件", "无法访问文件 %s\n%s"
+              .printf(filename, e.message), "error"
+              );
+        }
+      }
+
+      static bool check_segment_md5(FileInputStream fs, 
+          int64 offset, size_t size, string md5) {
+        var sum = new Checksum(ChecksumType.MD5);
+        try {
+          if (!fs.seek(offset, SeekType.SET, null)) return false;
+          char[] bytes = new char[size];
+          if (fs.read(bytes, size, null) != size) return false;
+          sum.update((uchar[])bytes, size);
+
+          return (sum.get_string() == md5);
+        } catch (Error e) {
+          return false;
+        }
+      }
+
+      static uint16 read_uint16(FileInputStream fs) throws IOError {
+        uint16[] data = new uint16[1];
+        if (fs.read((uint8[])data, 2, null) == 0)
+          throw new IOError.NO_MORE_CONTENT("read nothing");
+        return data[0];
+      }
+
+      static string read_utf16_segment(FileInputStream fs, int64 offset = -1, 
+          size_t size = 2) throws IOError {
+        string result = "";
+        try {
+          if (offset > 0) {
+            if (!fs.seek(offset, SeekType.SET, null)) return result;
+          }
+          char[] bytes = new char[size + 1];
+          if (fs.read(bytes, size, null) != size) {
+            throw new IOError.NO_MORE_CONTENT("read nothing");
+          }
+          bytes[size] = 0;
+          // convert UTF-16 to UTF-8
+          // since (string)bytes is a raw, plain cast. no problem here
+          result = GLib.convert((string)bytes, (ssize_t)size,
+              "UTF-8", "UTF-16LE"
+              );
+        } catch (ConvertError e) {
+          warning("Encoding convert error in scel file");
+          result = "";
+        } catch (Error e) {
+          result = "";
+        } 
+        return result;
+      }
+    } // class ScelTool
+
+
+    // server dbus object
     // keep this server only running by main process
     // must not fork() in thread excuting glib main loop in main process 
     [DBus (name = "org.ibus.CloudPinyin")]
@@ -82,7 +315,7 @@ namespace icp {
 
         // key interface for child processes to call
         public bool cloud_set_response(string pinyins, string content, 
-          int priority) {
+            int priority) {
           return set_response(pinyins, content, priority);
         }
 
@@ -106,6 +339,10 @@ namespace icp {
           Database.reverse_convert(content, out ps);
           return ps.to_string();
         }
+
+        public void import_scel(string filename) {
+          ScelTool.import(filename);
+        }
       }
 
     // for server init
@@ -126,13 +363,15 @@ namespace icp {
           conn.register_object ("/org/ibus/CloudPinyin", server);
         } else {
           stderr.printf("FATAL: register DBus fail!\n"
-            + "Please do not run this program multi times manually.\n");
+              + "Please do not run this program multi times manually.\n");
           assert_not_reached();
         }
       } catch (GLib.Error e) {
         stderr.printf("Error: %s\n", e.message);
       }
-    }
+
+      ScelTool.init();
+    } // init
   }
 }
 

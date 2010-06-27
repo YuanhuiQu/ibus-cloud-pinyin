@@ -45,7 +45,7 @@ namespace icp {
     private static void internal_query(Pinyin.Sequence pinyins,
         ArrayList<string> results, bool reverse_order = false,
         int pinyins_begin = 0, int pinyins_end = -1,
-        int limit = 1, double phrase_adjust = 2.4) {
+        int limit = 1, double phrase_adjust = 1.0) {
 
       if (pinyins_begin < 0) pinyins_begin = 0;
       if (pinyins_end < 0 || pinyins_end > pinyins.size)
@@ -87,16 +87,18 @@ namespace icp {
         if (id > 0) subquery += " UNION ALL ";
 
         subquery += 
-          "SELECT phrase, freq*%f AS freqadj FROM main.py_phrase_%d WHERE %s"
-          .printf(Math.pow(1.0 + (double)id, phrase_adjust), id, where);
+          "SELECT phrase, freq*%.3f AS freqadj FROM main.py_phrase_%d WHERE %s"
+          .printf((id + 1) * Math.pow(1.0 + (double)id, phrase_adjust),
+            id, where
+            );
 
-        // user db
+        // user db 
         subquery +=
-          (" UNION ALL SELECT phrase, freq*%f*max((32-%lf+atime)/32.0, %f)"
+          (" UNION ALL SELECT phrase, freq*%.3f*max((32-%.3lf+atime)/32.0, %.3f)"
            + " AS freqadj FROM userdb.py_phrase_%d WHERE %s")
-          .printf(Math.pow(1.0 + (double)id,
+          .printf((id + 1) * Math.pow(1.0 + (double)id,
                 phrase_adjust), get_atime(), Math.pow(0.3, 1 + id),
-                id, where
+              id, where
               );
       } // for
 
@@ -193,8 +195,49 @@ namespace icp {
       assert_exec(sql_builder.str);
     }
 
+    // batch insert perform INSERT OR REPLACE, do not perform
+    // do INSERT OR IGNORE
+    public static void batch_insert(ArrayList<string> phrases,
+        ArrayList<Pinyin.Sequence> sequences,
+        ArrayList<double?> freqs) {
+      int count = phrases.size;
+      if (sequences.size < count) count = sequences.size;
+      if (freqs.size < count) count = freqs.size;
+
+      StringBuilder sql_builder = new StringBuilder();
+      sql_builder.append("BEGIN;\n");
+      for (int i = 0; i < count; i++) {
+        var phrase = phrases[i];
+        var sequence = sequences[i];
+        double freq = freqs[i] ?? 1000;
+
+        if (sequence.size != phrase.length 
+            || sequence.size > PHRASE_LENGTH_MAX + 1
+            || sequence.size == 0
+           ) continue;
+
+        int length = sequence.size;
+        sql_builder.append(
+            "INSERT OR REPLACE INTO userdb.py_phrase_%d VALUES('%s',%.3lf,%.3lf"
+            .printf(length - 1, phrase, freq, 
+              get_atime())
+            );
+        for (int j = 0; j < length; j++) {
+          Id id = sequence.get_id(j);
+          // do not allow partial pinyin
+          if (id.vowel < 0) return;
+          sql_builder.append(",%d,%d".printf(id.consonant, id.vowel));
+        }
+        sql_builder.append(");\n");
+
+      }
+      sql_builder.append("COMMIT;\n");
+      assert_exec(sql_builder.str);
+    }
+
     public static void insert(string phrase, Pinyin.Sequence sequence,
-        double freq_increase = 0.1
+        double base_freq = -3000.0, double freq_increase = 200,
+        bool lookup_first = true
         ) {
       // insert into user_db
       // reject length mismatch or exceed max length allowed
@@ -206,28 +249,39 @@ namespace icp {
       int length = sequence.size;
       StringBuilder sql_builder = new StringBuilder();
       string where = "phrase=\"%s\"".printf(phrase);
-      sql_builder.append("INSERT OR IGNORE INTO userdb.py_phrase_%d VALUES("
-          .printf(length - 1)
-          );
-      double freq = 2400.0;
-      // query freq
-      string query =
-        "SELECT freq FROM main.py_phrase_%d WHERE phrase=\"%s\" LIMIT 1"
-        .printf(length - 1, phrase);
-      Sqlite.Statement stmt;
+      if (lookup_first)  {
+        sql_builder.append(
+            "INSERT OR IGNORE INTO userdb.py_phrase_%d VALUES("
+            .printf(length - 1)
+            );
+      } else {
+        sql_builder.append(
+            "INSERT OR REPLACE INTO userdb.py_phrase_%d VALUES("
+            .printf(length - 1)
+            );
+      }
+      double freq = base_freq;  
+      if (freq < 0) freq = (-freq) / length;
 
-      if (db.prepare_v2(query, -1, out stmt, null) == Sqlite.OK) {
-        for (bool running = true; running;) {
-          switch (stmt.step()) {
-            case Sqlite.ROW: 
-              freq = (double)stmt.column_int(0);
-              break;
-            case Sqlite.BUSY: 
-              Thread.usleep(1024);
-              break;
-            default: 
-              running = false;
-              break;
+      if (lookup_first) {
+        // query freq
+        string query =
+          "SELECT freq FROM main.py_phrase_%d WHERE phrase=\"%s\" LIMIT 1"
+          .printf(length - 1, phrase);
+        Sqlite.Statement stmt;
+        if (db.prepare_v2(query, -1, out stmt, null) == Sqlite.OK) {
+          for (bool running = true; running;) {
+            switch (stmt.step()) {
+              case Sqlite.ROW: 
+                freq = (double)stmt.column_double(0);
+                break;
+              case Sqlite.BUSY: 
+                Thread.usleep(1024);
+                break;
+              default: 
+                running = false;
+                break;
+            }
           }
         }
       }
@@ -246,21 +300,24 @@ namespace icp {
       }
       sql_builder.append(");");
 
-      lock (db) {
-        // try insert if not existed
-        assert_exec(sql_builder.str);
+      // lock (db) {
+      // try insert if not existed
+      assert_exec(sql_builder.str);
+      if (lookup_first) { 
         // update freq OR atime
         double atime = get_atime();
 
-        query =
-          "SELECT atime FROM userdb.py_phrase_%d WHERE %s LIMIT 1"
+        string query =
+          "SELECT atime, freq FROM userdb.py_phrase_%d WHERE %s LIMIT 1"
           .printf(length - 1, where);
+        Sqlite.Statement stmt;
 
         if (db.prepare_v2(query, -1, out stmt, null) == Sqlite.OK) {
           for (bool running = true; running;) {
             switch (stmt.step()) {
               case Sqlite.ROW: 
-                atime = (double)stmt.column_int(0);
+                atime = stmt.column_double(0);
+                freq = stmt.column_double(1);
                 break;
               case Sqlite.BUSY:
                 Thread.usleep(1024);
@@ -276,8 +333,8 @@ namespace icp {
         if (atime < 1.0) {
           // in 24 hours, update both
           assert_exec(
-              "UPDATE userdb.py_phrase_%d SET freq=freq*%lf+1, atime=%lf WHERE %s"
-              .printf(length - 1, freq_increase + 1.0, get_atime(), where)
+              "UPDATE userdb.py_phrase_%d SET freq=freq+%.3lf, atime=%lf WHERE %s"
+              .printf(length - 1, freq_increase, get_atime(), where)
               );
         } else {
           // update atime only
@@ -285,9 +342,11 @@ namespace icp {
               "UPDATE userdb.py_phrase_%d SET atime=%lf WHERE %s"
               .printf(length - 1, get_atime(), where)
               );
+          Frontend.notify("update atime only");
         }
+      } // if lookup_first
 
-      }
+      // } // lock (db)
     }
 
     public static bool reverse_convert(string content, 
@@ -376,7 +435,7 @@ namespace icp {
 
     public static void query(Pinyin.Sequence pinyins, 
         ArrayList<string> candidates, 
-        int limit = 0, double phrase_adjust = 2.4) {
+        int limit = 0, double phrase_adjust = 1.05) {
 
       internal_query(pinyins, candidates, false,
           0, -1, limit, phrase_adjust
@@ -384,7 +443,7 @@ namespace icp {
     }
 
     public static string greedy_convert(Pinyin.Sequence pinyins, 
-        double phrase_adjust = 4) {
+        double phrase_adjust = 2) {
 
       string r = "";
       if (pinyins.size == 0) return r;
