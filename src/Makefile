@@ -32,7 +32,7 @@ all: ibus-engine-cloud-pinyin ibus-cloud-pinyin-request
 
 ibus-engine-cloud-pinyin: $(CFLAGFILE) $(CSRCS)
 	@$(ECHO) "$(MSG_PREFIX)Building $@ ...$(MSG_SUFFIX)"
-	$(CC) $(CFLAGS) $(CSRCS) -g -o $@
+	$(CC) $(CFLAGS) $(CSRCS) -O3 -o $@
 
 ibus-cloud-pinyin-request: request-main.c
 	@$(ECHO) "$(MSG_PREFIX)Building $@ ...$(MSG_SUFFIX)"
