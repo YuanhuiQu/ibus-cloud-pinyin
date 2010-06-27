@@ -10,9 +10,10 @@
  * Icons
  * Requesting Processes Management
  * Pending Segments Support
+ * .scel Import Support
 
 ==== To Do ====
 
- * .scel Import Tool
+ * .scel Import Frontend
  * libopencc Support
  * User Guide
