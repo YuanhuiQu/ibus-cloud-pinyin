@@ -53,7 +53,7 @@ socket, http, url = require 'socket', require 'socket.http', require 'socket.url
 --------------------------------------------------------------------------------
 -- set_response(pinyins, content, [priority = 128])
 -- 输入法 API （仅在配置脚本中可用）
--- 设定云请求结果缓存，pinyins 相同时，只有更高 priority 才能改写 content
+-- 设定云请求结果缓存，pinyins 相同时，只有相同或更高 priority 才能改写 content
 -- 例如：set_response('wo men', '我们')
 
 --------------------------------------------------------------------------------

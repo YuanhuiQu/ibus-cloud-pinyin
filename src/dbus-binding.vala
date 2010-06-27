@@ -53,7 +53,7 @@ namespace icp {
     public static bool set_response(string pinyins,
         string content, int priority = 1) {
       if (!responses.contains(pinyins) || responses[pinyins].priority
-          < priority) {
+          <= priority) {
         responses[pinyins] = new Response(content, priority);
         return true;
       } return false;
