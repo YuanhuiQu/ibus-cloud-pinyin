@@ -508,10 +508,10 @@ namespace icp {
 
           // then in chinese mode, consider edit / commit things
           // edit raw pinyin buffer (disabled in correction mode)
-          // "sep", "back", "clear" here should has state = 0
-          if (!correction_mode && chinese_mode) {
+          // handle "sep", "back", "clear" here
+          if (chinese_mode) {
             // enter correction mode ?
-            if ("correct" in actions) {
+            if (!correction_mode && "correct" in actions) {
               if (raw_buffer.length > 0) {
                 if (pinyin_buffer.size > 0) {
                   correction_mode = true;
@@ -546,44 +546,48 @@ namespace icp {
                   }
                 }
               }
-            }
+            } // if to enter correction mode
 
-            if ("clear" in actions) {
+            if (!correction_mode && "clear" in actions) {
               clear_buffer();
               handled = true; break;
             }
 
-            bool is_backspace = (("back" in actions) 
-                && raw_buffer.length > 0
-                );
-            // check normal pinyin chars
-            if (Config.Switches.double_pinyin) {
-              // note that ';' can not occur at the beginning
-              if ((Pinyin.DoublePinyin.is_valid_key(keyval)
-                    && state == 0 && ('z' >= keyval >= 'a'
-                      || raw_buffer.length > 0)) || is_backspace) {
-                if (is_backspace) raw_buffer = raw_buffer[0:-1];
-                else raw_buffer += "%c".printf((int)keyval);
-                Pinyin.DoublePinyin.convert(raw_buffer, out pinyin_buffer);
-                handled = true; break;
+            // check normal pinyin chars, only in non correction mode
+            if (!correction_mode) {
+              bool is_backspace = (("back" in actions) 
+                  && raw_buffer.length > 0
+                  );
+
+              if (Config.Switches.double_pinyin) {
+                // note that ';' can not occur at the beginning
+                if ((Pinyin.DoublePinyin.is_valid_key(keyval)
+                      && state == 0 && ('z' >= keyval >= 'a'
+                        || raw_buffer.length > 0)) || is_backspace) {
+                  if (is_backspace) raw_buffer = raw_buffer[0:-1];
+                  else raw_buffer += "%c".printf((int)keyval);
+                  Pinyin.DoublePinyin.convert(raw_buffer, out pinyin_buffer);
+                  handled = true; break;
+                }
+              } else {
+                if (('z' >= keyval >= 'a'
+                      && state == 0) || is_backspace) {
+                  if (is_backspace) raw_buffer = raw_buffer[0:-1];
+                  else raw_buffer += "%c".printf((int)keyval);
+                  pinyin_buffer = new Pinyin.Sequence(raw_buffer);
+                  handled = true; break;
+                }
+                if (("sep" in actions) && raw_buffer.length > 0 
+                    && (uint)raw_buffer[raw_buffer.length - 1] != keyval) {
+                  raw_buffer += "%c".printf((int)keyval);
+                  handled = true; break;
+                }
               }
-            } else {
-              if (('z' >= keyval >= 'a'
-                    && state == 0) || is_backspace) {
-                if (is_backspace) raw_buffer = raw_buffer[0:-1];
-                else raw_buffer += "%c".printf((int)keyval);
-                pinyin_buffer = new Pinyin.Sequence(raw_buffer);
-                handled = true; break;
-              }
-              if (("sep" in actions) && raw_buffer.length > 0 
-                  && (uint)raw_buffer[raw_buffer.length - 1] != keyval) {
-                raw_buffer += "%c".printf((int)keyval);
-                handled = true; break;
-              }
-            }
+            } // edit pinyin buffer (backspace, escape, append)
 
             // consider candidate select
             // lookup table pgup, pgdn, candidate select
+            // this should work regardless of correction mode
             if (table_visible) {
               if ("pgup" in actions) { page_up(); handled = true;}
               if ("pgdn" in actions) { page_down(); handled = true;}
@@ -608,8 +612,7 @@ namespace icp {
               if (handled) break;
             }
 
-
-            // chinese puncs
+            // chinese puncs, let it work in correction mode
             if (((state ^ IBus.ModifierType.SHIFT_MASK)
                   == 0 || state == 0)
                 && 128 > keyval >= 32 
@@ -621,6 +624,11 @@ namespace icp {
                   );
               user_phrase_clear();
               commit(punc);
+              handled = true; break;
+            }
+
+            // disable backspace in correction mode
+            if (correction_mode && "back" in actions) {
               handled = true; break;
             }
           }
@@ -675,6 +683,7 @@ namespace icp {
             }
             handled = true; break;
           }
+
           // non-chinese puncs
           // special handle enter, convert it to ASCII 13
           if (((state ^ IBus.ModifierType.SHIFT_MASK)
