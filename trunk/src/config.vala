@@ -349,7 +349,7 @@ namespace icp {
     }
 
     // init
-    public static void init(string[] args) {
+    public static void init(ref unowned string[] args) {
       global_data_path = prefix_path + "/share/ibus-cloud-pinyin";
 
       Colors.init();
