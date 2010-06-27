@@ -143,9 +143,9 @@ namespace icp {
 
         public static bool double_pinyin = false;
         public static bool background_request = true;
-        public static bool always_show_candidates = false;
+        public static bool always_show_candidates = true;
         public static bool show_pinyin_auxiliary = true;
-        public static bool show_raw_in_auxiliary = false;
+        public static bool show_raw_in_auxiliary = true;
 
         public static bool default_offline_mode = false;
         public static bool default_chinese_mode = true;
