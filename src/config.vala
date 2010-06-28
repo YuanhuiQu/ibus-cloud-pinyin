@@ -183,8 +183,8 @@ namespace icp {
 
       public static void init() {
         punctuations = new HashMap<int, FullPunctuation>();
-        set('.', "。", true);
-        set(',', "，", true);
+        set('.', "。" /*, true */);
+        set(',', "，" /*, true */);
         set('^', "……");
         set('@', "·");
         set('!', "！");

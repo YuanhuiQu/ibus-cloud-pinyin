@@ -539,7 +539,6 @@ namespace icp {
               } else {
                 // user select some thing, currently buffer is empty,
                 // test if it can be reverse converted to pinyin
-
                 if (Frontend.get_current_time()
                     <= (uint64)(1000000 * Config.Timeouts.selection)
                     + Frontend.clipboard_update_time
@@ -622,7 +621,8 @@ namespace icp {
                   s.scanf("cand:%u", &index);
                   // check if that candidate exists
                   if (table.get_number_of_candidates() 
-                      > table.get_page_size() * page_index + index) {
+                      > table.get_page_size() * page_index + index
+                      && Config.CandidateLabels.size > index) {
                     candidate_clicked(index, 128, 0);
                     handled = true;
                   }

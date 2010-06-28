@@ -118,8 +118,8 @@ set_key('2', 'cand:1')
 -- 设置全角标点，half 为半角标点，full 为全角标点，如果对应多个全角标点，用
 -- 空格分开。默认如下：
 --[[
-set_punctuation('.', "。", true)
-set_punctuation(',', "，", true)
+set_punctuation('.', "。")
+set_punctuation(',', "，")
 set_punctuation('^', "……")
 set_punctuation('@', "·")
 set_punctuation('!', "！")
