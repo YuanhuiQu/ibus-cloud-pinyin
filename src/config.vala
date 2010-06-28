@@ -30,6 +30,7 @@ namespace icp {
     public static string global_data_path { get; private set; }
     public static string user_database { get; private set; }
     public static string global_database { get; private set; }
+    public static string program_scel_import { get; private set; }
     public static string program_main_icon { get; private set; }
 
     public static string user_config_path { get; private set; }
@@ -423,6 +424,9 @@ namespace icp {
       program_path = Environment.get_current_dir();
       program_main_file = "%s/%s".printf(program_path, args[0]);
       program_main_icon = global_data_path + "/icons/ibus-cloud-pinyin.png";
+      program_scel_import =
+        "%s/lib/ibus-cloud-pinyin/scel-import-selector.py"
+        .printf(prefix_path);
       program_request =
         "%s/lib/ibus-cloud-pinyin/ibus-cloud-pinyin-request"
         .printf(prefix_path);

@@ -8,6 +8,7 @@ ICONFILES=icons/ibus-cloud-pinyin.png icons/idle-0.png icons/idle-1.png icons/id
 LUAFILES=lua/config.lua lua/engine_sogou.lua lua/engine_qq.lua
 IBUSEXE=src/ibus-engine-cloud-pinyin
 REQUESTEXE=src/ibus-cloud-pinyin-request
+SCELEXE=src/scel-import-selector.py
 
 CFLAGFILE=src/c-flags.txt
 CFLAGFILE2=src/c-flags-2.txt
@@ -18,6 +19,7 @@ ECHO=echo -e
 INSTALL=install -p
 MKDIR=mkdir -p
 INSTALL_EXEC=$(INSTALL) -s -m 0755
+INSTALL_SCRIPT=$(INSTALL) -m 0755
 INSTALL_DATA=$(INSTALL) -m 0644
 
 MSG_PREFIX=\x1b[32;01m:: \x1b[39;01m
@@ -43,7 +45,7 @@ $(CFLAGFILE) $(CFLAGFILE2) $(VALACFLAGFILE) $(VALACFLAGFILE2): find-dependencies
 	@$(ECHO) "$(MSG_PREFIX)Finding dependencies ...$(MSG_SUFFIX)"
 	@./find-dependencies.sh
 
-install: $(IBUSEXE) $(REQUESTEXE) $(ICONFILES) main.db cloud-pinyin.xml $(LUAFILES)
+install: $(IBUSEXE) $(REQUESTEXE) $(SCELEXE) $(ICONFILES) main.db cloud-pinyin.xml $(LUAFILES)
 	@$(ECHO) "$(MSG_PREFIX)Installing (prefix=$(PREFIX)) ...$(MSG_SUFFIX)"
 	@$(MKDIR) $(DESTDIR)$(PREFIX)/share/ibus-cloud-pinyin/db/
 	@$(MKDIR) $(DESTDIR)$(PREFIX)/share/ibus-cloud-pinyin/icons/
@@ -57,6 +59,7 @@ install: $(IBUSEXE) $(REQUESTEXE) $(ICONFILES) main.db cloud-pinyin.xml $(LUAFIL
 	$(INSTALL_DATA) cloud-pinyin.xml $(DESTDIR)$(PREFIX)/share/ibus/component/
 	$(INSTALL_EXEC) $< $(DESTDIR)$(PREFIX)/lib/ibus/
 	$(INSTALL_EXEC) $(REQUESTEXE) $(DESTDIR)$(PREFIX)/lib/ibus-cloud-pinyin/
+	$(INSTALL_SCRIPT) $(SCELEXE) $(DESTDIR)$(PREFIX)/lib/ibus-cloud-pinyin/
 
 cloud-pinyin.xml: $(IBUSEXE)
 	@$(ECHO) "$(MSG_PREFIX)Creating ibus compoment xml file ...$(MSG_SUFFIX)"
