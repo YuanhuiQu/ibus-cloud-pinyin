@@ -114,9 +114,11 @@ namespace icp {
 
             Database.batch_insert(phrases, sequences, freqs);
 
-            if (process_index + 1 >= pinyin_list.size) {
+            if (process_index >= pinyin_list.size) {
               // import done
-              Frontend.notify("导入 scel 词库", "后台导入已完成", 
+              Frontend.notify("导入 scel 词库", 
+                  "导入已完成\n本次共导入 %d 个词条"
+                  .printf(process_index), 
                   Config.program_main_icon
                   );
               pinyin_list.clear();

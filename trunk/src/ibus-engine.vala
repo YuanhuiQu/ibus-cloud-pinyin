@@ -389,6 +389,12 @@ namespace icp {
           case "status":
             switch_offline_mode();
           break;
+          case "tools_scel_import":
+            string[] argv = { Config.program_scel_import };
+            Pid pid;
+            Process.spawn_async(null, argv, null, 0, null, out pid);
+            Process.close_pid(pid);
+          break;
           case "tools_status":
             LuaBinding.show_engine_speed_rank();
           break;
