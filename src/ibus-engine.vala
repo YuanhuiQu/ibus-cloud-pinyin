@@ -183,6 +183,8 @@ namespace icp {
         if (!waiting_animation_timer.is_destroyed())
           waiting_animation_timer.destroy();
         waiting_animation_timer = null;
+        update_preedit();
+        update_candidates();
       }
 
       // init, workaround for no ctor
@@ -449,6 +451,8 @@ namespace icp {
           } else {
             start_requesting();
           }
+        } else {
+          stop_requesting();
         }
       }
 
