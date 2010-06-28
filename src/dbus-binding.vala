@@ -97,13 +97,13 @@ namespace icp {
             var phrases = new ArrayList<string>();
             var freqs = new ArrayList<double?>();
 
-            // import at most 1024 items one time
-            for (int import_count = 0; import_count < 1024 
+            // import at most 2048 items one time
+            for (int import_count = 0; import_count < 2048
               && process_index < pinyin_list.size;
               process_index++) {
             double freq = freq_list[process_index];
 
-            // do not import gabbage here, hardlimit 10s
+            // do not import gabbage here, hardlimit 10
             if (freq > 10) {
             sequences.add(pinyin_list[process_index]);
             phrases.add(phrase_list[process_index]);
@@ -117,8 +117,7 @@ namespace icp {
             if (process_index >= pinyin_list.size) {
               // import done
               Frontend.notify("导入 scel 词库", 
-                  "导入已完成\n本次共导入 %d 个词条"
-                  .printf(process_index), 
+                  "导入已完成",
                   Config.program_main_icon
                   );
               pinyin_list.clear();
