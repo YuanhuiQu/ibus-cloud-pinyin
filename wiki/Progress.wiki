@@ -8,11 +8,12 @@
  * Sogou, QQ Web IME Client Scripts
  * Lua and DBus Binding
  * Icons
- * Requesting Processes Management
- * Pending Segments Support
+ * Internal Requesting Processes Management
+ * Internal Pending Segments Management
  * .scel Import
 
 ==== To Do ====
 
  * libopencc Support
+ * Fuzzy Pinyin Support
  * User Guide
