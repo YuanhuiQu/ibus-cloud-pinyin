@@ -342,7 +342,6 @@ namespace icp {
               "UPDATE userdb.py_phrase_%d SET atime=%lf WHERE %s"
               .printf(length - 1, get_atime(), where)
               );
-          Frontend.notify("update atime only");
         }
       } // if lookup_first
 
