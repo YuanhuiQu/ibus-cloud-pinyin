@@ -213,7 +213,6 @@ namespace icp {
         panel_prop_list.append(status_icon);
         panel_prop_list.append(tools_icon);
         waiting_animation_timer = null;
-        update_properties();
 
         // timeouts
         prerequest_retry = Config.Limits.prerequest_retry_limit;
@@ -240,6 +239,9 @@ namespace icp {
 
         // TODO: dlopen opencc ...
         inited = true;
+
+        // update properties now
+        update_properties();
       }
 
       private void force_commit_pending_list() {
