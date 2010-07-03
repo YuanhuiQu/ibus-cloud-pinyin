@@ -1,0 +1,7 @@
+ * [Intro 简介]
+ * [Install 安装]
+ * [Configuration 配置]
+   * [DoublePinyinScheme 双拼方案]
+ * [Feedback 反馈]
+ * [WhatsNew 更新记录]
+   * [Progress 进展]
