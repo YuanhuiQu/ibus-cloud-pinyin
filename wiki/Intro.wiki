@@ -20,7 +20,7 @@ http://ibus-cloud-pinyin.googlecode.com/svn/wiki/img/egg.png
    * 双拼及全拼，支持已有的和未来的双拼布局以及全拼的拼音分隔符
    * 独创 Tab 键进入纠正模式，对刚选定汉字片段或正在编辑的拼音进行纠正
    * 独创 `jkl;asdf` 键选词（纠正模式中）
-   * 简繁体转换（需要 opencc）
+   * 简繁体转换（需要 [http://code.google.com/p/open-chinese-convert/ opencc]）
  * 在线输入
    * 多个云拼音引擎同时使用
    * 未完成的部分在后台异步完成，输入过程无阻塞（普通 Web 输入法会阻塞）
