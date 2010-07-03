@@ -1,5 +1,11 @@
-== 双拼方案 ==
- * 微软拼音（默认方案）
+= 双拼方案 =
+
+== 注意事项 ==
+
+由于软件作者只使用微软拼音以及一些近似的双拼方案，其他方案并没有经过实际使用测试，可能会有问题。如果你发现了问题或者是希望在这里添加新的方案，请在 Issues 页提交相关内容，不胜感激！
+
+== 微软拼音 ==
+这是默认方案
 {{{
 set_double_pinyin{
 ['ca'] = 'ca', ['cb'] = 'cou', ['ce'] = 'ce', ['cg'] = 'ceng', ['cf'] = 'cen', ['ci'] = 'ci', ['ch'] = 'cang', ['ck'] = 'cao', ['cj'] = 'can', ['cl'] = 'cai', ['co'] = 'cuo', ['cp'] = 'cun', ['cs'] = 'cong', ['cr'] = 'cuan', ['cu'] = 'cu', ['cv'] = 'cui', 
@@ -29,7 +35,7 @@ set_double_pinyin{
 ['v'] = 'zh', ['i'] = 'ch', ['u'] = 'sh',
 }
 }}}
- * 搜狗拼音
+== 搜狗拼音 ==
 {{{
 set_double_pinyin{
 ['ca'] = 'ca', ['cb'] = 'cou', ['ce'] = 'ce', ['cg'] = 'ceng', ['cf'] = 'cen', ['ci'] = 'ci', ['ch'] = 'cang', ['ck'] = 'cao', ['cj'] = 'can', ['cl'] = 'cai', ['co'] = 'cuo', ['cp'] = 'cun', ['cs'] = 'cong', ['cr'] = 'cuan', ['cu'] = 'cu', ['cv'] = 'cui', 
@@ -59,7 +65,7 @@ set_double_pinyin{
 ['v'] = 'zh', ['i'] = 'ch', ['u'] = 'sh',
 }
 }}}
- * 智能 ABC
+== 智能 ABC ==
 {{{
 set_double_pinyin{
 ['aa'] = 'zha', ['ac'] = 'zhuai', ['ab'] = 'zhou', ['ae'] = 'zhe', ['ad'] = 'zhua', ['ag'] = 'zheng', ['af'] = 'zhen', ['ai'] = 'zhi', ['ah'] = 'zhang', ['ak'] = 'zhao', ['aj'] = 'zhan', ['am'] = 'zhui', ['al'] = 'zhai', ['ao'] = 'zhuo', ['an'] = 'zhun', ['ap'] = 'zhuan', ['as'] = 'zhong', ['au'] = 'zhu', ['at'] = 'zhuang', 
@@ -89,7 +95,7 @@ set_double_pinyin{
 ['a'] = 'zh', ['e'] = 'ch', ['v'] = 'sh',
 }
 }}}
- * 拼音加加
+== 拼音加加 ==
 {{{
 set_double_pinyin{
 ['ca'] = 'ca', ['cc'] = 'cuan', ['ce'] = 'ce', ['cd'] = 'cao', ['cg'] = 'cang', ['cf'] = 'can', ['ci'] = 'ci', ['co'] = 'cuo', ['cp'] = 'cou', ['cs'] = 'cai', ['cr'] = 'cen', ['cu'] = 'cu', ['ct'] = 'ceng', ['cv'] = 'cui', ['cy'] = 'cong', ['cz'] = 'cun', 
@@ -119,7 +125,7 @@ set_double_pinyin{
 ['v'] = 'zh', ['u'] = 'ch', ['i'] = 'sh',
 }
 }}}
- * UCDOS 6 智能双拼
+== UCDOS 6 智能双拼 ==
 {{{
 set_double_pinyin{
 ['ca'] = 'ca', ['cb'] = 'cou', ['ce'] = 'ce', ['cg'] = 'ceng', ['cf'] = 'cen', ['ci'] = 'ci', ['ch'] = 'cang', ['ck'] = 'cao', ['cj'] = 'can', ['cl'] = 'cai', ['co'] = 'cuo', ['cp'] = 'cun', ['cs'] = 'cong', ['cr'] = 'cuan', ['cu'] = 'cu', ['cv'] = 'cui', 
@@ -149,7 +155,7 @@ set_double_pinyin{
 ['v'] = 'zh', ['i'] = 'ch', ['u'] = 'sh',
 }
 }}}
- * 自然码
+== 自然码 ==
 {{{
 set_double_pinyin{
 ['ca'] = 'ca', ['cb'] = 'cou', ['ce'] = 'ce', ['cg'] = 'ceng', ['cf'] = 'cen', ['ci'] = 'ci', ['ch'] = 'cang', ['ck'] = 'cao', ['cj'] = 'can', ['cl'] = 'cai', ['co'] = 'cuo', ['cp'] = 'cun', ['cs'] = 'cong', ['cr'] = 'cuan', ['cu'] = 'cu', ['cv'] = 'cui', 
