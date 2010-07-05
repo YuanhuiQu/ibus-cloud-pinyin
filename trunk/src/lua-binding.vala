@@ -136,11 +136,12 @@ namespace icp {
 
         this.group = group;
         this.engine = engine;
+        string pinyins = group.pinyins;
 
         string[] argv = {
           Config.program_request,
           "-c", "%s".printf(engine.script),
-          "-r", "%s".printf(group.pinyins),
+          "-r", "%s".printf(pinyins),
           "-p", "%d".printf(engine.priority),
           "-t", "%f".printf(group.timeout)
         };
@@ -208,7 +209,7 @@ namespace icp {
 
       public RequestGroup(string pinyins, double timeout, bool* done) {
         this.done = done;
-        this.pinyins = pinyins;
+        this.pinyins = pinyins.replace("ü", "v");
         *(this.done) = false;
         this.timeout = timeout;
         can_clean = false;
