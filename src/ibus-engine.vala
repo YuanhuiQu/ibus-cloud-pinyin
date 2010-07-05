@@ -834,7 +834,7 @@ namespace icp {
             = Config.Switches.show_raw_in_auxiliary 
             ? " [%s]".printf(raw_buffer) : "";
           var text = new Text.from_string(
-              "%s%s".printf(pinyin_buffer_aux, raw_buffer_aux)
+              @"$pinyin_buffer_aux$raw_buffer_aux"
               );
           Config.Colors.buffer_pinyin.apply(
               text, 0, (int)pinyin_buffer_aux.length

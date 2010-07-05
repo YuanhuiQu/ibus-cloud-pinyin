@@ -46,15 +46,17 @@ namespace icp {
 
     // for server use, internal
     public static string query(string pinyins) {
-      if (responses.contains(pinyins)) return responses[pinyins].content;
+      string pinyins_u = pinyins.replace("v", "ü");
+      if (responses.contains(pinyins_u)) return responses[pinyins_u].content;
       else return "";
     }
 
     public static bool set_response(string pinyins,
         string content, int priority = 1) {
-      if (!responses.contains(pinyins) || responses[pinyins].priority
+      string pinyins_u = pinyins.dup().replace("v", "ü");
+      if (!responses.contains(pinyins_u) || responses[pinyins_u].priority
           <= priority) {
-        responses[pinyins] = new Response(content, priority);
+        responses[pinyins_u] = new Response(content, priority);
         return true;
       } return false;
     }
@@ -212,7 +214,7 @@ namespace icp {
             string phrase = read_utf16_segment(fs, -1, (size_t)phrase_len);
 
             // freq
-            int freq_len = 12 + offset * (12 + pinyin_count * 2 + 2);
+            size_t freq_len = 12 + offset * (12 + pinyin_count * 2 + 2);
 
             uint8[] freq_data = new uint8[freq_len];
             fs.read((uint8[]) freq_data, freq_len, null);
