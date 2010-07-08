@@ -16,4 +16,7 @@
 
  * libopencc Support
  * Fuzzy Pinyin Support
+ * More import tools: pidgin contacts, plain text, ...
+ * Web IME Client dynamic switching via GUI
+ * Baidu Web IME Client
  * User Guide
