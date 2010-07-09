@@ -1,7 +1,7 @@
 #labels Featured,Phase-Support
 = 反馈 =
 
-如果你在使用这个输入法的时候遇到了问题，欢迎通过以下途径进行反馈：
+如果你在使用这个输入法的时候遇到了问题，或者有什么想要说的话，欢迎通过以下途径进行反馈：
 
  * 在 [http://code.google.com/p/ibus-cloud-pinyin/issues/list Issues] 页提交新的 Issue
    * 报告软件 Bug，或者提出 Feature Request，使用此途径
