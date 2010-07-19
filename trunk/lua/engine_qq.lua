@@ -32,9 +32,10 @@ http.USERAGENT = "ibus-cloud-pinyin"
 key_file = user_cache_path..'/.tencent-key'
 
 py = pinyin:gsub("[^a-z ]", ''):gsub(" ", '%%27')
+uid = math.random(900) + 100
 
 function refresh_key()
-	local ret = http.request('http://ime.qq.com/fcgi-bin/getkey?callback=window.QQWebIME.keyback295') or ''
+	local ret = http.request('http://ime.qq.com/fcgi-bin/getkey?callback=window.QQWebIME.keyback'..uid) or ''
 	key = ret:gsub('"key"', ''):match('"(.-)"') or ''
 	if #key > 0 then local file = io.open(key_file, 'w') file:write(key) file:close() end
 end
@@ -57,7 +58,7 @@ function try_convert(tail, tail_len)
 	http.TIMEOUT, retry = 1.2
 	while true do
 		-- print('requesting, timeout = '..http.TIMEOUT)
-		local ret = http.request("http://ime.qq.com/fcgi-bin/getword?key="..key..'&callback=window.QQWebIME.callback029&q='..py..py_tail)
+		local ret = http.request("http://ime.qq.com/fcgi-bin/getword?key="..key..'&callback=window.QQWebIME.callback'..uid..'&q='..py..py_tail)
 		local res = ret and ret:match('%"rs%"%:%[(.-)%]')
 		if res then
 			local content = res
