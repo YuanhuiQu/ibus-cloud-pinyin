@@ -136,12 +136,11 @@ namespace icp {
 
         this.group = group;
         this.engine = engine;
-        string pinyins = group.pinyins;
 
         string[] argv = {
           Config.program_request,
           "-c", "%s".printf(engine.script),
-          "-r", "%s".printf(pinyins),
+          "-r", "%s".printf(group.pinyins),
           "-p", "%d".printf(engine.priority),
           "-t", "%f".printf(group.timeout)
         };

@@ -27,7 +27,7 @@ namespace icp {
     // for connection
     private static EngineDesc engine;
     private static Component component;
-    private static Bus bus;
+    private static IBus.Bus bus;
     private static Factory factory;
 
     // active engine
@@ -1075,7 +1075,7 @@ namespace icp {
     }
 
     public static void register() {
-      bus = new Bus();
+      bus = new IBus.Bus();
       if (Config.CommandlineOptions.launched_by_ibus) 
         bus.request_name("org.freedesktop.IBus.cloudpinyin", 0);
       else

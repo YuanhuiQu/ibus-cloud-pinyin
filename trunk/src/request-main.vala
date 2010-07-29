@@ -106,7 +106,7 @@ int main(string[] args) {
   vm.set_global("user_cache_path");
 
   vm.check_stack(1);
-  // convert 'ü' to 'v':
+  // 'ü' to 'v': already converted in parent process
   vm.push_string(pinyins);
   vm.set_global("pinyin");
   vm.register("response", l_response);
