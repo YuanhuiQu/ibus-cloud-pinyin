@@ -21,12 +21,17 @@
 --]]----------------------------------------------------------------------------
 
 socket, http, url = require 'socket', require 'socket.http', require 'socket.url'
+dofile_flag = {}
 
 --------------------------------------------------------------------------------
 -- 这是 ibus-cloud-pinyin 的全局配置文件，亦为 lua 脚本
 -- 此文件会随着软件升级而被重写，配置应写在用户配置文件里
+--
 -- 用户配置文件的位置在
 -- ${XDG_CONFIG_HOME:-$HOME/.config}/ibus/cloud-pinyin/config.lua
+--
+-- 用户配置文件存在时，在全局配置文件之后生效，所以不必将全局配置文件复制到用户
+-- 配置文件，而只需要将同全局配置不同的部分写如用户配置文件即可
 
 --------------------------------------------------------------------------------
 -- 关于注释：处于双减号后面的部分，直到行尾，是注释。这一行就是注释
@@ -210,6 +215,14 @@ set_colors{
 --]]
 
 --------------------------------------------------------------------------------
+-- set_cutting_adjust(pinyin)
+-- 输入法 API （仅在配置脚本中可用）
+-- 设置全拼切分调整，默认情况下仅会从左最大匹配，并对一些特定的情况做出调整
+-- 接受一个字符串，为空格分开的合法的全拼串，算上空格的长度在 4 － 8 字符之间
+set_cutting_adjust('ran geng') -- 当然更好
+set_cutting_adjust('me ne') -- 什么呢
+
+--------------------------------------------------------------------------------
 -- user_config_path， user_data_path， user_cache_path, data_path
 -- 由输入法提供的一些路径
 
@@ -227,8 +240,11 @@ local autoload_file_path = '/tmp/.cloud-pinyin-autoload.lua'
 register_engine("Sogou", data_path .. '/lua/engine_sogou.lua')
 register_engine("QQ", data_path .. '/lua/engine_qq.lua')
 
+
 -- wrapped dofile
 function try_dofile(path)
+	if dofile_flag[path] then return end
+	dofile_flag[path] = true
 	local file = io.open(path, 'r')
 	if file then file:close() pcall(function() dofile(path) end) end
 end

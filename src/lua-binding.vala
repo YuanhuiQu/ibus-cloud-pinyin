@@ -287,6 +287,17 @@ namespace icp {
       return 1;
       // }
     }
+    
+    private static int l_set_cutting_adjust(LuaVM vm) {
+      if (!check_permissions()) return 0;
+      // take an string and push it to icp.Pinyin.cutting_adjusts
+      if (vm.is_string(1)) {
+        string cutting_adjust = vm.to_string(1);
+        Pinyin.cutting_adjusts[cutting_adjust.replace(" ", "")] 
+          = cutting_adjust;
+      }
+      return 0;
+    }
 
     private static int l_notify(LuaVM vm) {
       if (vm.is_string(1)) {
@@ -637,6 +648,8 @@ namespace icp {
       vm.register("set_timeout", l_set_timeout);
       vm.register("set_limit", l_set_limit);
       vm.register("set_color", l_set_color);
+
+      vm.register("set_cutting_adjust", l_set_cutting_adjust);
 
       // these engines' requests will be async (in sep process)
       vm.register("register_engine", l_register_engine);

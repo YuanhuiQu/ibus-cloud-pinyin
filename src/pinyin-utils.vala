@@ -982,9 +982,6 @@ namespace icp {
       cutting_adjusts["zhuangei"] = "zhuan gei";
       cutting_adjusts["zunao"] = "zu nao";
 
-      cutting_adjusts["rangeng"] = "ran geng";
-      cutting_adjusts["mene"] = "me ne";
-
       // init double pinyin
       DoublePinyin.init();
     }
