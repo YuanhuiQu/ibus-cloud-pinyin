@@ -835,7 +835,6 @@ namespace icp {
       vowel_reverse_ids[-1] = "";
 
       // adjust cutting list
-      // IMPROVE: allow user setting this map
       cutting_adjusts = new HashMap<string, string>();
       cutting_adjusts["angang"] = "an gang";
       cutting_adjusts["ange"] = "an ge";

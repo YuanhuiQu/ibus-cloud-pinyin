@@ -55,6 +55,10 @@ namespace icp {
       return tv.tv_usec + (uint64)tv.tv_sec * 1000000;
     }
 
+    public static void clear_selection() {
+      _selection = "";
+    }
+
     public static void init() {
       // assume gtk and gdk are inited
       if (Notify.is_initted()) return;

@@ -424,6 +424,7 @@ namespace icp {
 
       public void commit(string content) {
         if (content.length > 0) {
+          Frontend.clear_selection();
           if (is_pending_segment_list_empty())
             commit_text(new Text.from_string(content));
           else {
@@ -538,8 +539,10 @@ namespace icp {
           if (chinese_mode) {
             // enter correction mode ?
             if (!correction_mode && "correct" in actions) {
-              if (raw_buffer.length > 0) {
-                if (pinyin_buffer.size > 0) {
+              // changed > 0 to > 1
+              if (raw_buffer.length > 1) {
+                if (pinyin_buffer.size > 0 
+                  && pinyin_buffer.get_id(0).vowel > 0) {
                   correction_mode = true;
                   handled = true; break;
                 }
