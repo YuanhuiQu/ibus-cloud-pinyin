@@ -54,8 +54,8 @@ namespace icp {
     public static bool set_response(string pinyins,
         string content, int priority = 1) {
       string pinyins_u = pinyins.dup().replace("v", "ü");
-      if (!responses.contains(pinyins_u) || responses[pinyins_u].priority
-          <= priority) {
+      if ((!responses.contains(pinyins_u) || responses[pinyins_u].priority
+          <= priority) && new Pinyin.Sequence(pinyins_u).size == content.length ) {
         responses[pinyins_u] = new Response(content, priority);
         return true;
       } return false;
@@ -236,7 +236,7 @@ namespace icp {
           }
         } catch (IOError.NO_MORE_CONTENT e) {
           // rewrite freqs
-          double factor = 5000.0 / (max_freq + all_freq / phrase_count);
+          double factor = 10000.0 / (max_freq + all_freq / phrase_count);
           int freq_list_index = freq_list.size;
           for (int i = 0; i < phrase_count; i++) {
             if (--freq_list_index < 0) break;
