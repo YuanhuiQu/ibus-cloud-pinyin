@@ -145,30 +145,35 @@ namespace icp {
         waiting_animation_timer.set_callback(() => {
             // send another prerequest if current one is done
             if (prerequest_done && !last_prerequest_done) {
-            send_prerequest();
-            last_prerequest_done = prerequest_done;
-            update_preedit();
+              send_prerequest();
+              last_prerequest_done = prerequest_done;
+              update_preedit();
             }
             if (process_pending_list()) {
-            update_preedit();
+              update_preedit();
             }
             // update status icon
+            string icon_path;
             if (waiting_subindex > 1) {
             waiting_subindex = 0;
             if (pending_segment_list.size == 0 && prerequest_done) {
-            status_icon.set_icon("%s/icons/idle-%d.png"
-              .printf(Config.global_data_path, 
-                LuaBinding.get_engine_speed_rank())
-              );
+              icon_path = "%s/icons/idle-%d.png".printf(
+                Config.global_data_path, 
+                LuaBinding.get_engine_speed_rank()
+                );
             } else {
-            waiting_index += waiting_index_acc;
-            if (waiting_index == 3 || waiting_index == 0)
-              waiting_index_acc = - waiting_index_acc;
-            status_icon.set_icon("%s/icons/waiting-%d.png"
-                .printf(Config.global_data_path, waiting_index));
+              waiting_index += waiting_index_acc;
+              if (waiting_index == 3 || waiting_index == 0)
+                waiting_index_acc = - waiting_index_acc;
+              icon_path = "%s/icons/waiting-%d.png".printf(
+                Config.global_data_path, waiting_index
+                );
             }
             // update that icon
-            update_property(status_icon);
+            if (icon_path != status_icon.icon) {
+              status_icon.set_icon(icon_path);
+              update_property(status_icon);
+            }
             // stop if offline mode
             } else waiting_subindex ++;
             if (offline_mode) stop_requesting();
