@@ -29,10 +29,11 @@ http = require 'socket.http'
 socket = require 'socket'
 
 http.USERAGENT = "ibus-cloud-pinyin"
-key_file = user_cache_path..'/.tencent-key'
+uid = math.random(900) + 100
+key_file = user_cache_path..'/.tencent-key.'..uid
 
 py = pinyin:gsub("[^a-z ]", ''):gsub(" ", '%%27')
-uid = math.random(900) + 100
+
 
 function refresh_key()
 	local ret = http.request('http://ime.qq.com/fcgi-bin/getkey?callback=window.QQWebIME.keyback'..uid) or ''
@@ -40,7 +41,6 @@ function refresh_key()
 	if #key > 0 then local file = io.open(key_file, 'w') file:write(key) file:close() end
 end
 
-start_time = os.time()
 http.TIMEOUT, retry = 2, 100
 
 -- get key
