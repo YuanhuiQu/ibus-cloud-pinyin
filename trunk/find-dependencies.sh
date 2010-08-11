@@ -22,12 +22,12 @@ require_program() {
 }
 
 require_pkg() {
-	# name, version
+	# name, version, valac name [lite (used for request-send)]
 	echo -n "    $1: "
 	if pkg-config --atleast-version=$2 $1; then
 		pkg-config --modversion $1
 		PACKAGES_PKGCONFIG="$PACKAGES_PKGCONFIG $1"
-		PACKAGES_VALAC="$PACKAGES_VALAC --pkg $3"
+		[ -n "$3" ] && PACKAGES_VALAC="$PACKAGES_VALAC --pkg $3"
 		if [ -n "$4" ]; then
 			PACKAGES_VALAC_2="$PACKAGES_VALAC_2 --pkg $3"
 			PACKAGES_PKGCONFIG_2="$PACKAGES_PKGCONFIG_2 $1"
@@ -65,6 +65,7 @@ pkg-config lua && LUAPKG_NAME="lua"
 # debian uses lua5.1 as pkg-config name, while lua is vala pkg name, annoying ...
 require_pkg $LUAPKG_NAME 5.1 lua lite
 require_pkg glib-2.0 2 glib-2.0
+require_pkg gthread-2.0 2 ''
 require_pkg gdk-2.0 2 gdk-2.0
 require_pkg gtk+-2.0 2 gtk+-2.0
 require_pkg ibus-1.0 1.3.4 ibus-1.0
