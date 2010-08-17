@@ -102,7 +102,7 @@ set_key('L', masks.release + masks.control + masks.shift, "trad simp")
 -- 左 Shift : 中英文切换
 set_key(keys.shift_left, masks.release + masks.shift, "eng chs")
 -- 右 Shift : 在线/离线切换
-set_key(keys.shift_left, masks.release + masks.shift, "online offline")
+set_key(keys.shift_right, masks.release + masks.shift, "online offline")
 set_key(keys.enter, "raw")
 set_key('j', 'cand:0')
 set_key('1', 'cand:0')
