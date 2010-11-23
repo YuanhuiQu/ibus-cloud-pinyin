@@ -24,7 +24,7 @@ using Gee;
 namespace icp {
   class Config {
     // project constants
-    public static const string version = "0.8.0-alpha";
+    public static const string version = "0.8.0.20101124";
     public static const string prefix_path = "@PREFIX@";
 
     public static string global_data_path { get; private set; }
@@ -210,14 +210,14 @@ namespace icp {
 
       public static void set(int half_char, string full_chars, 
           bool only_after_chinese = false) {
-        if (full_chars.length == 0) punctuations.remove(half_char);
+        if (full_chars.length == 0) punctuations.unset(half_char);
         else punctuations[half_char] = new FullPunctuation(full_chars, 
             only_after_chinese
             );
       }
 
       public static string get(int key, bool after_chinese = true) {
-        if (!punctuations.contains(key) 
+        if (!punctuations.has_key(key) 
             || (punctuations[key].only_after_chinese 
               && !after_chinese)
            ) return "%c".printf(key);
@@ -225,7 +225,7 @@ namespace icp {
       }
 
       public static bool exists(int key) {
-        return punctuations.contains(key);
+        return punctuations.has_key(key);
       }
     }
 
@@ -291,12 +291,12 @@ namespace icp {
       }
 
       public static void set(Key key, string action) {
-        if (action.length == 0) key_actions.remove(key);
+        if (action.length == 0) key_actions.unset(key);
         else key_actions[key] = action;
       }
 
       public static string get(Key key) {
-        if (!key_actions.contains(key)) return "";
+        if (!key_actions.has_key(key)) return "";
         return key_actions[key];
       }
     }

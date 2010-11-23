@@ -48,17 +48,17 @@ namespace icp {
         }
 
         string vowel_str;
-        if (pinyin.length > 1 && consonant_ids.contains(pinyin[0:2])) {
+        if (pinyin.length > 1 && consonant_ids.has_key(pinyin[0:2])) {
           consonant = consonant_ids[pinyin[0:2]];
           vowel_str = pinyin[2:pinyin.length];
-        } else if (pinyin.length > 0 && consonant_ids.contains(pinyin[0:1])) {
+        } else if (pinyin.length > 0 && consonant_ids.has_key(pinyin[0:1])) {
           consonant = consonant_ids[pinyin[0:1]];
           vowel_str = pinyin[1:pinyin.length];
         } else {
           consonant = 0;
           vowel_str = pinyin;
         }
-        if (vowel_ids.contains(vowel_str) && (pinyin in valid_pinyins)) {
+        if (vowel_ids.has_key(vowel_str) && (pinyin in valid_pinyins)) {
           vowel = vowel_ids[vowel_str];
         } else vowel = -1;
       }
@@ -136,7 +136,7 @@ namespace icp {
           // consider adjusted cuttings
           for (int l = 8; l >= 4; l--) {
             if (l + pos <= pinyins_pre.length 
-                && cutting_adjusts.contains(pinyins_pre[pos:pos+l])) {
+                && cutting_adjusts.has_key(pinyins_pre[pos:pos+l])) {
               // recheck, do not break following pinyins
               if (!is_valid_pinyin_begin(pinyins_pre, pos + l, 2)) continue;
               // use selected adjusted cutting
@@ -183,8 +183,8 @@ namespace icp {
 
         // construct by ids arraylist
         foreach (Id id in ids) {
-          if (consonant_reverse_ids.contains(id.consonant)
-              && vowel_reverse_ids.contains(id.vowel)) {
+          if (consonant_reverse_ids.has_key(id.consonant)
+              && vowel_reverse_ids.has_key(id.vowel)) {
             id_sequence.add(id);
           }
         }
@@ -305,14 +305,14 @@ namespace icp {
         ArrayList<Id> ids = new ArrayList<Id>();
         for (int pos = 0; pos < double_pinyins.length; ++pos) {
           if (pos + 1 < double_pinyins.length) {
-            if (double_pinyins[pos:pos+2] in scheme) {
+            if (scheme.has_key(double_pinyins[pos:pos+2])) {
               ids.add(scheme[double_pinyins[pos:pos+2]]);
               pos++;
             }
           } else {
             // last char
             string s = double_pinyins[pos:pos+1];
-            Id id = (s in scheme) ? scheme[s] : new Id(s);
+            Id id = scheme.has_key(s) ? scheme[s] : new Id(s);
             if (!id.empty()) ids.add(new Id.id(id.consonant, -1));
           }
         }
@@ -321,7 +321,7 @@ namespace icp {
 
       // convert Id to double_pinyin
       public static string lookup(Id id) {
-        if (id in reverse_scheme) return reverse_scheme[id];
+        if (reverse_scheme.has_key(id)) return reverse_scheme[id];
         else return "";
       }
     }

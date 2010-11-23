@@ -167,9 +167,9 @@ namespace icp {
               // since directly access class variables will cause
               // segmentational fault. here a map is used to help
               // locate related RequestStatus class by pid(p)
-              assert(p in pid_to_request_status);
+              assert(pid_to_request_status.has_key(p));
               RequestStatus rs = pid_to_request_status[p];
-              pid_to_request_status.remove(p);
+              pid_to_request_status.unset(p);
 
               assert(rs.pid == p);
 
@@ -595,7 +595,7 @@ namespace icp {
       if (vm.is_number(3)) priority = vm.to_integer(3);
 
       if (script_filename.length == 0 || priority <= 0) {
-        if (engines.contains(name)) engines.remove(name);
+        if (engines.has_key(name)) engines.unset(name);
       } else
         engines[name] = new CloudEngine(script_filename, priority);
 

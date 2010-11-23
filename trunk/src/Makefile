@@ -32,7 +32,7 @@ all: ibus-engine-cloud-pinyin ibus-cloud-pinyin-request
 
 ibus-engine-cloud-pinyin: $(CFLAGFILE) $(CSRCS)
 	@$(ECHO) "$(MSG_PREFIX)Building $@ ...$(MSG_SUFFIX)"
-	$(CC) $(CFLAGS) $(CSRCS) -O3 -o $@
+	$(CC) $(CFLAGS) $(CSRCS) -g -o $@
 
 ibus-cloud-pinyin-request: request-main.c
 	@$(ECHO) "$(MSG_PREFIX)Building $@ ...$(MSG_SUFFIX)"
@@ -48,9 +48,9 @@ $(CSRCS): $(VALACFLAGFILE) $(VALASRCS)
 	$(VALAC) $(VALAFLAGS) --disable-warnings  -C $(VALASRCS)
 	@#$(VALAC) $(VALAFLAGS) -C $(VALASRCS)
 	@$(ECHO) "$(MSG_PREFIX)Patching C files (workaround for valac) ...$(MSG_SUFFIX)"
-	if ! grep -qe 'dbus_[^t]*thread' main.c; then sed -i 's/gdk_threads_init/dbus_g_thread_init();gdk_threads_init/' main.c; fi
+	@#if ! grep -qe 'dbus_[^t]*thread' main.c; then sed -i 's/gdk_threads_init/dbus_g_thread_init();gdk_threads_init/' main.c; fi
 	for i in *.c; do sed -i "s#@PREFIX@#$(PREFIX)#g" $$i; done
 
 clean:
 	@$(ECHO) "$(MSG_PREFIX)Cleaning src ...$(MSG_SUFFIX)"
-	-rm -rf ibus-engine-cloud-pinyin *.o $(CSRCS)
+	-rm -rf ibus-engine-cloud-pinyin ibus-cloud-pinyin-request *.o $(CSRCS) request-main.c
