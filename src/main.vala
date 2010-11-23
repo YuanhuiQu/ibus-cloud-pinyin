@@ -25,6 +25,9 @@ namespace icp {
   public class Main {
     public static int main (string[] args) {
       Gdk.threads_init();
+      DBus.thread_init();
+
+      // parse args
       Config.init(ref args);
       
       // show version and done
@@ -45,6 +48,8 @@ namespace icp {
         return 0;
       }
 
+      // init Gtk (require by clipboard reader)
+      // will fail without X environment
       Gdk.init(ref args);
       Gtk.init(ref args);
       
@@ -65,11 +70,12 @@ namespace icp {
       LuaBinding.init();
 
       if (!Config.CommandlineOptions.do_not_connect_ibus) {
-        // give lua thread some time (0.2 s) to set up
+        // give lua thread some time (~0.2 s) to set up
         // currently no lock to protect complex settings
         Thread.usleep(100000);
         IBusBinding.register();
       }
+
       main_loop = new MainLoop (null, false);
       main_loop.run();
 

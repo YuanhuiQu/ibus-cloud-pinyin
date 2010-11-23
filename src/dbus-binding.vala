@@ -47,14 +47,14 @@ namespace icp {
     // for server use, internal
     public static string query(string pinyins) {
       string pinyins_u = pinyins.replace("v", "ü");
-      if (responses.contains(pinyins_u)) return responses[pinyins_u].content;
+      if (responses.has_key(pinyins_u)) return responses[pinyins_u].content;
       else return "";
     }
 
     public static bool set_response(string pinyins,
         string content, int priority = 1) {
       string pinyins_u = pinyins.dup().replace("v", "ü");
-      if ((!responses.contains(pinyins_u) || responses[pinyins_u].priority
+      if ((!responses.has_key(pinyins_u) || responses[pinyins_u].priority
           <= priority) && new Pinyin.Sequence(pinyins_u).size == content.length ) {
         responses[pinyins_u] = new Response(content, priority);
         return true;
@@ -177,7 +177,7 @@ namespace icp {
           fs.read((uint8[])pinyin_header, 4, null);
 
           if (pinyin_header[1] == 0) break;
-          if (pinyin_map.contains((int)pinyin_header[0])) break;
+          if (pinyin_map.has_key((int)pinyin_header[0])) break;
 
           string pinyin_content = read_utf16_segment(fs, -1,
               (size_t)pinyin_header[1]
