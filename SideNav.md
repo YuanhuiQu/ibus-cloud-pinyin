@@ -1,0 +1,8 @@
+  * [简介](Intro.md)
+  * [安装](Install.md)
+  * [配置](Configuration.md)
+    * [双拼方案](DoublePinyinScheme.md)
+  * [FAQ](FAQ.md)
+  * [反馈](Feedback.md)
+  * [更新记录](WhatsNew.md)
+    * [进展](Progress.md)
